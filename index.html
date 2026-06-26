@@ -188,9 +188,9 @@ tr:hover td{background:#fafafa;}
 .prod-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 
 /* UPLOAD */
-.upload-zone{border:2px dashed var(--border);border-radius:9px;padding:24px;text-align:center;cursor:pointer;transition:.2s;position:relative;}
+.upload-zone{border:2px dashed var(--border);border-radius:9px;padding:24px;text-align:center;cursor:pointer;transition:.2s;display:block;}
 .upload-zone:hover{border-color:var(--blue);}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone input{display:none;}
 .img-grid{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
 .img-prev{width:62px;height:62px;border-radius:8px;object-fit:cover;border:2px solid var(--border);}
 
@@ -834,7 +834,7 @@ canvas{display:block;}
           <div class="fgrp"><label>Nom du produit *</label><input id="pf-name" placeholder="Robe africaine imprimée"></div>
           <div class="fgrp">
             <label>Photos du produit</label>
-            <div class="upload-zone"><input type="file" id="pf-imgs" accept="image/*" multiple onchange="handleImgs(this)"><div style="font-size:28px;margin-bottom:6px">📸</div><div style="font-size:12px;color:var(--gray)">Cliquez pour ajouter des photos</div></div>
+            <label class="upload-zone" for="pf-imgs"><input type="file" id="pf-imgs" accept="image/*" multiple onchange="handleImgs(this)"><div style="font-size:28px;margin-bottom:6px">📸</div><div style="font-size:12px;color:var(--gray)">Cliquez pour ajouter des photos</div></label>
             <div class="img-grid" id="pf-prev"></div>
           </div>
           <div class="form-row">
