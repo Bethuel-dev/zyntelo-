@@ -1365,19 +1365,18 @@ const Store = {
       if (key.startsWith('prods_')) {
         const targetOwnerId = key.split('_')[1];
         if (S.isGerant && S.user) {
-          // Le gérant doit passer par la fonction sécurisée, produit par produit.
           const prevIds = new Set((S._prevProductsSnapshot||[]).map(p => p._rowId).filter(Boolean));
           const newIds = new Set((val||[]).map(p => p._rowId).filter(Boolean));
-          for (const oldId of prevIds) {
-            if (!newIds.has(oldId)) {
-              await sb.rpc('gerant_delete_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: oldId });
-            }
-          }
-          for (const item of (val||[])) {
+          // Suppressions et upserts en parallèle
+          const delOps = [...prevIds].filter(id => !newIds.has(id)).map(oldId =>
+            sb.rpc('gerant_delete_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: oldId })
+          );
+          const upsertOps = (val||[]).map(item => {
             const { _rowId, ...data } = item;
-            const { error } = await sb.rpc('gerant_upsert_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: _rowId || null, p_data: data });
-            if (error) console.error('Store.set gerant upsert product error', error);
-          }
+            return sb.rpc('gerant_upsert_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: _rowId || null, p_data: data })
+              .then(({ error }) => { if (error) console.error('Store.set gerant upsert product error', error); });
+          });
+          await Promise.all([...delOps, ...upsertOps]);
           S._prevProductsSnapshot = JSON.parse(JSON.stringify(val||[]));
           return;
         }
@@ -1995,23 +1994,33 @@ function applyGerantRestrictions() {
 async function loginAs(user) {
   S.user = user;
   S.isGerant = !!user.isGerant;
-  // Déterminer l'ownerId : si gérant, utiliser ownerId, sinon son propre id
   const ownerId = user.isGerant ? user.ownerId : user.id;
-  S.shop = await Store.get('shop_'+ownerId) || { name: user.shopName||'Ma Boutique', ann:'', wa: user.wa||'', domain:'', blocked:false };
+
+  // Tous les chargements en parallèle — réduit le temps de connexion de 6× à 1×
+  const [shopData, products, orders, gerants, promosRes, adm] = await Promise.all([
+    Store.get('shop_'+ownerId),
+    Store.get('prods_'+ownerId),
+    Store.get('orders_'+ownerId),
+    Store.get('gerants_'+ownerId),
+    sb.from('promo_offers').select('*').eq('owner_id', ownerId),
+    Store.get('admin_settings')
+  ]);
+
+  S.shop = shopData || { name: user.shopName||'Ma Boutique', ann:'', wa: user.wa||'', domain:'', blocked:false };
   S.shop.id = ownerId;
   if (!S.shop.slug) {
     S.shop.slug = await generateUniqueSlug(S.shop.name);
     await sb.from('shops').update({ slug: S.shop.slug }).eq('id', ownerId);
   }
-  S.products = await Store.get('prods_'+ownerId) || [];
+
+  S.products = products || [];
   S._prevProductsSnapshot = JSON.parse(JSON.stringify(S.products));
-  S.orders = await Store.get('orders_'+ownerId) || [];
+  S.orders = orders || [];
   // Correctif de secours : certaines commandes créées avant ce correctif n'ont pas
   // de champ 'id' propre — on l'établit à partir de l'identifiant de ligne réel.
   S.orders.forEach(o => { if (!o.id && o._rowId) o.id = 'o_' + o._rowId; });
-  S.gerants = await Store.get('gerants_'+ownerId) || [];
-  const { data: promosData } = await sb.from('promo_offers').select('*').eq('owner_id', ownerId);
-  S.promoOffers = promosData || [];
+  S.gerants = gerants || [];
+  S.promoOffers = promosRes.data || [];
   applyShopAppearance(S.shop.appearance);
 
   // Génère un slug de secours pour les produits créés avant cette fonctionnalité
@@ -2039,11 +2048,11 @@ async function loginAs(user) {
   renderAnnList();
   showLogoPreview(S.shop.logoUrl);
 
-  // Paiements admin
-  const adm = await Store.get('admin_settings') || {};
-  document.getElementById('pm-wave').textContent = adm.wave||'—';
-  document.getElementById('pm-om').textContent = adm.om||'—';
-  document.getElementById('pm-mtn').textContent = adm.mtn||'—';
+  // Paiements admin (chargé en parallèle)
+  const admData = adm || {};
+  document.getElementById('pm-wave').textContent = admData.wave||'—';
+  document.getElementById('pm-om').textContent = admData.om||'—';
+  document.getElementById('pm-mtn').textContent = admData.mtn||'—';
 
   // Abonnement
   document.getElementById('abo-exp').textContent = user.expiry||'Non définie';
@@ -2851,15 +2860,15 @@ async function openPublicShopBySlug(route) {
   recordActivityEvent(shop.id, 'visite');
   applyShopAppearance(S.shop.appearance);
 
-  const { data: prods } = await sb.from('products').select('*').eq('owner_id', shop.id);
-  S.products = (prods||[]).map(row => ({ ...row.data, _rowId: row.id }));
-
-  const { data: cats } = await sb.from('categories').select('*').eq('owner_id', shop.id);
-  S.categories = cats || [];
-
   const today = new Date().toISOString().split('T')[0];
-  const { data: promos } = await sb.from('promo_offers').select('*').eq('owner_id', shop.id).eq('active', true);
-  S.promoOffers = (promos||[]).filter(o => (!o.start_date || o.start_date <= today) && (!o.end_date || o.end_date >= today));
+  const [prodsRes, catsRes, promosRes] = await Promise.all([
+    sb.from('products').select('*').eq('owner_id', shop.id),
+    sb.from('categories').select('*').eq('owner_id', shop.id),
+    sb.from('promo_offers').select('*').eq('owner_id', shop.id).eq('active', true)
+  ]);
+  S.products = (prodsRes.data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+  S.categories = catsRes.data || [];
+  S.promoOffers = (promosRes.data||[]).filter(o => (!o.start_date || o.start_date <= today) && (!o.end_date || o.end_date >= today));
 
   if (route.page === 'product') {
     const p = S.products.find(x => x.slug === route.prodSlug);
