@@ -1454,7 +1454,7 @@ const Store = {
 // ═══════════════════════════════════════════════
 let S = {
   user: null, shop: null, products: [], orders: [], gerants: [], categories: [], promoOffers: [],
-  curProd: null, orderQty: 1, selVariant: null, selectedOffer: null, imgData: [], editImgs: null,
+  curProd: null, orderQty: 1, selVariant: null, selectedOffer: null, imgData: [], imgFiles: [], editImgs: null,
   isGerant: false, cameFromCatalogue: null
 };
 
@@ -2510,9 +2510,11 @@ function handleVarImg(input, uid) {
 
 function handleImgs(input) {
   S.imgData = [];
+  S.imgFiles = [];
   const grid = document.getElementById('pf-prev');
   grid.innerHTML = '';
   Array.from(input.files).forEach(file => {
+    S.imgFiles.push(file);
     const r = new FileReader();
     r.onload = e => {
       S.imgData.push(e.target.result);
@@ -2536,7 +2538,7 @@ function showAddForm() {
   document.getElementById('pf-desc').value = '';
   document.getElementById('vars-cont').innerHTML = `<div class="var-row"><input placeholder="Ex: Rouge, Taille S…"><input type="file" accept="image/*" style="display:none" id="v_default1" onchange="handleVarImg(this,'v_default1')"><button type="button" class="btn-del-v" style="background:var(--blue-l);color:var(--blue)" onclick="document.getElementById('v_default1').click()" title="Image de la variante">🖼️</button><button class="btn-del-v" onclick="this.parentElement.remove()">×</button></div>`;
   document.getElementById('pf-prev').innerHTML = '';
-  S.imgData = []; S.editImgs = null;
+  S.imgData = []; S.imgFiles = []; S.editImgs = null;
   S.curSections = [];
   renderSectionsList();
   document.getElementById('prod-form').style.display = 'block';
@@ -2593,7 +2595,7 @@ function editProduct(id) {
 
 function hideForm() {
   document.getElementById('prod-form').style.display = 'none';
-  S.imgData = []; S.editImgs = null;
+  S.imgData = []; S.imgFiles = []; S.editImgs = null;
 }
 
 // ═══════════════════════════════════════════════
@@ -2723,7 +2725,30 @@ async function saveProduct() {
     if (!name) return null;
     return { name, image: (fileInput && fileInput.dataset.imgData) || '' };
   }).filter(Boolean);
-  const imgs = S.imgData.length ? S.imgData : (S.editImgs || []);
+
+  // Upload des images vers Supabase Storage (évite de stocker du base64 lourd en base)
+  let imgs = S.editImgs || [];
+  if (S.imgFiles && S.imgFiles.length) {
+    const loading = document.getElementById('loading');
+    loading.classList.remove('hide');
+    const uploadedUrls = [];
+    for (const file of S.imgFiles) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${ownerId()}/products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: false });
+      if (upErr) {
+        loading.classList.add('hide');
+        toast('Erreur upload image : ' + upErr.message, 'err');
+        restoreBtn();
+        return;
+      }
+      const { data: pubData } = sb.storage.from('logos').getPublicUrl(path);
+      uploadedUrls.push(pubData.publicUrl);
+    }
+    loading.classList.add('hide');
+    imgs = uploadedUrls;
+  }
+
   const sections = S.curSections || [];
 
   if (editId) {
