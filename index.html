@@ -1367,16 +1367,19 @@ const Store = {
         if (S.isGerant && S.user) {
           const prevIds = new Set((S._prevProductsSnapshot||[]).map(p => p._rowId).filter(Boolean));
           const newIds = new Set((val||[]).map(p => p._rowId).filter(Boolean));
-          // Suppressions et upserts en parallèle
-          const delOps = [...prevIds].filter(id => !newIds.has(id)).map(oldId =>
-            sb.rpc('gerant_delete_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: oldId })
-          );
-          const upsertOps = (val||[]).map(item => {
+          // D'abord les upserts, ensuite seulement les suppressions explicites
+          await Promise.all((val||[]).map(item => {
             const { _rowId, ...data } = item;
             return sb.rpc('gerant_upsert_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: _rowId || null, p_data: data })
               .then(({ error }) => { if (error) console.error('Store.set gerant upsert product error', error); });
-          });
-          await Promise.all([...delOps, ...upsertOps]);
+          }));
+          // Suppressions uniquement pour les produits explicitement retirés de la liste
+          const toDelete = [...prevIds].filter(id => !newIds.has(id));
+          if (toDelete.length > 0 && toDelete.length < prevIds.size) {
+            await Promise.all(toDelete.map(oldId =>
+              sb.rpc('gerant_delete_product', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: oldId })
+            ));
+          }
           S._prevProductsSnapshot = JSON.parse(JSON.stringify(val||[]));
           return;
         }
@@ -1390,9 +1393,12 @@ const Store = {
 
         const ops = [];
 
-        // Suppressions ciblées : uniquement les lignes qui existaient avant et n'existent plus
-        for (const oldId of Object.keys(prevById)) {
-          if (!newIds2.has(oldId)) {
+        // Suppressions ciblées : uniquement si le produit a été explicitement supprimé
+        // (jamais toute la liste d'un coup pour éviter les pertes accidentelles)
+        const prevCount = Object.keys(prevById).length;
+        const toDeleteOwner = Object.keys(prevById).filter(id => !newIds2.has(id));
+        if (toDeleteOwner.length < prevCount) {
+          for (const oldId of toDeleteOwner) {
             ops.push(sb.from('products').delete().eq('id', oldId).eq('owner_id', targetOwnerId));
           }
         }
