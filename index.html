@@ -1542,7 +1542,6 @@ async function init() {
 
   // Boutique publique : totalement indépendant de la session, accessible à tous
   if (route.type === 'shop') {
-    hide('loading');
     await openPublicShopBySlug(route);
     return;
   }
@@ -2110,7 +2109,7 @@ async function loginAs(user) {
   S.products.forEach(p => {
     if (!p.slug) { p.slug = slugify(p.name) + '-' + p.id.slice(-4); needsProdSlugFix = true; }
   });
-  if (needsProdSlugFix) await Store.set('prods_'+ownerId, S.products);
+  if (needsProdSlugFix) Store.set('prods_'+ownerId, S.products); // sauvegarde en arrière-plan, ne bloque pas la connexion
 
   startOrdersRealtimeListener(ownerId);
 
@@ -2923,11 +2922,13 @@ function renderProds() {
 async function openPublicShopBySlug(route) {
   const { data: shop, error } = await sb.from('shops').select('*').eq('slug', route.shopSlug).maybeSingle();
   if (error || !shop) {
+    hide('loading');
     go('s-boutique');
     document.getElementById('bshop-area').innerHTML = `<div class="empty"><div class="empty-ico">🔍</div><p>Boutique introuvable.</p></div>`;
     return;
   }
   if (shop.blocked) {
+    hide('loading');
     go('s-boutique');
     document.getElementById('bshop-area').innerHTML = `<div class="empty"><div class="empty-ico">⛔</div><p>Cette boutique est temporairement indisponible.</p></div>`;
     return;
@@ -2938,7 +2939,7 @@ async function openPublicShopBySlug(route) {
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
     badge: shop.badge, appearance: shop.appearance || {}
   };
-  S.publicOwnerId = shop.id; // pour les commandes publiques (pas de session)
+  S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
   applyShopAppearance(S.shop.appearance);
 
@@ -2952,9 +2953,17 @@ async function openPublicShopBySlug(route) {
   S.categories = catsRes.data || [];
   S.promoOffers = (promosRes.data||[]).filter(o => (!o.start_date || o.start_date <= today) && (!o.end_date || o.end_date >= today));
 
+  hide('loading'); // données prêtes → on affiche le contenu
+
   if (route.page === 'product') {
     const p = S.products.find(x => x.slug === route.prodSlug);
-    previewShop(p ? p.id : null, true);
+    if (p) {
+      previewShop(p.id, true);
+    } else {
+      // Produit introuvable par son slug : afficher la boutique complète
+      navTo(`/b/${S.shop.slug}`);
+      renderShopHome(true);
+    }
   } else if (route.page === 'catalogue') {
     renderPublicCatalogue();
   } else if (route.page === 'category') {
@@ -3044,8 +3053,8 @@ function previewShop(prodId, isPublic) {
       <div>
         <div class="p-name-big">${p.name}</div>
         <div class="p-prices">
-          <span class="p-new">${p.newP.toLocaleString()} FCFA</span>
-          ${p.oldP?`<span class="p-old">${p.oldP.toLocaleString()} FCFA</span>`:''}
+          <span class="p-new">${(+p.newP||0).toLocaleString()} FCFA</span>
+          ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString()} FCFA</span>`:''}
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
         ${varsHtml}
@@ -3061,14 +3070,14 @@ function previewShop(prodId, isPublic) {
               <button class="qty-btn" onclick="chQty(1)">+</button>
             </div>
           </div>
-          <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${p.newP.toLocaleString()} FCFA</span></div>
+          <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
           <div id="prod-offers-box"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
           <div class="fgrp"><label>Téléphone *</label><input id="or-tel" type="tel" placeholder="+225 07 XX XX XX XX"></div>
-          <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${p.newP.toLocaleString()} FCFA</span> à la livraison</button>
+          <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} FCFA</span> à la livraison</button>
         </div>
       </div>
     </div>
