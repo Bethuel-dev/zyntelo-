@@ -1333,10 +1333,15 @@ const Store = {
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
         const targetOwnerId = key.split('_')[1];
-        // Cas gérant : pas de session Auth, on passe par une fonction sécurisée
+        // Cas gérant : les produits sont lisibles publiquement (même accès que la boutique client)
+        // Les commandes passent par le RPC sécurisé car elles sont privées
         if (S.isGerant && S.user && table !== 'gerants') {
-          const fn = table === 'orders' ? 'gerant_get_orders' : 'gerant_get_products';
-          const { data, error } = await sb.rpc(fn, { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email });
+          if (table === 'products') {
+            const { data, error } = await sb.from('products').select('*').eq('owner_id', targetOwnerId);
+            if (error) { console.error('Store.get gerant products error', error); return []; }
+            return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+          }
+          const { data, error } = await sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email });
           if (error) { console.error('Store.get gerant error', error); return []; }
           return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
         }
