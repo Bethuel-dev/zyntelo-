@@ -21,6 +21,9 @@ self.addEventListener('push', (event) => {
     badge: '/icon-192.png',
     data: { url: payload.url || '/' },
     vibrate: [100, 50, 100],
+    silent: false, // garantit que le son par défaut du système est joué (respecte les réglages du téléphone)
+    tag: 'zyntelo-' + Date.now(), // identifiant unique : chaque commande déclenche bien son propre son, jamais regroupée silencieusement
+    renotify: true,
   };
 
   // event.waitUntil garantit que la notification s'affiche même si le
