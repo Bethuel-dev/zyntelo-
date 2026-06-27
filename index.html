@@ -1355,6 +1355,22 @@ const ADMIN_UID = '51f865a0-0231-4bf9-8828-3d793e0ad06a';
 // Garde la même interface (get/set/del) que l'ancienne version
 // pour que tout le reste du code fonctionne sans modification.
 // ═══════════════════════════════════════════════
+// Réessaie une requête Supabase jusqu'à 3 fois si elle expire par timeout
+// (code Postgres 57014), avec un délai progressif entre chaque tentative.
+// N'a aucun effet sur les requêtes qui réussissent ou échouent pour une
+// autre raison — celles-ci ressortent immédiatement, sans attente inutile.
+async function retryOnTimeout(queryFn, maxAttempts = 3) {
+  let lastResult;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    lastResult = await queryFn();
+    if (!lastResult.error || lastResult.error.code !== '57014') return lastResult;
+    if (attempt < maxAttempts) {
+      await new Promise(r => setTimeout(r, 700 * attempt)); // 700ms, puis 1400ms
+    }
+  }
+  return lastResult;
+}
+
 const Store = {
   async get(key) {
     try {
@@ -1393,21 +1409,15 @@ const Store = {
         // Les commandes passent par le RPC sécurisé car elles sont privées
         if (S.isGerant && S.user && table !== 'gerants') {
           if (table === 'products') {
-            let { data, error } = await sb.from('products').select('*').eq('owner_id', targetOwnerId);
-            if (error && error.code === '57014') {
-              // Timeout : on retente une fois après une courte pause, sans rien changer d'autre
-              await new Promise(r => setTimeout(r, 800));
-              ({ data, error } = await sb.from('products').select('*').eq('owner_id', targetOwnerId));
-            }
-            window._gerantProdsLastError = error || (data ? null : 'data est null/undefined sans erreur'); // diagnostic temporaire
+            const { data, error } = await retryOnTimeout(() =>
+              sb.from('products').select('*').eq('owner_id', targetOwnerId)
+            );
             if (error) { console.error('Store.get gerant products error', error); return []; }
             return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
           }
-          let { data, error } = await sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email });
-          if (error && error.code === '57014') {
-            await new Promise(r => setTimeout(r, 800));
-            ({ data, error } = await sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email }));
-          }
+          const { data, error } = await retryOnTimeout(() =>
+            sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email })
+          );
           if (error) { console.error('Store.get gerant error', error); return []; }
           return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
         }
@@ -3136,17 +3146,7 @@ async function delProd(id) {
 function renderProds() {
   const list = document.getElementById('prods-list');
   if (!S.products.length) {
-    let debugMsg = '';
-    if (S.isGerant) {
-      debugMsg = `<div style="margin-top:14px;padding:14px;background:#fff3cd;border-radius:10px;font-family:monospace;font-size:11px;text-align:left;word-break:break-all;">
-        <strong>🔍 Diagnostic (gérant)</strong><br>
-        S.user.ownerId : "${S.user ? S.user.ownerId : 'undefined'}"<br>
-        S.gerantRecordId : "${S.gerantRecordId || 'undefined'}"<br>
-        S.user.email : "${S.user ? S.user.email : 'undefined'}"<br>
-        Erreur capturée : ${window._gerantProdsLastError ? JSON.stringify(window._gerantProdsLastError) : 'aucune'}
-      </div>`;
-    }
-    list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>${debugMsg}`;
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>`;
     return;
   }
   list.innerHTML = S.products.map(p => `
