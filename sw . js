@@ -1,0 +1,49 @@
+// Service Worker Zyntelo — gère la réception des notifications push
+// même lorsque l'application est fermée, et le clic dessus.
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// Réception d'une notification push envoyée par le serveur
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch (e) { payload = { title: 'Zyntelo', body: 'Nouvelle notification' }; }
+
+  const title = payload.title || 'Zyntelo';
+  const options = {
+    body: payload.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    data: { url: payload.url || '/' },
+    vibrate: [100, 50, 100],
+  };
+
+  // event.waitUntil garantit que la notification s'affiche même si le
+  // navigateur tente de suspendre le Service Worker juste après.
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Clic sur la notification : ouvre ou ramène au premier plan l'onglet Zyntelo
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsList) => {
+      for (const client of clientsList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
