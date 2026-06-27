@@ -528,6 +528,7 @@ canvas{display:block;}
       <button class="btn btn-ghost" onclick="go('s-about')">À propos</button>
       <button class="btn btn-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
       <button class="btn btn-ghost" id="land-logout-btn" style="display:none;color:var(--red)" onclick="logout()">Déconnexion</button>
+      <button class="btn btn-ghost" onclick="showPerfLog()" style="font-size:11px;opacity:.5">📊 Diagnostic perf (temporaire)</button>
       <button class="btn btn-ghost" onclick="go('s-login')">Se connecter</button>
       <button class="btn btn-blue" onclick="go('s-register')">Créer ma boutique</button>
     </div>
@@ -2272,14 +2273,18 @@ async function loginAs(user) {
   // Tous les chargements en parallèle — réduit le temps de connexion de 6× à 1×
   // Pour le gérant, on ne charge pas la liste des gérants (il n'en a pas besoin),
   // ce qui réduit aussi le nombre de requêtes simultanées et le risque de timeout.
+  const _timed = (label, promise) => {
+    const t0 = performance.now();
+    return promise.then(r => { console.log(`[Perf] ${label}: ${Math.round(performance.now()-t0)} ms`); window._zyntelloPerfLog = window._zyntelloPerfLog||[]; window._zyntelloPerfLog.push({event:label, ms:Math.round(performance.now()-t0), ts:Date.now()}); return r; });
+  };
   const [shopData, products, orders, gerants, promosRes, adm, catsRes2] = await Promise.all([
-    Store.get('shop_'+ownerId),
-    Store.get('prods_'+ownerId),
-    Store.get('orders_'+ownerId),
-    user.isGerant ? Promise.resolve([]) : Store.get('gerants_'+ownerId),
-    sb.from('promo_offers').select('*').eq('owner_id', ownerId),
-    Store.get('admin_settings'),
-    sb.from('categories').select('*').eq('owner_id', ownerId)
+    _timed('shop', Store.get('shop_'+ownerId)),
+    _timed('products', Store.get('prods_'+ownerId)),
+    _timed('orders', Store.get('orders_'+ownerId)),
+    _timed('gerants', user.isGerant ? Promise.resolve([]) : Store.get('gerants_'+ownerId)),
+    _timed('promos', sb.from('promo_offers').select('*').eq('owner_id', ownerId)),
+    _timed('admin_settings', Store.get('admin_settings')),
+    _timed('categories', sb.from('categories').select('*').eq('owner_id', ownerId))
   ]);
   // Toujours réinitialisée avec les catégories du bon propriétaire — jamais de
   // résidu d'une connexion précédente sur le même navigateur.
