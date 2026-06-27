@@ -528,7 +528,7 @@ canvas{display:block;}
       <button class="btn btn-ghost" onclick="go('s-about')">À propos</button>
       <button class="btn btn-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
       <button class="btn btn-ghost" id="land-logout-btn" style="display:none;color:var(--red)" onclick="logout()">Déconnexion</button>
-      <button class="btn btn-ghost" onclick="showPerfLog()" style="font-size:11px;opacity:.5">📊 Diagnostic perf (temporaire)</button>
+      <button class="btn btn-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
       <button class="btn btn-ghost" onclick="go('s-login')">Se connecter</button>
       <button class="btn btn-blue" onclick="go('s-register')">Créer ma boutique</button>
     </div>
@@ -1265,6 +1265,11 @@ Merci pour votre confiance 🙏
       <!-- MON PROFIL (page À propos) -->
       <div class="dash-page" id="adm-profil">
         <div class="page-head"><h1>Mon profil</h1><p>Ce qui s'affiche sur la page "À propos" du site</p></div>
+        <div class="card">
+          <div class="card-title">🛠️ Maintenance technique</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:10px">Migre les anciennes images encore stockées en base64 vers Supabase Storage, pour accélérer l'application. Sans danger pour les données — les images déjà optimisées sont automatiquement ignorées.</p>
+          <button class="btn btn-ghost btn-sm" onclick="migrateProductImagesToStorage()">Lancer la migration des images</button>
+        </div>
         <div class="card">
           <div class="card-title">📸 Photo</div>
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
@@ -2275,7 +2280,7 @@ async function loginAs(user) {
   // ce qui réduit aussi le nombre de requêtes simultanées et le risque de timeout.
   const _timed = (label, promise) => {
     const t0 = performance.now();
-    return promise.then(r => { console.log(`[Perf] ${label}: ${Math.round(performance.now()-t0)} ms`); window._zyntelloPerfLog = window._zyntelloPerfLog||[]; window._zyntelloPerfLog.push({event:label, ms:Math.round(performance.now()-t0), ts:Date.now()}); return r; });
+    return promise.then(r => { window._zyntelloPerfLog = window._zyntelloPerfLog||[]; window._zyntelloPerfLog.push({event:label, ms:Math.round(performance.now()-t0), ts:Date.now()}); return r; });
   };
   const [shopData, products, orders, gerants, promosRes, adm, catsRes2] = await Promise.all([
     _timed('shop', Store.get('shop_'+ownerId)),
@@ -2837,15 +2842,97 @@ function addVar() {
   c.appendChild(d);
 }
 
+// ═══════════════════════════════════════════════
+// MIGRATION DES IMAGES EXISTANTES VERS SUPABASE STORAGE
+// ═══════════════════════════════════════════════
+// Convertit les images encore stockées en base64 (ancien système) vers de
+// vrais fichiers dans Supabase Storage, produit par produit, avec logs
+// détaillés. Ne supprime jamais l'image avant confirmation que le nouvel
+// upload a réussi — en cas d'échec sur un produit, celui-ci est simplement
+// laissé tel quel et la migration continue avec le suivant.
+async function migrateProductImagesToStorage() {
+  if (!confirm('Migrer toutes les images en base64 vers Supabase Storage ? Cette opération peut prendre plusieurs minutes selon le nombre de produits.')) return;
+
+  const { data: allProducts, error } = await sb.from('products').select('id, owner_id, data');
+  if (error) { alert('Erreur de lecture : ' + error.message); return; }
+
+  let migrated = 0, skipped = 0, failed = 0;
+  const failedDetails = [];
+
+  for (const row of allProducts) {
+    const p = row.data;
+    let changed = false;
+    const isBase64 = (s) => typeof s === 'string' && s.startsWith('data:image');
+
+    try {
+      // Image(s) principale(s)
+      if (Array.isArray(p.imgs)) {
+        for (let i = 0; i < p.imgs.length; i++) {
+          if (isBase64(p.imgs[i])) {
+            const url = await uploadBase64ToStorage(p.imgs[i], row.owner_id);
+            if (url) { p.imgs[i] = url; changed = true; }
+          }
+        }
+      }
+      // Images de sections additionnelles
+      if (Array.isArray(p.sections)) {
+        for (const s of p.sections) {
+          if (s.img && isBase64(s.img)) {
+            const url = await uploadBase64ToStorage(s.img, row.owner_id);
+            if (url) { s.img = url; changed = true; }
+          }
+        }
+      }
+      // Images de variantes
+      if (Array.isArray(p.vars)) {
+        for (const v of p.vars) {
+          if (v && typeof v === 'object' && v.image && isBase64(v.image)) {
+            const url = await uploadBase64ToStorage(v.image, row.owner_id);
+            if (url) { v.image = url; changed = true; }
+          }
+        }
+      }
+
+      if (changed) {
+        const { error: updError } = await sb.from('products').update({ data: p }).eq('id', row.id);
+        if (updError) { failed++; failedDetails.push(`${p.name || row.id}: ${updError.message}`); }
+        else migrated++;
+      } else {
+        skipped++;
+      }
+    } catch (e) {
+      failed++;
+      failedDetails.push(`${p.name || row.id}: ${e.message}`);
+    }
+  }
+
+  let report = `Migration terminée.\n✅ Migrés : ${migrated}\n⏭️ Déjà optimisés (ignorés) : ${skipped}\n❌ Échecs : ${failed}`;
+  if (failedDetails.length) report += '\n\nDétail des échecs :\n' + failedDetails.join('\n');
+  alert(report);
+  console.log('Rapport de migration images', { migrated, skipped, failed, failedDetails });
+}
+
+async function uploadBase64ToStorage(dataURL, targetOwnerId) {
+  try {
+    const blob = dataURLToBlob(dataURL);
+    const fileName = `${targetOwnerId}/${Date.now()}_${Math.floor(Math.random()*100000)}.jpg`;
+    const { error } = await sb.storage.from('product-images').upload(fileName, blob, { contentType: 'image/jpeg' });
+    if (error) { console.error('uploadBase64ToStorage error', error); return null; }
+    const { data: urlData } = sb.storage.from('product-images').getPublicUrl(fileName);
+    return urlData.publicUrl;
+  } catch (e) { console.error('uploadBase64ToStorage exception', e); return null; }
+}
+
 function handleVarImg(input, uid) {
   const file = input.files[0];
   if (!file) return;
-  compressImage(file).then(compressed => {
-    input.dataset.imgData = compressed;
-    const row = input.closest('.var-row');
-    const btn = row.querySelector('button[title]');
+  const row = input.closest('.var-row');
+  const btn = row.querySelector('button[title]');
+  if (btn) btn.textContent = '⏳';
+  compressAndUploadImage(file).then(finalUrl => {
+    input.dataset.imgData = finalUrl;
     if (btn) btn.textContent = '✅';
-  }).catch(e => console.error('Erreur compression image variante', e));
+  }).catch(e => { console.error('Erreur upload image variante', e); if (btn) btn.textContent = '🖼️'; });
 }
 
 // Compresse une image avant stockage : redimensionne et réduit la qualité,
@@ -2874,19 +2961,54 @@ function compressImage(file, maxWidth = 1000, quality = 0.7) {
   });
 }
 
+// Convertit une dataURL (image compressée en mémoire) en Blob, format
+// nécessaire pour l'envoyer vers Supabase Storage.
+function dataURLToBlob(dataURL) {
+  const [header, base64] = dataURL.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+// Compresse puis envoie une image vers Supabase Storage, et retourne son
+// URL publique définitive — utilisée pour TOUTE nouvelle image de produit
+// (image principale, sections, variantes), au lieu du base64 volumineux.
+// En cas d'échec réseau, on revient au base64 compressé en secours, pour
+// ne jamais bloquer le commerçant qui ajoute son produit.
+async function compressAndUploadImage(file, maxWidth = 1000, quality = 0.7) {
+  const compressed = await compressImage(file, maxWidth, quality);
+  try {
+    const blob = dataURLToBlob(compressed);
+    const targetOwnerId = ownerId();
+    const fileName = `${targetOwnerId}/${Date.now()}_${Math.floor(Math.random()*100000)}.jpg`;
+    const { error } = await sb.storage.from('product-images').upload(fileName, blob, { contentType: 'image/jpeg' });
+    if (error) { console.error('compressAndUploadImage: upload échoué, secours en base64', error); return compressed; }
+    const { data: urlData } = sb.storage.from('product-images').getPublicUrl(fileName);
+    return urlData.publicUrl;
+  } catch (e) {
+    console.error('compressAndUploadImage: exception, secours en base64', e);
+    return compressed; // secours : on garde quand même l'image, juste pas optimisée cette fois
+  }
+}
+
 function handleImgs(input) {
   S.imgData = [];
   S.imgFiles = [];
   const grid = document.getElementById('pf-prev');
   grid.innerHTML = '';
-  Array.from(input.files).forEach(file => {
+  Array.from(input.files).forEach((file, idx) => {
     S.imgFiles.push(file);
-    compressImage(file).then(compressed => {
-      S.imgData.push(compressed);
-      const img = document.createElement('img');
-      img.src = compressed; img.className = 'img-prev';
-      grid.appendChild(img);
-    }).catch(e => console.error('Erreur compression image', e));
+    S.imgData.push(null); // marque la position, remplie une fois l'upload terminé
+    const imgEl = document.createElement('img');
+    imgEl.className = 'img-prev';
+    grid.appendChild(imgEl);
+    // Aperçu instantané (compression seule, rapide) pendant que l'upload se fait en arrière-plan
+    compressImage(file).then(compressed => { imgEl.src = compressed; }).catch(()=>{});
+    compressAndUploadImage(file).then(finalUrl => {
+      S.imgData[idx] = finalUrl;
+    }).catch(e => console.error('Erreur upload image', e));
   });
 }
 
@@ -2991,10 +3113,10 @@ function updateSectionText(id, val) {
 function handleSectionImg(id, input) {
   const file = input.files[0];
   if (!file) return;
-  compressImage(file).then(compressed => {
+  compressAndUploadImage(file).then(finalUrl => {
     const s = S.curSections.find(x => x.id === id);
-    if (s) { s.img = compressed; renderSectionsList(); }
-  }).catch(e => console.error('Erreur compression image section', e));
+    if (s) { s.img = finalUrl; renderSectionsList(); }
+  }).catch(e => console.error('Erreur upload image section', e));
 }
 
 function sectionBlockHtml(s) {
@@ -3088,27 +3210,26 @@ async function saveProduct() {
     return { name, image: (fileInput && fileInput.dataset.imgData) || '' };
   }).filter(Boolean);
 
-  // Upload des images vers Supabase Storage (évite de stocker du base64 lourd en base)
+  // Les images ont déjà été compressées et uploadées vers Supabase Storage
+  // au moment de la sélection (voir handleImgs) — on attend ici simplement
+  // que les uploads en arrière-plan soient bien terminés avant d'enregistrer.
   let imgs = S.editImgs || [];
   if (S.imgFiles && S.imgFiles.length) {
     const loading = document.getElementById('loading');
     loading.classList.remove('hide');
-    const uploadedUrls = [];
-    for (const file of S.imgFiles) {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${ownerId()}/products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: false });
-      if (upErr) {
-        loading.classList.add('hide');
-        toast('Erreur upload image : ' + upErr.message, 'err');
-        restoreBtn();
-        return;
-      }
-      const { data: pubData } = sb.storage.from('logos').getPublicUrl(path);
-      uploadedUrls.push(pubData.publicUrl);
+    // Attend que chaque image ait fini son upload (S.imgData ne contient plus de null)
+    let waited = 0;
+    while (S.imgData.some(u => u === null) && waited < 15000) {
+      await new Promise(r => setTimeout(r, 250));
+      waited += 250;
     }
     loading.classList.add('hide');
-    imgs = uploadedUrls;
+    if (S.imgData.some(u => u === null)) {
+      toast('Erreur : certaines images n\'ont pas pu être envoyées. Réessayez.', 'err');
+      restoreBtn();
+      return;
+    }
+    imgs = S.imgData.slice();
   }
 
   const sections = S.curSections || [];
