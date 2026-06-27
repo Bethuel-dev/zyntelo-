@@ -1399,6 +1399,7 @@ const Store = {
               await new Promise(r => setTimeout(r, 800));
               ({ data, error } = await sb.from('products').select('*').eq('owner_id', targetOwnerId));
             }
+            window._gerantProdsLastError = error || (data ? null : 'data est null/undefined sans erreur'); // diagnostic temporaire
             if (error) { console.error('Store.get gerant products error', error); return []; }
             return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
           }
@@ -3135,7 +3136,17 @@ async function delProd(id) {
 function renderProds() {
   const list = document.getElementById('prods-list');
   if (!S.products.length) {
-    list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>`;
+    let debugMsg = '';
+    if (S.isGerant) {
+      debugMsg = `<div style="margin-top:14px;padding:14px;background:#fff3cd;border-radius:10px;font-family:monospace;font-size:11px;text-align:left;word-break:break-all;">
+        <strong>🔍 Diagnostic (gérant)</strong><br>
+        S.user.ownerId : "${S.user ? S.user.ownerId : 'undefined'}"<br>
+        S.gerantRecordId : "${S.gerantRecordId || 'undefined'}"<br>
+        S.user.email : "${S.user ? S.user.email : 'undefined'}"<br>
+        Erreur capturée : ${window._gerantProdsLastError ? JSON.stringify(window._gerantProdsLastError) : 'aucune'}
+      </div>`;
+    }
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>${debugMsg}`;
     return;
   }
   list.innerHTML = S.products.map(p => `
