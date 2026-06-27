@@ -2264,6 +2264,7 @@ function applyGerantRestrictions() {
 }
 
 async function loginAs(user) {
+  const _perfStart = performance.now(); // mesure de performance — additif, sans effet sur la logique
   S.user = user;
   S.isGerant = !!user.isGerant;
   const ownerId = user.isGerant ? user.ownerId : user.id;
@@ -2383,6 +2384,12 @@ async function loginAs(user) {
 
   // Enregistrement discret du Service Worker — n'attend jamais, ne bloque jamais
   registerServiceWorker();
+
+  // Mesure de performance — purement informatif, n'affecte jamais le comportement réel
+  const _perfMs = Math.round(performance.now() - _perfStart);
+  console.log(`[Perf] Connexion complète en ${_perfMs} ms`);
+  window._zyntelloPerfLog = window._zyntelloPerfLog || [];
+  window._zyntelloPerfLog.push({ event: 'login', ms: _perfMs, ts: Date.now() });
 }
 
 function showCoverPreview(url) {
@@ -3151,7 +3158,7 @@ function renderProds() {
   }
   list.innerHTML = S.products.map(p => `
     <div class="prod-card">
-      <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:'📦'}</div>
+      <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
       <div class="prod-info">
         <div class="prod-name">${p.name}</div>
         <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} FCFA</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></div>
@@ -3296,7 +3303,7 @@ function previewShop(prodId, isPublic) {
   if (isPublic && p.slug) navTo(`/b/${S.shop.slug}/p/${p.slug}`);
   else if (!isPublic) navTo(`/b/${S.shop.slug}`);
   const mainImg = p.imgs&&p.imgs[0] ? `<img id="main-img" src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:68px">📦</span>`;
-  const thumbs = p.imgs&&p.imgs.length>1 ? p.imgs.map((img,i)=>`<div class="pthumb ${i===0?'on':''}" onclick="setMainImg(this,'${img}')"><img src="${img}"></div>`).join('') : '';
+  const thumbs = p.imgs&&p.imgs.length>1 ? p.imgs.map((img,i)=>`<div class="pthumb ${i===0?'on':''}" onclick="setMainImg(this,'${img}')"><img src="${img}" loading="lazy" decoding="async"></div>`).join('') : '';
   S.curProdDefaultImg = p.imgs&&p.imgs[0] ? p.imgs[0] : '';
   const varsHtml = p.vars&&p.vars.length ? `<div class="vars-sec"><div class="vars-lbl">Variante :</div><div class="vars-row">${p.vars.map((v,i)=>{
     const vName = (typeof v === 'string') ? v : v.name;
@@ -3731,6 +3738,16 @@ async function resetAppearance() {
 }
 
 // Applique réellement les styles sur la boutique publique via des variables CSS
+// Affiche les mesures de performance collectées depuis le début de la session.
+// Accessible en tapant showPerfLog() — pas de bouton visible dans l'interface,
+// pour ne pas encombrer l'expérience des commerçants qui n'en ont pas besoin.
+function showPerfLog() {
+  const log = window._zyntelloPerfLog || [];
+  if (!log.length) { alert('Aucune mesure encore enregistrée. Reconnectez-vous pour générer une mesure.'); return; }
+  const txt = log.map(l => `${l.event}: ${l.ms} ms`).join('\n');
+  alert('📊 Mesures de performance (session actuelle) :\n\n' + txt);
+}
+
 function applyShopAppearance(appearance) {
   const a = { ...APPEARANCE_DEFAULTS, ...(appearance||{}) };
   const ann = { ...APPEARANCE_DEFAULTS.ann, ...(a.ann||{}) };
@@ -3815,7 +3832,7 @@ function productCardHtml(p) {
   const img = (p.imgs && p.imgs[0]) ? p.imgs[0] : '';
   return `
     <div class="shh-prod-card" onclick="goToProductFromGrid('${p.id}')">
-      <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0">`:'🛍️'}</div>
+      <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0" loading="lazy" decoding="async">`:'🛍️'}</div>
       <div class="shh-prod-name">${p.name}</div>
       <div class="shh-prod-prices">
         <span class="shh-prod-new">${(+p.newP).toLocaleString()} FCFA</span>
