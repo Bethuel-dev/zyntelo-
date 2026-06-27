@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zyntelo</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1A56E8">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
 :root{
@@ -1042,6 +1045,11 @@ canvas{display:block;}
       <div class="dash-page" id="p-abo">
         <div class="page-head"><h1>Mon abonnement</h1><p>Gérez votre abonnement Zyntelo</p></div>
         <div class="card">
+          <div class="card-title">🔔 Notifications</div>
+          <p style="font-size:13px;color:var(--gray);margin-bottom:12px">Soyez averti instantanément dès qu'une commande arrive sur votre boutique.</p>
+          <button class="btn btn-blue btn-sm" onclick="enablePushNotifications()">Activer les notifications</button>
+        </div>
+        <div class="card">
           <div class="card-title">💳 Statut actuel</div>
           <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px">
             <div><div class="stat-lbl">Statut</div><span class="badge" id="abo-badge">Actif ✓</span></div>
@@ -1915,6 +1923,146 @@ function drawLineChart(canvasId, labels, data, color) {
   });
 }
 
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS PUSH WEB (additif — ne modifie aucune fonctionnalité existante)
+// ═══════════════════════════════════════════════
+const VAPID_PUBLIC_KEY = 'BNrRqzCdoeprFCTGIclOs6q_Uj5oA192DBji7tGnjPsqPZGGk8SXdi0zr5LQ7Aqlkpr0DhBx1aSSfUFsFXXwzI4';
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function pushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window;
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    return reg;
+  } catch (e) { console.error('Erreur enregistrement Service Worker', e); return null; }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+// Point d'entrée principal : à appeler depuis un clic utilisateur (obligatoire sur iOS)
+async function enablePushNotifications() {
+  if (!pushSupported()) {
+    if (isIOSDevice() && !isStandaloneMode()) {
+      showIOSInstallInstructions();
+    } else {
+      toast('Les notifications ne sont pas supportées sur ce navigateur', 'err');
+    }
+    return;
+  }
+  if (isIOSDevice() && !isStandaloneMode()) {
+    // Sur iPhone, le push n'existe que pour l'app installée sur l'écran d'accueil
+    showIOSInstallInstructions();
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    toast('Notifications refusées. Vous pourrez les activer plus tard dans les paramètres.', 'err');
+    markPushPromptSeen();
+    return;
+  }
+
+  const reg = await registerServiceWorker();
+  if (!reg) { toast('Erreur technique, réessayez plus tard', 'err'); return; }
+
+  try {
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    await saveOwnerPushSubscription(sub);
+    toast('🔔 Notifications activées ✓');
+    markPushPromptSeen();
+  } catch (e) {
+    console.error('Erreur abonnement push', e);
+    toast('Erreur lors de l\'activation des notifications', 'err');
+  }
+}
+
+async function saveOwnerPushSubscription(sub) {
+  const subJson = sub.toJSON();
+  const targetOwnerId = ownerId();
+  if (!targetOwnerId) return;
+  try {
+    await sb.from('push_subscriptions').upsert({
+      owner_id: targetOwnerId,
+      endpoint: subJson.endpoint,
+      p256dh: subJson.keys.p256dh,
+      auth_key: subJson.keys.auth,
+      device_label: navigator.userAgent.slice(0, 60)
+    }, { onConflict: 'owner_id,endpoint' });
+  } catch (e) { console.error('Erreur sauvegarde abonnement push', e); }
+}
+
+function showIOSInstallInstructions() {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `<div class="popup" style="text-align:center;max-width:380px">
+    <div class="popup-handle"></div>
+    <div style="font-size:44px;margin-bottom:10px">📲</div>
+    <h3 style="margin-bottom:10px">Activer les notifications sur iPhone</h3>
+    <p style="font-size:14px;line-height:1.7;text-align:left;margin-bottom:18px">
+      Pour recevoir les notifications sur iPhone, installez Zyntelo comme une application :<br><br>
+      1. Touchez le bouton <strong>Partager</strong> 􀈂 en bas de Safari<br>
+      2. Choisissez <strong>"Sur l'écran d'accueil"</strong><br>
+      3. Ouvrez Zyntelo depuis cette nouvelle icône<br>
+      4. Réactivez les notifications depuis là
+    </p>
+    <button class="btn btn-blue btn-w" onclick="this.closest('.overlay').remove()">J'ai compris</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  markPushPromptSeen();
+}
+
+function markPushPromptSeen() {
+  try { localStorage.setItem('zyntelo_push_prompt_seen', '1'); } catch {}
+}
+function hasPushPromptBeenSeen() {
+  try { return localStorage.getItem('zyntelo_push_prompt_seen') === '1'; } catch { return false; }
+}
+
+// Propose l'activation une seule fois par appareil, après inscription ou connexion —
+// n'interrompt jamais si l'utilisateur a déjà répondu (accepté ou refusé) une fois.
+function maybePromptPushNotifications() {
+  if (hasPushPromptBeenSeen()) return;
+  if (!pushSupported() && !isIOSDevice()) return;
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') { markPushPromptSeen(); return; }
+  setTimeout(() => {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay on';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = `<div class="popup" style="text-align:center;max-width:380px">
+      <div class="popup-handle"></div>
+      <div style="font-size:44px;margin-bottom:10px">🔔</div>
+      <h3 style="margin-bottom:10px">Activer les notifications ?</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:18px">Soyez averti instantanément dès qu'une commande arrive sur votre boutique.</p>
+      <button class="btn btn-blue btn-w" style="margin-bottom:8px" onclick="this.closest('.overlay').remove();enablePushNotifications()">Activer les notifications</button>
+      <button class="btn btn-ghost btn-w" onclick="this.closest('.overlay').remove();markPushPromptSeen()">Plus tard</button>
+    </div>`;
+    document.body.appendChild(overlay);
+  }, 1200);
+}
+
 async function logout() {
   await sb.auth.signOut();
   localStorage.removeItem('zyntelo_gerant_session');
@@ -1955,6 +2103,7 @@ async function doLogin() {
   // supplémentaire ici, pour une connexion la plus rapide possible.
   const user = { id: data.user.id, email: data.user.email, isAdmin:false, isGerant:false };
   await loginAs(user);
+  if (!S.isGerant) maybePromptPushNotifications();
 }
 
 async function doGerantLogin() {
@@ -2173,6 +2322,9 @@ async function loginAs(user) {
 
   go('s-dash');
   toast(`Bienvenue ${user.name} ! 👋`);
+
+  // Enregistrement discret du Service Worker — n'attend jamais, ne bloque jamais
+  registerServiceWorker();
 }
 
 function showCoverPreview(url) {
@@ -2320,6 +2472,7 @@ async function doRegister() {
   const user = { id:userId, name, shopName, email, wa, slug, isAdmin:false, isGerant:false, blocked:false, expiry: nextMonth() };
   await loginAs(user);
   toast('Boutique créée avec succès ! 🎉');
+  maybePromptPushNotifications();
 }
 
 async function doAdminLogin() {
@@ -3897,10 +4050,31 @@ async function notifyOwnerNewOrder(orderData) {
         to: data.email, shopName: data.shop_name,
         prodName: orderData.prodName, qty: orderData.qty, total: orderData.total,
         prenom: orderData.prenom, ville: orderData.ville, qrt: orderData.qrt, tel: orderData.tel,
+        date: orderData.date, heure: new Date(orderData.createdAt||Date.now()).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
         dashboardLink: `${window.location.origin}/login`
       }
     });
   } catch (e) { console.error('notifyOwnerNewOrder error', e); }
+  // Notification push, en plus de l'email — ne bloque jamais et n'affecte pas l'email ci-dessus
+  sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
+    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} FCFA`);
+}
+
+// Envoie une notification push pour un événement donné, en évitant les doublons
+// grâce au log (owner_id + event_type + ref_id doit être unique).
+async function sendPushEvent(targetOwnerId, eventType, refId, title, body) {
+  try {
+    if (refId) {
+      const { error: logError } = await sb.from('notification_log').insert({ owner_id: targetOwnerId, event_type: eventType, ref_id: String(refId) });
+      if (logError) {
+        // Conflit = déjà envoyée pour cet événement précis, on n'envoie pas de doublon
+        if (logError.code === '23505') return;
+      }
+    }
+    await sb.functions.invoke('send-push-notification', {
+      body: { ownerId: targetOwnerId, title, body, url: `${window.location.origin}/login` }
+    });
+  } catch (e) { console.error('sendPushEvent error', eventType, e); }
 }
 
 async function submitOrder() {
@@ -3998,6 +4172,9 @@ async function valCmd(id) {
       if (newBadge) { S.shop.badge = newBadge; }
     }
   } catch (e) { console.error('valCmd: erreur stats/badge', e); }
+
+  // Notification push — additif, ne bloque jamais la validation déjà effectuée ci-dessus
+  sendPushEvent(ownerId(), 'livraison_validee', o._rowId, '✅ Livraison validée', `${o.prodName} pour ${o.prenom}`);
 }
 
 async function annCmd(id) {
@@ -4018,6 +4195,7 @@ async function annCmd(id) {
     if (error) { toast('Erreur : ' + error.message, 'err'); console.error('annCmd update error', error); return; }
   }
   renderCmds(); toast('Commande annulée');
+  sendPushEvent(ownerId(), 'commande_annulee', o._rowId, '❌ Commande annulée', `${o.prodName} pour ${o.prenom}`);
 }
 
 function sendReceipt(id) {
