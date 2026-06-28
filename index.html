@@ -1930,8 +1930,8 @@ async function loadAdminStats() {
       confirmedOrdersCountByOwner[o.owner_id] = (confirmedOrdersCountByOwner[o.owner_id] || 0) + 1;
     }
   });
-  // Client actif = a reçu au moins 3 commandes confirmées (peu importe quand)
-  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 3).length;
+  // Client actif = a reçu au moins 1 commande confirmée (peu importe quand)
+  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 1).length;
   // Client inactif = n'a jamais reçu de commande confirmée
   const inactiveUsers = allShops.filter(s => !confirmedOrdersCountByOwner[s.id]).length;
   const activeRate = totalUsers ? ((activeUsers/totalUsers)*100).toFixed(1) : '0';
@@ -1969,7 +1969,7 @@ async function loadAdminStats() {
       }
     });
     const usersExistingByMonthEnd = allShops.filter(s => new Date(s.created_at) <= m.end);
-    return usersExistingByMonthEnd.filter(s => (countByOwnerUpToMonth[s.id] || 0) >= 3).length;
+    return usersExistingByMonthEnd.filter(s => (countByOwnerUpToMonth[s.id] || 0) >= 1).length;
   });
 
   const inactivePerMonth = months.map((m, i) => {
@@ -2436,7 +2436,7 @@ function recomputeStatsFromLiveData() {
       confirmedOrdersCountByOwner[o.owner_id] = (confirmedOrdersCountByOwner[o.owner_id] || 0) + 1;
     }
   });
-  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 3).length;
+  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 1).length;
   const inactiveUsers = allShops.filter(s => !confirmedOrdersCountByOwner[s.id]).length;
   const activeRate = totalUsers ? ((activeUsers/totalUsers)*100).toFixed(1) : '0';
   const inactiveRate = totalUsers ? ((inactiveUsers/totalUsers)*100).toFixed(1) : '0';
