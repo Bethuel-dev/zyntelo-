@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zyntelo</title>
 <link rel="manifest" href="/manifest.json">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <meta name="theme-color" content="#1A56E8">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
@@ -179,6 +180,7 @@ tr:hover td{background:#fafafa;}
 .nav-item:hover{color:#fff;background:#111;}
 .nav-item.active{color:#fff;background:#111;border-left-color:var(--blue);}
 .nav-item .ni{font-size:15px;width:18px;flex-shrink:0;}
+.ni svg{width:17px;height:17px;stroke:currentColor;flex-shrink:0;vertical-align:-3px;}
 .sb-foot{padding:16px 18px;border-top:1px solid #1f1f1f;}
 .u-info{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
 .u-ava{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
@@ -732,18 +734,18 @@ canvas{display:block;}
       <div class="zlogo"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name w">Zyntelo</span></div>
     </div>
     <nav class="sb-nav">
-      <div class="nav-item active" onclick="pg('p-overview',this)"><span class="ni">📊</span>Tableau de bord</div>
-      <div class="nav-item" onclick="pg('p-boutique',this)"><span class="ni">🏪</span>Ma boutique</div>
-      <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni">🎨</span>Apparence</div>
-      <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni">📦</span>Produits</div>
-      <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni">🔥</span>Offres promotionnelles</div>
-      <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni">📋</span>Commandes</div>
-      <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni">👥</span>Clients</div>
-      <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni">🗃️</span>Stock</div>
-      <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni">📈</span>Statistiques</div>
-      <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni">👤</span>Gérant</div>
-      <div class="nav-item" onclick="pg('p-abo',this)"><span class="ni">💳</span>Abonnement</div>
-      <div class="nav-item" onclick="pg('p-aide',this)"><span class="ni">🆘</span>Centre d'aide</div>
+      <div class="nav-item active" onclick="pg('p-overview',this)"><span class="ni"><i data-lucide="layout-dashboard"></i></span>Tableau de bord</div>
+      <div class="nav-item" onclick="pg('p-boutique',this)"><span class="ni"><i data-lucide="store"></i></span>Ma boutique</div>
+      <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni"><i data-lucide="palette"></i></span>Apparence</div>
+      <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
+      <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
+      <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
+      <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
+      <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
+      <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni"><i data-lucide="trending-up"></i></span>Statistiques</div>
+      <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni"><i data-lucide="user-cog"></i></span>Gérant</div>
+      <div class="nav-item" onclick="pg('p-abo',this)"><span class="ni"><i data-lucide="credit-card"></i></span>Abonnement</div>
+      <div class="nav-item" onclick="pg('p-aide',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Centre d'aide</div>
     </nav>
     <div class="sb-foot">
       <div class="u-info"><div class="u-ava" id="d-ava">J</div><div><div class="u-name" id="d-name">Mon compte</div><div class="u-plan" id="d-plan">Actif ✓</div></div></div>
@@ -1246,13 +1248,13 @@ canvas{display:block;}
   <aside class="sidebar">
     <div class="sb-logo"><div class="zlogo"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name w">Admin</span></div></div>
     <nav class="sb-nav">
-      <div class="nav-item active" onclick="admPg('adm-clients',this)"><span class="ni">👥</span>Clients</div>
-      <div class="nav-item" onclick="admPg('adm-messages',this)"><span class="ni">💬</span>Messages</div>
-      <div class="nav-item" onclick="admPg('adm-abos',this)"><span class="ni">💳</span>Abonnements</div>
-      <div class="nav-item" onclick="admPg('adm-profil',this)"><span class="ni">👤</span>Mon profil</div>
-      <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni">⭐</span>Avis</div>
-      <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni">📊</span>Statistiques</div>
-      <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni">🆘</span>Préoccupations</div>
+      <div class="nav-item active" onclick="admPg('adm-clients',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
+      <div class="nav-item" onclick="admPg('adm-messages',this)"><span class="ni"><i data-lucide="message-square"></i></span>Messages</div>
+      <div class="nav-item" onclick="admPg('adm-abos',this)"><span class="ni"><i data-lucide="credit-card"></i></span>Abonnements</div>
+      <div class="nav-item" onclick="admPg('adm-profil',this)"><span class="ni"><i data-lucide="user"></i></span>Mon profil</div>
+      <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni"><i data-lucide="star"></i></span>Avis</div>
+      <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni"><i data-lucide="bar-chart-3"></i></span>Statistiques</div>
+      <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1822,6 +1824,14 @@ function refreshMobileMenuButtonVisibility() {
   btn.style.visibility = hasSidebar ? 'visible' : 'hidden';
 }
 
+// Convertit toutes les balises <i data-lucide="..."> visibles en vraies icônes
+// SVG. Sans danger si la bibliothèque n'a pas encore chargé (ex: CDN lent) —
+// dans ce cas, le texte/emoji de secours éventuel reste affiché normalement.
+function refreshLucideIcons() {
+  try { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); }
+  catch (e) { console.error('refreshLucideIcons error', e); }
+}
+
 function go(screenId) {
   document.querySelectorAll('.screen,.flex-screen').forEach(s => {
     s.classList.remove('on');
@@ -1834,6 +1844,7 @@ function go(screenId) {
   if (screenId === 's-admin-login') navTo('/admin');
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
+  refreshLucideIcons();
 }
 
 function pg(pageId, el) {
@@ -1852,6 +1863,7 @@ function pg(pageId, el) {
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-aide') openHelpCenter(); else stopHelpPolling();
   closeMobileSidebar();
+  refreshLucideIcons();
 }
 
 function admPg(pageId, el) {
@@ -1867,6 +1879,7 @@ function admPg(pageId, el) {
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
   closeMobileSidebar();
+  refreshLucideIcons();
 }
 
 async function renderAdminReviews() {
@@ -4612,6 +4625,12 @@ function updTotal() {
 }
 
 async function notifyOwnerNewOrder(orderData) {
+  // Email et push sont indépendants : on les lance en parallèle, sans jamais
+  // attendre l'un pour démarrer l'autre — la notification push (visible sur
+  // l'écran verrouillé) ne doit jamais être retardée par la lenteur de l'email.
+  sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
+    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} FCFA`);
+
   try {
     const { data, error } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: ownerId() });
     if (error) { console.error('notifyOwnerNewOrder: erreur récupération contact', error); return; }
@@ -4626,11 +4645,8 @@ async function notifyOwnerNewOrder(orderData) {
       dashboardLink: `${window.location.origin}/login?goto=commandes`
     };
 
-    await sendOrderEmailWithRetry(emailPayload);
+    sendOrderEmailWithRetry(emailPayload); // sans await : ne retarde jamais rien d'autre
   } catch (e) { console.error('notifyOwnerNewOrder error', e); }
-  // Notification push, en plus de l'email — ne bloque jamais et n'affecte pas l'email ci-dessus
-  sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
-    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} FCFA`);
 }
 
 // Envoie l'email de notification, avec logs détaillés en cas d'échec et une
@@ -5060,18 +5076,39 @@ function renderHelpChat() {
   box.scrollTop = box.scrollHeight;
 }
 
+let hcRealtimeChannel = null;
+
 async function openHelpCenter() {
   await loadHelpMessages();
   renderHelpChat();
   stopHelpPolling();
+
+  // Temps réel : dès qu'un nouveau message arrive (réponse admin), il
+  // s'affiche immédiatement, sans attendre le prochain cycle de vérification.
+  if (S.user && !S.isGerant) {
+    if (hcRealtimeChannel) { sb.removeChannel(hcRealtimeChannel); hcRealtimeChannel = null; }
+    hcRealtimeChannel = sb
+      .channel('help-chat-listen-' + S.user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages', filter: `participant_id=eq.${S.user.id}` }, async () => {
+        await loadHelpMessages();
+        renderHelpChat();
+      })
+      .subscribe();
+  }
+
+  // Filet de sécurité : si jamais le temps réel manque un événement (coupure
+  // réseau ponctuelle...), ce polling moins fréquent rattrape malgré tout.
   hcPollTimer = setInterval(async () => {
     const before = hcMessages.length;
     await loadHelpMessages();
     if (hcMessages.length !== before) renderHelpChat();
-  }, 5000);
+  }, 15000);
 }
 
-function stopHelpPolling() { if (hcPollTimer) { clearInterval(hcPollTimer); hcPollTimer = null; } }
+function stopHelpPolling() {
+  if (hcPollTimer) { clearInterval(hcPollTimer); hcPollTimer = null; }
+  if (hcRealtimeChannel) { sb.removeChannel(hcRealtimeChannel); hcRealtimeChannel = null; }
+}
 
 async function sendHelpMessage() {
   const ta = document.getElementById('hc-text');
@@ -5114,18 +5151,36 @@ let admSupportPollTimer = null;
 let admThreads = [];
 let admOpenPid = null;
 
+let admSupportRealtimeChannel = null;
+
 async function openAdminSupport() {
   admOpenPid = null;
   await loadAdminThreads();
   renderAdminThreadList();
   stopAdminSupportPolling();
+
+  // Temps réel : un nouveau message (préoccupation ou réponse) déclenche
+  // immédiatement le rafraîchissement, sans attendre le prochain cycle.
+  if (admSupportRealtimeChannel) { sb.removeChannel(admSupportRealtimeChannel); admSupportRealtimeChannel = null; }
+  admSupportRealtimeChannel = sb
+    .channel('admin-support-listen')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_messages' }, async () => {
+      await loadAdminThreads();
+      if (admOpenPid) renderAdminThreadView(admOpenPid); else renderAdminThreadList();
+    })
+    .subscribe();
+
+  // Filet de sécurité, moins fréquent qu'avant — le temps réel fait le gros du travail
   admSupportPollTimer = setInterval(async () => {
     await loadAdminThreads();
     if (admOpenPid) renderAdminThreadView(admOpenPid); else renderAdminThreadList();
-  }, 5000);
+  }, 15000);
 }
 
-function stopAdminSupportPolling() { if (admSupportPollTimer) { clearInterval(admSupportPollTimer); admSupportPollTimer = null; } }
+function stopAdminSupportPolling() {
+  if (admSupportPollTimer) { clearInterval(admSupportPollTimer); admSupportPollTimer = null; }
+  if (admSupportRealtimeChannel) { sb.removeChannel(admSupportRealtimeChannel); admSupportRealtimeChannel = null; }
+}
 
 async function loadAdminThreads() {
   const { data } = await sb.from('support_messages').select('*').order('created_at', { ascending: true });
@@ -5475,6 +5530,18 @@ async function sendMsgAll() {
 // LANCER
 // ═══════════════════════════════════════════════
 init();
+refreshLucideIcons();
+
+// Filet de sécurité global : si du nouveau contenu contenant des icônes
+// Lucide est injecté dynamiquement ailleurs dans l'app (rendu de listes,
+// cartes, etc.), elles sont automatiquement converties, sans qu'on ait
+// besoin d'ajouter refreshLucideIcons() à chaque fonction de rendu une par une.
+let _lucideObserverTimeout = null;
+new MutationObserver(() => {
+  clearTimeout(_lucideObserverTimeout);
+  _lucideObserverTimeout = setTimeout(refreshLucideIcons, 80);
+}).observe(document.body, { childList: true, subtree: true });
+
 </script>
 </body>
 </html>
