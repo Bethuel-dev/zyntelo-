@@ -745,6 +745,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni"><i data-lucide="trending-up"></i></span>Statistiques</div>
       <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni"><i data-lucide="user-cog"></i></span>Gérant</div>
       <div class="nav-item" onclick="pg('p-abo',this)"><span class="ni"><i data-lucide="credit-card"></i></span>Abonnement</div>
+      <div class="nav-item gerant-only" style="display:none" onclick="pg('p-gerant-notifs',this)"><span class="ni"><i data-lucide="bell"></i></span>Notifications</div>
       <div class="nav-item" onclick="pg('p-aide',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Centre d'aide</div>
     </nav>
     <div class="sb-foot">
@@ -1117,6 +1118,16 @@ canvas{display:block;}
         .hc-input{display:flex;gap:8px;margin-top:12px}
         .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;height:46px}
       </style>
+      <!-- NOTIFICATIONS (gérant uniquement) -->
+      <div class="dash-page gerant-only" id="p-gerant-notifs" style="display:none">
+        <div class="page-head"><h1>Notifications</h1><p>Soyez averti instantanément des nouvelles commandes de la boutique.</p></div>
+        <div class="card">
+          <div class="card-title">🔔 Notifications</div>
+          <p style="font-size:13px;color:var(--gray);margin-bottom:12px">Recevez un email et une alerte sur votre téléphone dès qu'une commande arrive.</p>
+          <button class="btn btn-blue btn-sm" onclick="enablePushNotifications()">Activer les notifications</button>
+        </div>
+      </div>
+
       <div class="dash-page" id="p-aide">
         <div class="page-head"><h1>Centre d'aide</h1><p>Une question, un souci ? Écrivez à l'équipe Zyntelo.</p></div>
         <div class="hc-wrap">
@@ -2541,7 +2552,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-aide'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-aide', 'p-gerant-notifs'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -4639,24 +4650,35 @@ async function notifyOwnerNewOrder(orderData) {
   // Email et push sont indépendants : on les lance en parallèle, sans jamais
   // attendre l'un pour démarrer l'autre — la notification push (visible sur
   // l'écran verrouillé) ne doit jamais être retardée par la lenteur de l'email.
+  // Le push touche déjà tous les appareils abonnés sur cet owner_id, gérants
+  // inclus (chacun a son propre abonnement, même owner_id, endpoint différent).
   sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
     '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} FCFA`);
+
+  const basePayload = {
+    shopName: null, // rempli plus bas une fois connu
+    prodName: orderData.prodName, qty: orderData.qty, total: orderData.total,
+    prenom: orderData.prenom, ville: orderData.ville, qrt: orderData.qrt, tel: orderData.tel,
+    orderRef: orderData.id || orderData._rowId || '',
+    date: orderData.date, heure: new Date(orderData.createdAt||Date.now()).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    dashboardLink: `${window.location.origin}/login?goto=commandes`
+  };
 
   try {
     const { data, error } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: ownerId() });
     if (error) { console.error('notifyOwnerNewOrder: erreur récupération contact', error); return; }
     if (!data || !data.email) { console.error('notifyOwnerNewOrder: aucun email trouvé pour cette boutique', ownerId()); return; }
 
-    const emailPayload = {
-      to: data.email, shopName: data.shop_name,
-      prodName: orderData.prodName, qty: orderData.qty, total: orderData.total,
-      prenom: orderData.prenom, ville: orderData.ville, qrt: orderData.qrt, tel: orderData.tel,
-      orderRef: orderData.id || orderData._rowId || '',
-      date: orderData.date, heure: new Date(orderData.createdAt||Date.now()).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
-      dashboardLink: `${window.location.origin}/login?goto=commandes`
-    };
+    sendOrderEmailWithRetry({ ...basePayload, to: data.email, shopName: data.shop_name }); // sans await : ne retarde jamais rien d'autre
 
-    sendOrderEmailWithRetry(emailPayload); // sans await : ne retarde jamais rien d'autre
+    // En plus du propriétaire, on envoie le même email à chaque gérant actif
+    // de cette boutique — jamais bloquant, jamais en série les uns avec les autres.
+    sb.rpc('get_active_gerants_for_notification', { p_owner_id: ownerId() }).then(({ data: gerants, error: gErr }) => {
+      if (gErr) { console.error('notifyOwnerNewOrder: erreur récupération gérants', gErr); return; }
+      (gerants || []).forEach(g => {
+        sendOrderEmailWithRetry({ ...basePayload, to: g.email, shopName: data.shop_name });
+      });
+    });
   } catch (e) { console.error('notifyOwnerNewOrder error', e); }
 }
 
