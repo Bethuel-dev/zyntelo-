@@ -2475,7 +2475,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -4053,12 +4053,22 @@ async function savePromoOffer() {
   if (!S.promoOffers) S.promoOffers = [];
 
   if (id) {
-    const { error } = await sb.from('promo_offers').update({ name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted }).eq('id', id);
-    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    if (S.isGerant) {
+      const { data, error } = await sb.rpc('gerant_save_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id, p_name: name, p_start_date: startDate, p_end_date: endDate, p_product_ids: productIds, p_tiers: tiersSorted });
+      if (error || !data || !data.success) { toast('Erreur : impossible de modifier l\'offre.', 'err'); console.error('gerant_save_promo error', error, data); return; }
+    } else {
+      const { error } = await sb.from('promo_offers').update({ name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted }).eq('id', id);
+      if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    }
     toast('Offre modifiée ✓');
   } else {
-    const { error } = await sb.from('promo_offers').insert({ owner_id: ownerId(), name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted });
-    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    if (S.isGerant) {
+      const { data, error } = await sb.rpc('gerant_save_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: null, p_name: name, p_start_date: startDate, p_end_date: endDate, p_product_ids: productIds, p_tiers: tiersSorted });
+      if (error || !data || !data.success) { toast('Erreur : impossible de créer l\'offre.', 'err'); console.error('gerant_save_promo error', error, data); return; }
+    } else {
+      const { error } = await sb.from('promo_offers').insert({ owner_id: ownerId(), name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted });
+      if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    }
     toast('Offre créée ✓');
   }
   hidePromoForm();
@@ -4233,15 +4243,25 @@ function renderPromoOffers() {
 }
 
 async function togglePromoActive(id, newState) {
-  const { error } = await sb.from('promo_offers').update({ active: newState }).eq('id', id);
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (S.isGerant) {
+    const { data, error } = await sb.rpc('gerant_toggle_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id, p_active: newState });
+    if (error || !data || !data.success) { toast('Erreur : action impossible.', 'err'); console.error('gerant_toggle_promo error', error, data); return; }
+  } else {
+    const { error } = await sb.from('promo_offers').update({ active: newState }).eq('id', id);
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  }
   await loadPromoOffers();
 }
 
 async function deletePromoOffer(id) {
   if (!confirm('Supprimer cette offre ?')) return;
-  const { error } = await sb.from('promo_offers').delete().eq('id', id);
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (S.isGerant) {
+    const { data, error } = await sb.rpc('gerant_delete_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id });
+    if (error || !data || !data.success) { toast('Erreur : suppression impossible.', 'err'); console.error('gerant_delete_promo error', error, data); return; }
+  } else {
+    const { error } = await sb.from('promo_offers').delete().eq('id', id);
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  }
   toast('Offre supprimée');
   await loadPromoOffers();
 }
