@@ -2244,6 +2244,17 @@ async function saveOwnerPushSubscription(sub) {
   const targetOwnerId = ownerId();
   if (!targetOwnerId) return;
   try {
+    if (S.isGerant) {
+      // Le gérant n'a pas de session Supabase Auth classique — on passe par
+      // une fonction sécurisée, comme pour le reste de ses actions.
+      const { data, error } = await sb.rpc('gerant_save_push_subscription', {
+        p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email,
+        p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
+        p_device_label: navigator.userAgent.slice(0, 60)
+      });
+      if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (gérant)', error, data);
+      return;
+    }
     await sb.from('push_subscriptions').upsert({
       owner_id: targetOwnerId,
       endpoint: subJson.endpoint,
