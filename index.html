@@ -1596,9 +1596,18 @@ function parseRoute() {
   // Détection d'un domaine personnalisé : si le visiteur arrive via le propre
   // domaine d'un commerçant (ex: maboutique.com), on affiche directement sa
   // boutique, sans changer le routage existant par /b/slug pour zyntelo.app.
-  const ZYNTELO_HOSTS = ['zyntelo.app', 'zyntelo.vercel.app', 'localhost', '127.0.0.1'];
-  const hostname = window.location.hostname;
-  const isCustomDomain = !ZYNTELO_HOSTS.includes(hostname) && !hostname.endsWith('.vercel.app');
+  // On reconnaît ici TOUTE variation du domaine Zyntelo (avec ou sans www,
+  // sous-domaines vercel.app...) pour ne jamais bloquer un visiteur légitime
+  // par erreur — mieux vaut être permissif ici que trop strict.
+  const hostname = window.location.hostname.toLowerCase();
+  const isZynteloHost =
+    hostname === 'zyntelo.app' ||
+    hostname === 'www.zyntelo.app' ||
+    hostname.endsWith('.zyntelo.app') ||
+    hostname.endsWith('.vercel.app') ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1';
+  const isCustomDomain = !isZynteloHost;
 
   const path = window.location.pathname.replace(/\/+$/, ''); // enlève le / final
   const parts = path.split('/').filter(Boolean); // ex: ['b','african-s','p','robe']
