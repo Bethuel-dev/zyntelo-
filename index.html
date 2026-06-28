@@ -1811,7 +1811,8 @@ function admPg(pageId, el) {
   if (pageId === 'adm-abos') renderAdminAbos();
   if (pageId === 'adm-messages') renderAdminMessages();
   if (pageId === 'adm-reviews') renderAdminReviews();
-  if (pageId === 'adm-stats') initAdminStats();
+  if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
+  else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   closeMobileSidebar();
 }
 
@@ -1895,11 +1896,15 @@ function initAdminStats() {
 async function loadAdminStats() {
   const { data: shops } = await sb.from('shops').select('id, shop_name, created_at');
   const { data: events } = await sb.from('shop_activity_events').select('owner_id, event_type, created_at');
-  const { data: orders } = await sb.from('orders').select('owner_id, data, created_at');
+  const { data: orders } = await sb.from('orders').select('id, owner_id, data, created_at');
 
   const allShops = shops || [];
   const allEvents = events || [];
-  const allOrders = orders || [];
+  const allOrders = (orders || []).map(o => ({ ...o, _rowId: o.id }));
+
+  // Synchronise la mémoire utilisée par le temps réel avec ces données fraîches —
+  // les prochains événements reçus viendront s'ajouter à cette base correcte.
+  statsLiveData = { shops: allShops, orders: allOrders };
 
   const { from, to } = statsRange;
 
@@ -2237,6 +2242,7 @@ async function logout() {
   await sb.auth.signOut();
   localStorage.removeItem('zyntelo_gerant_session');
   stopOrdersRealtimeListener();
+  stopStatsRealtimeListener();
   S = { user:null, shop:null, products:[], orders:[], gerants:[], curProd:null, orderQty:1, selVariant:null, imgData:[], editImgs:null, isGerant:false };
   // Réafficher tous les onglets (au cas où on était en mode gérant restreint)
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => { item.style.display = ''; });
@@ -2365,6 +2371,81 @@ function startOrdersRealtimeListener(targetOwnerId) {
 
 function stopOrdersRealtimeListener() {
   if (ordersRealtimeChannel) { sb.removeChannel(ordersRealtimeChannel); ordersRealtimeChannel = null; }
+}
+
+// ═══════════════════════════════════════════════
+// TEMPS RÉEL — STATISTIQUES ADMIN
+// ═══════════════════════════════════════════════
+// Garde en mémoire les données déjà chargées, pour ne jamais refaire une
+// grosse requête à chaque petit événement — seul le nécessaire est recalculé,
+// à partir de ce qui est déjà en mémoire + le changement reçu.
+let statsRealtimeChannel = null;
+let statsLiveData = { shops: [], orders: [] };
+
+function startStatsRealtimeListener() {
+  if (statsRealtimeChannel) { sb.removeChannel(statsRealtimeChannel); statsRealtimeChannel = null; }
+  statsRealtimeChannel = sb
+    .channel('admin-stats-listen')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shops' }, (payload) => {
+      // Nouvelle boutique créée : on l'ajoute simplement à la liste déjà en mémoire
+      statsLiveData.shops.push({ id: payload.new.id, shop_name: payload.new.shop_name, created_at: payload.new.created_at });
+      recomputeStatsFromLiveData();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+      statsLiveData.orders.push({ owner_id: payload.new.owner_id, data: payload.new.data, created_at: payload.new.created_at });
+      recomputeStatsFromLiveData();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
+      // Une commande existante a changé (ex: passage à "livrée") : on met à jour
+      // seulement cette ligne précise dans les données déjà en mémoire.
+      const idx = statsLiveData.orders.findIndex(o => o._rowId === payload.new.id);
+      const updated = { owner_id: payload.new.owner_id, data: payload.new.data, created_at: payload.new.created_at, _rowId: payload.new.id };
+      if (idx >= 0) statsLiveData.orders[idx] = updated; else statsLiveData.orders.push(updated);
+      recomputeStatsFromLiveData();
+    })
+    .subscribe();
+}
+
+function stopStatsRealtimeListener() {
+  if (statsRealtimeChannel) { sb.removeChannel(statsRealtimeChannel); statsRealtimeChannel = null; }
+}
+
+// Recalcule uniquement les compteurs affichés, à partir des données déjà en
+// mémoire (jamais une nouvelle requête réseau) — léger et instantané.
+function recomputeStatsFromLiveData() {
+  if (!document.getElementById('adm-stats').classList.contains('on')) return; // n'affiche rien si la page n'est pas visible
+  const allShops = statsLiveData.shops;
+  const allOrders = statsLiveData.orders;
+  const { from, to } = statsRange;
+
+  const totalUsers = allShops.length;
+  const newUsers = allShops.filter(s => { const d = new Date(s.created_at); return d >= from && d <= to; }).length;
+
+  const confirmedOrdersCountByOwner = {};
+  allOrders.forEach(o => {
+    if (o.data && o.data.status === 'livree') {
+      confirmedOrdersCountByOwner[o.owner_id] = (confirmedOrdersCountByOwner[o.owner_id] || 0) + 1;
+    }
+  });
+  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 3).length;
+  const inactiveUsers = allShops.filter(s => !confirmedOrdersCountByOwner[s.id]).length;
+  const activeRate = totalUsers ? ((activeUsers/totalUsers)*100).toFixed(1) : '0';
+  const inactiveRate = totalUsers ? ((inactiveUsers/totalUsers)*100).toFixed(1) : '0';
+
+  const ordersInRange = allOrders.filter(o => { const d = new Date(o.created_at); return d >= from && d <= to; });
+  const confirmedOrders = ordersInRange.filter(o => o.data && o.data.status === 'livree');
+  const totalSales = confirmedOrders.reduce((s,o) => s + (o.data.total||0), 0);
+
+  document.getElementById('sc-total-users').textContent = totalUsers;
+  document.getElementById('sc-new-users').textContent = newUsers;
+  document.getElementById('sc-active-users').textContent = activeUsers;
+  document.getElementById('sc-inactive-users').textContent = inactiveUsers;
+  document.getElementById('sc-active-rate').textContent = activeRate + '%';
+  document.getElementById('sc-inactive-rate').textContent = inactiveRate + '%';
+  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' FCFA';
+  document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
+
+  renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
 }
 
 async function loginAsGerant(g, shop) {
