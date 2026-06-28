@@ -816,8 +816,21 @@ canvas{display:block;}
           <div class="fgrp"><label>Nom de la boutique</label><input id="sh-name" placeholder="Mode Abidjan"></div>
           <div class="fgrp"><label>Description courte</label><textarea id="sh-desc" rows="2" placeholder="Vêtements et accessoires…"></textarea></div>
           <div class="fgrp"><label>WhatsApp (reçus clients)</label><input id="sh-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
-          <div class="fgrp"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
+          <div class="fgrp" style="display:none"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
           <button class="btn btn-blue btn-sm" onclick="saveShop()">Enregistrer</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🌐 Nom de domaine personnalisé</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Utilisez votre propre nom de domaine (ex: maboutique.com) au lieu du lien Zyntelo par défaut. Vous devez d'abord avoir acheté ce domaine ailleurs (Namecheap, GoDaddy, OVH...).</p>
+          <div id="domain-status-box" style="display:none;margin-bottom:12px;padding:12px;border-radius:8px;font-size:13px;"></div>
+          <div class="fgrp"><label>Votre domaine</label><input id="cd-domain-input" placeholder="maboutique.com"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-blue btn-sm" onclick="connectCustomDomain()">Connecter ce domaine</button>
+            <button class="btn btn-ghost btn-sm" id="cd-recheck-btn" style="display:none" onclick="recheckCustomDomain()">Vérifier le statut</button>
+            <button class="btn btn-ghost btn-sm" id="cd-remove-btn" style="display:none;color:var(--red)" onclick="removeCustomDomain()">Retirer</button>
+          </div>
+          <div id="domain-dns-instructions" style="display:none;margin-top:14px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:12px;font-family:monospace;"></div>
         </div>
       </div>
 
@@ -1406,7 +1419,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, blocked:data.blocked, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{} };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{} };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -1557,8 +1570,26 @@ let S = {
 // ROUTAGE URL (liens publics partageables)
 // ═══════════════════════════════════════════════
 function parseRoute() {
+  // Détection d'un domaine personnalisé : si le visiteur arrive via le propre
+  // domaine d'un commerçant (ex: maboutique.com), on affiche directement sa
+  // boutique, sans changer le routage existant par /b/slug pour zyntelo.app.
+  const ZYNTELO_HOSTS = ['zyntelo.app', 'zyntelo.vercel.app', 'localhost', '127.0.0.1'];
+  const hostname = window.location.hostname;
+  const isCustomDomain = !ZYNTELO_HOSTS.includes(hostname) && !hostname.endsWith('.vercel.app');
+
   const path = window.location.pathname.replace(/\/+$/, ''); // enlève le / final
   const parts = path.split('/').filter(Boolean); // ex: ['b','african-s','p','robe']
+
+  if (isCustomDomain) {
+    // Sur un domaine personnalisé, on garde la même structure de sous-pages
+    // (catalogue, produit...) mais sans le préfixe /b/slug — la boutique est
+    // déterminée par le domaine lui-même, pas par l'URL.
+    if (parts[0] === 'p' && parts[1]) return { type: 'shop', customDomain: hostname, page: 'product', prodSlug: parts[1] };
+    if (parts[0] === 'catalogue') return { type: 'shop', customDomain: hostname, page: 'catalogue' };
+    if (parts[0] === 'categorie' && parts[1]) return { type: 'shop', customDomain: hostname, page: 'category', catSlug: parts[1] };
+    return { type: 'shop', customDomain: hostname, page: 'home' };
+  }
+
   if (parts[0] === 'b' && parts[1]) {
     if (parts[2] === 'p' && parts[3]) return { type: 'shop', shopSlug: parts[1], page: 'product', prodSlug: parts[3] };
     if (parts[2] === 'catalogue') return { type: 'shop', shopSlug: parts[1], page: 'catalogue' };
@@ -1744,6 +1775,7 @@ function pg(pageId, el) {
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
+  if (pageId === 'p-boutique') renderDomainStatus();
   closeMobileSidebar();
 }
 
@@ -2812,6 +2844,93 @@ async function removeLogo() {
   toast('Logo retiré');
 }
 
+// ═══════════════════════════════════════════════
+// DOMAINE PERSONNALISÉ (connexion en autonomie via API Vercel)
+// ═══════════════════════════════════════════════
+function renderDomainStatus() {
+  const box = document.getElementById('domain-status-box');
+  const recheckBtn = document.getElementById('cd-recheck-btn');
+  const removeBtn = document.getElementById('cd-remove-btn');
+  const dnsBox = document.getElementById('domain-dns-instructions');
+  const status = S.shop.domainStatus;
+  const domain = S.shop.domain;
+
+  if (!domain) {
+    box.style.display = 'none'; recheckBtn.style.display = 'none'; removeBtn.style.display = 'none'; dnsBox.style.display = 'none';
+    return;
+  }
+  document.getElementById('cd-domain-input').value = domain;
+  recheckBtn.style.display = ''; removeBtn.style.display = '';
+  box.style.display = 'block';
+
+  if (status === 'active') {
+    box.style.background = 'var(--green-l)'; box.style.color = 'var(--green)';
+    box.textContent = `✅ ${domain} est actif et connecté à votre boutique.`;
+    dnsBox.style.display = 'none';
+  } else if (status === 'error') {
+    box.style.background = 'var(--red-l)'; box.style.color = 'var(--red)';
+    box.textContent = `❌ Erreur : ${S.shop.domainError || 'impossible de connecter ce domaine.'}`;
+    dnsBox.style.display = 'none';
+  } else {
+    box.style.background = '#fff3cd'; box.style.color = '#856404';
+    box.textContent = `⏳ En attente — configurez votre domaine chez votre fournisseur (voir ci-dessous), puis cliquez sur "Vérifier le statut".`;
+    dnsBox.style.display = 'block';
+    dnsBox.innerHTML = `Chez votre fournisseur de domaine, ajoutez un enregistrement :<br><br>
+      Type : <strong>A</strong><br>
+      Nom : <strong>@</strong><br>
+      Valeur : <strong>76.76.21.21</strong><br><br>
+      (Pour www.${domain}, ajoutez aussi un CNAME pointant vers <strong>cname.vercel-dns.com</strong>)`;
+  }
+}
+
+async function connectCustomDomain() {
+  const domain = document.getElementById('cd-domain-input').value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+  if (!domain || !domain.includes('.')) { toast('Entrez un nom de domaine valide (ex: maboutique.com)', 'err'); return; }
+
+  const { data, error } = await sb.functions.invoke('manage-custom-domain', {
+    body: { action: 'add', ownerId: ownerId(), domain }
+  });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (!data.success) { toast('Erreur : ' + data.error, 'err'); return; }
+
+  S.shop.domain = domain;
+  S.shop.domainStatus = 'pending';
+  S.shop.domainError = null;
+  renderDomainStatus();
+  toast('Domaine ajouté ✓ — configurez le DNS comme indiqué ci-dessous');
+}
+
+async function recheckCustomDomain() {
+  const domain = S.shop.domain;
+  if (!domain) return;
+  toast('Vérification en cours…');
+  const { data, error } = await sb.functions.invoke('manage-custom-domain', {
+    body: { action: 'check', ownerId: ownerId(), domain }
+  });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (!data.success) { toast('Erreur : ' + data.error, 'err'); return; }
+
+  S.shop.domainStatus = data.status;
+  renderDomainStatus();
+  toast(data.verified ? '✅ Domaine actif !' : '⏳ Pas encore vérifié, le DNS peut prendre du temps à se propager');
+}
+
+async function removeCustomDomain() {
+  const domain = S.shop.domain;
+  if (!domain) return;
+  if (!confirm(`Retirer ${domain} de votre boutique ? Votre lien Zyntelo par défaut continuera de fonctionner.`)) return;
+
+  const { error } = await sb.functions.invoke('manage-custom-domain', {
+    body: { action: 'remove', ownerId: ownerId(), domain }
+  });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+
+  S.shop.domain = ''; S.shop.domainStatus = null; S.shop.domainError = null;
+  document.getElementById('cd-domain-input').value = '';
+  renderDomainStatus();
+  toast('Domaine retiré');
+}
+
 async function saveShop() {
   S.shop.name = document.getElementById('sh-name').value || S.shop.name;
   S.shop.wa = document.getElementById('sh-wa').value;
@@ -3308,7 +3427,10 @@ function renderProds() {
 // Chargement PUBLIC d'une boutique à partir de son adresse (slug), sans session.
 // Utilisé quand un client ouvre un lien de boutique partagé.
 async function openPublicShopBySlug(route) {
-  const { data: shop, error } = await sb.from('shops').select('*').eq('slug', route.shopSlug).maybeSingle();
+  const query = sb.from('shops').select('*');
+  const { data: shop, error } = route.customDomain
+    ? await query.eq('domain', route.customDomain).maybeSingle()
+    : await query.eq('slug', route.shopSlug).maybeSingle();
   if (error || !shop) {
     hide('loading');
     go('s-boutique');
