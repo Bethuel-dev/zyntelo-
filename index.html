@@ -743,6 +743,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni">📈</span>Statistiques</div>
       <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni">👤</span>Gérant</div>
       <div class="nav-item" onclick="pg('p-abo',this)"><span class="ni">💳</span>Abonnement</div>
+      <div class="nav-item" onclick="pg('p-aide',this)"><span class="ni">🆘</span>Centre d'aide</div>
     </nav>
     <div class="sb-foot">
       <div class="u-info"><div class="u-ava" id="d-ava">J</div><div><div class="u-name" id="d-name">Mon compte</div><div class="u-plan" id="d-plan">Actif ✓</div></div></div>
@@ -1092,6 +1093,40 @@ canvas{display:block;}
           <p style="font-size:11px;color:var(--gray);margin-top:11px">Après paiement, envoyez votre reçu sur WhatsApp avec votre email. Activation sous 24h.</p>
         </div>
       </div>
+
+      <!-- CENTRE D'AIDE -->
+      <style>
+        .hc-wrap{max-width:680px;margin:0 auto}
+        .hc-chat{background:#fff;border:1px solid var(--gray-l);border-radius:14px;padding:16px;display:flex;flex-direction:column}
+        .hc-msgs{display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:55vh;padding:4px;min-height:280px}
+        .hc-row{display:flex;gap:9px;align-items:flex-end}
+        .hc-row.me{flex-direction:row-reverse}
+        .hc-ava{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;background:linear-gradient(135deg,#7C3AED,#EC4899)}
+        .hc-col{display:flex;flex-direction:column;max-width:78%}
+        .hc-name{font-size:11px;color:var(--gray);margin-bottom:3px;font-weight:600}
+        .hc-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+        .hc-bubble.enola{background:var(--gray-l);border-bottom-left-radius:4px;color:#222}
+        .hc-bubble.me{background:#1A56E8;color:#fff;border-bottom-right-radius:4px}
+        .hc-typing{display:flex;gap:4px;padding:13px 15px;background:var(--gray-l);border-radius:14px;border-bottom-left-radius:4px;width:fit-content}
+        .hc-typing span{width:7px;height:7px;border-radius:50%;background:#9aa;animation:hcbounce 1.2s infinite}
+        .hc-typing span:nth-child(2){animation-delay:.2s}
+        .hc-typing span:nth-child(3){animation-delay:.4s}
+        @keyframes hcbounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
+        .hc-input{display:flex;gap:8px;margin-top:12px}
+        .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;height:46px}
+      </style>
+      <div class="dash-page" id="p-aide">
+        <div class="page-head"><h1>Centre d'aide</h1><p>Une question, un souci ? Écrivez à l'équipe Zyntelo.</p></div>
+        <div class="hc-wrap">
+          <div class="hc-chat">
+            <div class="hc-msgs" id="hc-msgs"></div>
+            <div class="hc-input">
+              <textarea id="hc-text" placeholder="Écrivez votre préoccupation..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHelpMessage();}"></textarea>
+              <button class="btn btn-blue" onclick="sendHelpMessage()">Envoyer</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -1217,6 +1252,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-profil',this)"><span class="ni">👤</span>Mon profil</div>
       <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni">⭐</span>Avis</div>
       <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni">📊</span>Statistiques</div>
+      <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni">🆘</span>Préoccupations</div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1370,6 +1406,13 @@ Merci pour votre confiance 🙏
           <p style="font-size:12px;color:var(--gray);margin-top:-6px;margin-bottom:14px">Progression de chaque boutique vers les badges de performance, basée sur leurs ventes confirmées.</p>
           <div id="badges-progress-list"></div>
         </div>
+      </div>
+
+      <!-- PRÉOCCUPATIONS -->
+      <div class="dash-page" id="adm-support">
+        <div class="page-head"><h1>Préoccupations</h1><p>Les demandes d'aide de vos utilisateurs</p></div>
+        <div id="adm-thread-list"></div>
+        <div id="adm-thread-view" style="display:none"></div>
       </div>
     </div>
   </main>
@@ -1807,6 +1850,7 @@ function pg(pageId, el) {
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
+  if (pageId === 'p-aide') openHelpCenter(); else stopHelpPolling();
   closeMobileSidebar();
 }
 
@@ -1821,6 +1865,7 @@ function admPg(pageId, el) {
   if (pageId === 'adm-reviews') renderAdminReviews();
   if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
+  if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
   closeMobileSidebar();
 }
 
@@ -2251,6 +2296,8 @@ async function logout() {
   localStorage.removeItem('zyntelo_gerant_session');
   stopOrdersRealtimeListener();
   stopStatsRealtimeListener();
+  stopHelpPolling();
+  stopAdminSupportPolling();
   S = { user:null, shop:null, products:[], orders:[], gerants:[], curProd:null, orderQty:1, selVariant:null, imgData:[], editImgs:null, isGerant:false };
   // Réafficher tous les onglets (au cas où on était en mode gérant restreint)
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => { item.style.display = ''; });
@@ -2470,7 +2517,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-aide'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -4964,6 +5011,185 @@ async function sendGerantInviteEmail(email, code) {
     console.error('Erreur envoi email invitation', e);
     toast('Invitation créée, mais l\'email n\'a pas pu être envoyé. Communiquez le code manuellement.', 'err');
   }
+}
+
+// ═══════════════════════════════════════════════
+// CENTRE D'AIDE (marchand) + PRÉOCCUPATIONS (admin)
+// ═══════════════════════════════════════════════
+const ENOLA = { name: 'Enola', initial: 'E' };
+function hcEscape(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---- Côté marchand / gérant ----
+let hcPollTimer = null;
+let hcMessages = [];
+
+async function loadHelpMessages() {
+  if (!S.user) { hcMessages = []; return; }
+  if (S.isGerant) {
+    const { data } = await sb.rpc('gerant_get_concerns', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email });
+    hcMessages = (data && data.success && Array.isArray(data.messages)) ? data.messages : [];
+  } else {
+    const { data } = await sb.from('support_messages')
+      .select('id, sender, body, created_at')
+      .eq('participant_id', S.user.id).eq('participant_type', 'owner')
+      .order('created_at', { ascending: true });
+    hcMessages = data || [];
+    if (hcMessages.some(m => m.sender === 'admin')) {
+      sb.from('support_messages').update({ read_by_user: true })
+        .eq('participant_id', S.user.id).eq('participant_type', 'owner').eq('sender', 'admin').then(() => {});
+    }
+  }
+}
+
+function hcRow(who, text) {
+  const safe = hcEscape(text);
+  if (who === 'me') return `<div class="hc-row me"><div class="hc-col"><div class="hc-bubble me">${safe}</div></div></div>`;
+  return `<div class="hc-row"><div class="hc-ava">${ENOLA.initial}</div><div class="hc-col"><div class="hc-name">${ENOLA.name}</div><div class="hc-bubble enola">${safe}</div></div></div>`;
+}
+
+function renderHelpChat() {
+  const box = document.getElementById('hc-msgs');
+  if (!box) return;
+  let html = hcRow('enola', "Bonjour 👋 Je suis Enola, votre assistante Zyntelo. Quelle est votre préoccupation ?");
+  for (const m of hcMessages) html += hcRow(m.sender === 'admin' ? 'enola' : 'me', m.body);
+  const last = hcMessages[hcMessages.length - 1];
+  if (last && last.sender === 'user') {
+    html += `<div class="hc-row"><div class="hc-ava">${ENOLA.initial}</div><div class="hc-col"><div class="hc-name">${ENOLA.name}</div><div class="hc-typing"><span></span><span></span><span></span></div></div></div>`;
+  }
+  box.innerHTML = html;
+  box.scrollTop = box.scrollHeight;
+}
+
+async function openHelpCenter() {
+  await loadHelpMessages();
+  renderHelpChat();
+  stopHelpPolling();
+  hcPollTimer = setInterval(async () => {
+    const before = hcMessages.length;
+    await loadHelpMessages();
+    if (hcMessages.length !== before) renderHelpChat();
+  }, 5000);
+}
+
+function stopHelpPolling() { if (hcPollTimer) { clearInterval(hcPollTimer); hcPollTimer = null; } }
+
+async function sendHelpMessage() {
+  const ta = document.getElementById('hc-text');
+  const body = (ta.value || '').trim();
+  if (!body) return;
+  ta.value = '';
+  if (S.isGerant) {
+    const { data, error } = await sb.rpc('gerant_send_concern', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_name: S.user.name || S.user.email, p_body: body });
+    if (error || !data || !data.success) { toast('Erreur : message non envoyé.', 'err'); ta.value = body; return; }
+  } else {
+    const name = S.user.shopName || (S.shop && S.shop.name) || S.user.email;
+    const { error } = await sb.from('support_messages').insert({
+      participant_id: S.user.id, participant_type: 'owner', owner_id: S.user.id,
+      participant_name: name, sender: 'user', body
+    });
+    if (error) { toast('Erreur : ' + error.message, 'err'); ta.value = body; return; }
+  }
+  await loadHelpMessages();
+  renderHelpChat();
+}
+
+// ---- Côté admin : Préoccupations ----
+let admSupportPollTimer = null;
+let admThreads = [];
+let admOpenPid = null;
+
+async function openAdminSupport() {
+  admOpenPid = null;
+  await loadAdminThreads();
+  renderAdminThreadList();
+  stopAdminSupportPolling();
+  admSupportPollTimer = setInterval(async () => {
+    await loadAdminThreads();
+    if (admOpenPid) renderAdminThreadView(admOpenPid); else renderAdminThreadList();
+  }, 5000);
+}
+
+function stopAdminSupportPolling() { if (admSupportPollTimer) { clearInterval(admSupportPollTimer); admSupportPollTimer = null; } }
+
+async function loadAdminThreads() {
+  const { data } = await sb.from('support_messages').select('*').order('created_at', { ascending: true });
+  const map = {};
+  for (const m of (data || [])) {
+    if (!map[m.participant_id]) map[m.participant_id] = { pid: m.participant_id, type: m.participant_type, owner_id: m.owner_id, name: m.participant_name || 'Utilisateur', msgs: [], unread: 0 };
+    map[m.participant_id].msgs.push(m);
+    if (m.sender === 'user' && !m.read_by_admin) map[m.participant_id].unread++;
+  }
+  admThreads = Object.values(map).sort((a, b) => b.msgs[b.msgs.length - 1].created_at.localeCompare(a.msgs[a.msgs.length - 1].created_at));
+}
+
+function renderAdminThreadList() {
+  const view = document.getElementById('adm-thread-view'); if (view) view.style.display = 'none';
+  const list = document.getElementById('adm-thread-list'); if (!list) return;
+  list.style.display = 'block';
+  if (!admThreads.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune préoccupation pour le moment.</p>`; return; }
+  list.innerHTML = admThreads.map(t => {
+    const last = t.msgs[t.msgs.length - 1];
+    const snippet = hcEscape((last.body || '').slice(0, 60));
+    const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
+    const dot = t.unread ? `<span style="background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;flex-shrink:0">${t.unread}</span>` : '';
+    return `<div class="card" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px" onclick="openAdminThread('${t.pid}')">
+      <div style="min-width:0">
+        <div style="font-weight:700">${hcEscape(t.name)} <span style="font-size:11px;color:var(--gray);font-weight:500">· ${role}</span></div>
+        <div style="font-size:12px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.sender === 'admin' ? 'Vous : ' : ''}${snippet}</div>
+      </div>${dot}
+    </div>`;
+  }).join('');
+}
+
+async function openAdminThread(pid) {
+  admOpenPid = pid;
+  await sb.from('support_messages').update({ read_by_admin: true }).eq('participant_id', pid).eq('sender', 'user');
+  await loadAdminThreads();
+  renderAdminThreadView(pid);
+}
+
+function renderAdminThreadView(pid) {
+  const t = admThreads.find(x => x.pid === pid);
+  if (!t) { renderAdminThreadList(); return; }
+  document.getElementById('adm-thread-list').style.display = 'none';
+  const view = document.getElementById('adm-thread-view');
+  view.style.display = 'block';
+  const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
+  const bubbles = t.msgs.map(m => {
+    const safe = hcEscape(m.body);
+    if (m.sender === 'admin') return `<div class="hc-row me"><div class="hc-col"><div class="hc-bubble me">${safe}</div></div></div>`;
+    return `<div class="hc-row"><div class="hc-ava" style="background:linear-gradient(135deg,#1A56E8,#22D3EE)">${hcEscape((t.name || 'U').charAt(0).toUpperCase())}</div><div class="hc-col"><div class="hc-name">${hcEscape(t.name)}</div><div class="hc-bubble enola">${safe}</div></div></div>`;
+  }).join('');
+  view.innerHTML = `
+    <button class="btn btn-sm" style="margin-bottom:12px" onclick="backToThreadList()">← Retour</button>
+    <div style="font-weight:800;margin-bottom:10px">${hcEscape(t.name)} <span style="font-size:12px;color:var(--gray);font-weight:500">· ${role}</span></div>
+    <div class="hc-chat">
+      <div class="hc-msgs">${bubbles}</div>
+      <div class="hc-input">
+        <textarea id="adm-reply-text" placeholder="Votre réponse..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminReply();}"></textarea>
+        <button class="btn btn-blue" onclick="sendAdminReply()">Répondre</button>
+      </div>
+    </div>`;
+  const m = view.querySelector('.hc-msgs'); if (m) m.scrollTop = m.scrollHeight;
+}
+
+function backToThreadList() { admOpenPid = null; renderAdminThreadList(); }
+
+async function sendAdminReply() {
+  if (!admOpenPid) return;
+  const t = admThreads.find(x => x.pid === admOpenPid);
+  if (!t) return;
+  const ta = document.getElementById('adm-reply-text');
+  const body = (ta.value || '').trim();
+  if (!body) return;
+  ta.value = '';
+  const { error } = await sb.from('support_messages').insert({
+    participant_id: t.pid, participant_type: t.type, owner_id: t.owner_id,
+    participant_name: t.name, sender: 'admin', body
+  });
+  if (error) { toast('Erreur : ' + error.message, 'err'); ta.value = body; return; }
+  await loadAdminThreads();
+  renderAdminThreadView(admOpenPid);
 }
 
 function formatOrderDateTime(o) {
