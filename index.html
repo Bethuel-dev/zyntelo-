@@ -763,14 +763,6 @@ canvas{display:block;}
           <div class="stat-box"><div class="stat-lbl">Produits</div><div class="stat-val" id="st-prods">0</div></div>
         </div>
         <div class="card">
-          <div class="card-title">🔗 Lien de votre boutique</div>
-          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-            <div style="flex:1;background:var(--gray-l);border-radius:7px;padding:10px 12px;font-size:12px;font-weight:600" id="d-link">zyntelo.com/boutique/ma-boutique</div>
-            <button class="btn btn-blue btn-sm" onclick="previewShop()">👁 Voir</button>
-            <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="shareWA()">📤 Partager</button>
-          </div>
-        </div>
-        <div class="card">
           <div class="card-title">📋 Dernières commandes</div>
           <div id="ov-cmds"><div class="empty"><div class="empty-ico">📭</div><p>Partagez votre boutique pour recevoir des commandes !</p></div></div>
         </div>
@@ -3127,7 +3119,8 @@ async function saveShop() {
 function updateLink() {
   const slug = (S.shop.name||'boutique').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   const link = S.shop.domain || `zyntelo.com/boutique/${slug}`;
-  document.getElementById('d-link').textContent = link;
+  const el = document.getElementById('d-link');
+  if (el) el.textContent = link;
 }
 
 // ═══════════════════════════════════════════════
