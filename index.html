@@ -333,6 +333,23 @@ tr:hover td{background:#fafafa;}
 .stat-card-val{font-size:22px;font-weight:800;font-family:'Syne',sans-serif;}
 .stats-growth-badge{font-size:11px;font-weight:700;color:var(--green);background:var(--green-l);padding:3px 9px;border-radius:100px;margin-left:6px;}
 
+/* PARCOURS DES BADGES */
+.badge-progress-row{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;background:#fff;margin-bottom:14px;}
+.badge-progress-row.bleu{border:2px solid var(--blue);}
+.badge-progress-row.rouge{border:2px solid var(--red);}
+.badge-progress-icon{font-size:32px;flex-shrink:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.badge-progress-row.bleu .badge-progress-icon{background:var(--blue-l);}
+.badge-progress-row.rouge .badge-progress-icon{background:var(--red-l);}
+.badge-progress-body{flex:1;min-width:0;}
+.badge-progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+.badge-progress-title{font-weight:700;font-size:13px;}
+.badge-progress-pct{font-size:12px;font-weight:700;color:var(--gray);}
+.badge-progress-track{width:100%;height:10px;border-radius:100px;background:#f1f3f5;overflow:hidden;}
+.badge-progress-fill{height:100%;border-radius:100px;transition:width .4s ease;}
+.badge-progress-row.bleu .badge-progress-fill{background:linear-gradient(90deg,var(--blue),#4A7FFF);}
+.badge-progress-row.rouge .badge-progress-fill{background:linear-gradient(90deg,var(--red),#FF6B6B);}
+.badge-progress-shop{font-size:11px;color:var(--gray);margin-top:5px;}
+
 /* MENU BOUTIQUE (☰) */
 .shh-menu{display:none;position:absolute;right:18px;top:60px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;min-width:180px;overflow:hidden;}
 .shh-menu.on{display:block;}
@@ -1351,6 +1368,12 @@ Merci pour votre confiance 🙏
           <div class="card-title">⚪ Utilisateurs inactifs <span id="sc-inactive-pct" class="stats-growth-badge"></span></div>
           <canvas id="chart-inactive-users" height="90"></canvas>
         </div>
+
+        <div class="card">
+          <div class="card-title">🏅 Parcours des badges</div>
+          <p style="font-size:12px;color:var(--gray);margin-top:-6px;margin-bottom:14px">Progression de chaque boutique vers les badges de performance, basée sur leurs ventes confirmées.</p>
+          <div id="badges-progress-list"></div>
+        </div>
       </div>
     </div>
   </main>
@@ -1870,7 +1893,7 @@ function initAdminStats() {
 }
 
 async function loadAdminStats() {
-  const { data: shops } = await sb.from('shops').select('id, created_at');
+  const { data: shops } = await sb.from('shops').select('id, shop_name, created_at');
   const { data: events } = await sb.from('shop_activity_events').select('owner_id, event_type, created_at');
   const { data: orders } = await sb.from('orders').select('owner_id, data, created_at');
 
@@ -1880,15 +1903,23 @@ async function loadAdminStats() {
 
   const { from, to } = statsRange;
 
-  // Cartes de résumé (sur la période sélectionnée)
+  // Cartes de résumé (sur la période sélectionnée pour les nouveaux utilisateurs et ventes,
+  // mais "actif/inactif" se base sur l'historique COMPLET de chaque boutique, jamais
+  // filtré par date — un client actif le reste, peu importe la période affichée).
   const totalUsers = allShops.length;
   const newUsers = allShops.filter(s => { const d = new Date(s.created_at); return d >= from && d <= to; }).length;
 
-  const activeOwnerIds = new Set(
-    allEvents.filter(e => { const d = new Date(e.created_at); return d >= from && d <= to; }).map(e => e.owner_id)
-  );
-  const activeUsers = activeOwnerIds.size;
-  const inactiveUsers = Math.max(0, totalUsers - activeUsers);
+  // Compte les commandes confirmées par boutique, sur TOUT l'historique
+  const confirmedOrdersCountByOwner = {};
+  allOrders.forEach(o => {
+    if (o.data && o.data.status === 'livree') {
+      confirmedOrdersCountByOwner[o.owner_id] = (confirmedOrdersCountByOwner[o.owner_id] || 0) + 1;
+    }
+  });
+  // Client actif = a reçu au moins 3 commandes confirmées (peu importe quand)
+  const activeUsers = allShops.filter(s => (confirmedOrdersCountByOwner[s.id] || 0) >= 3).length;
+  // Client inactif = n'a jamais reçu de commande confirmée
+  const inactiveUsers = allShops.filter(s => !confirmedOrdersCountByOwner[s.id]).length;
   const activeRate = totalUsers ? ((activeUsers/totalUsers)*100).toFixed(1) : '0';
   const inactiveRate = totalUsers ? ((inactiveUsers/totalUsers)*100).toFixed(1) : '0';
 
@@ -1905,6 +1936,8 @@ async function loadAdminStats() {
   document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' FCFA';
   document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
 
+  renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
+
   // Construire les points mensuels sur les 12 derniers mois (ou la période si plus courte)
   const months = buildMonthBuckets(from, to);
 
@@ -1913,8 +1946,16 @@ async function loadAdminStats() {
   }).length);
 
   const activePerMonth = months.map(m => {
-    const ids = new Set(allEvents.filter(e => { const d = new Date(e.created_at); return d >= m.start && d <= m.end; }).map(e => e.owner_id));
-    return ids.size;
+    // Commandes confirmées entre le début et la fin de ce mois (cumul historique)
+    const countByOwnerUpToMonth = {};
+    allOrders.forEach(o => {
+      const d = new Date(o.created_at);
+      if (o.data && o.data.status === 'livree' && d <= m.end) {
+        countByOwnerUpToMonth[o.owner_id] = (countByOwnerUpToMonth[o.owner_id] || 0) + 1;
+      }
+    });
+    const usersExistingByMonthEnd = allShops.filter(s => new Date(s.created_at) <= m.end);
+    return usersExistingByMonthEnd.filter(s => (countByOwnerUpToMonth[s.id] || 0) >= 3).length;
   });
 
   const inactivePerMonth = months.map((m, i) => {
@@ -1933,6 +1974,55 @@ async function loadAdminStats() {
   drawLineChart('chart-new-users', months.map(m=>m.label), newUsersPerMonth, '#1A56E8');
   drawLineChart('chart-active-users', months.map(m=>m.label), activePerMonth, '#16A34A');
   drawLineChart('chart-inactive-users', months.map(m=>m.label), inactivePerMonth, '#9CA3AF');
+}
+
+// Affiche, pour chaque boutique, sa progression vers le badge Pro (100 ventes)
+// et le badge Meilleur (500 ventes) — toujours basé sur le total HISTORIQUE
+// des ventes confirmées, jamais filtré par la période sélectionnée, pour que
+// la progression soit cohérente avec les vrais badges déjà attribués.
+function renderBadgesProgress(allShops, confirmedOrdersCountByOwner) {
+  const list = document.getElementById('badges-progress-list');
+  if (!list) return;
+
+  // Trie les boutiques par nombre de ventes décroissant — les plus proches
+  // d'un badge apparaissent en premier, plus motivant à consulter.
+  const sorted = allShops
+    .map(s => ({ ...s, sales: confirmedOrdersCountByOwner[s.id] || 0 }))
+    .sort((a, b) => b.sales - a.sales);
+
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty"><p>Aucune boutique pour le moment.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(s => {
+    const bluePct = Math.min(100, (s.sales / 100) * 100);
+    const redPct = Math.min(100, (s.sales / 500) * 100);
+    const name = s.shop_name || 'Boutique sans nom';
+    return `
+      <div class="badge-progress-row bleu">
+        <div class="badge-progress-icon">🏅</div>
+        <div class="badge-progress-body">
+          <div class="badge-progress-top">
+            <span class="badge-progress-title">${name} — Badge Pro Bleu</span>
+            <span class="badge-progress-pct">${bluePct.toFixed(bluePct === 100 || bluePct === 0 ? 0 : 1)}%</span>
+          </div>
+          <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${bluePct}%"></div></div>
+          <div class="badge-progress-shop">${s.sales} / 100 ventes confirmées</div>
+        </div>
+      </div>
+      <div class="badge-progress-row rouge">
+        <div class="badge-progress-icon">🏆</div>
+        <div class="badge-progress-body">
+          <div class="badge-progress-top">
+            <span class="badge-progress-title">${name} — Badge Meilleur Rouge</span>
+            <span class="badge-progress-pct">${redPct.toFixed(redPct === 100 || redPct === 0 ? 0 : 1)}%</span>
+          </div>
+          <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${redPct}%"></div></div>
+          <div class="badge-progress-shop">${s.sales} / 500 ventes confirmées</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function buildMonthBuckets(from, to) {
