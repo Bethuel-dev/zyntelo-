@@ -5078,9 +5078,11 @@ async function sendHelpMessage() {
   const body = (ta.value || '').trim();
   if (!body) return;
   ta.value = '';
+  let senderName, senderRole;
   if (S.isGerant) {
     const { data, error } = await sb.rpc('gerant_send_concern', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_name: S.user.name || S.user.email, p_body: body });
     if (error || !data || !data.success) { toast('Erreur : message non envoyé.', 'err'); ta.value = body; return; }
+    senderName = S.user.name || S.user.email; senderRole = 'Gérant';
   } else {
     const name = S.user.shopName || (S.shop && S.shop.name) || S.user.email;
     const { error } = await sb.from('support_messages').insert({
@@ -5088,9 +5090,23 @@ async function sendHelpMessage() {
       participant_name: name, sender: 'user', body
     });
     if (error) { toast('Erreur : ' + error.message, 'err'); ta.value = body; return; }
+    senderName = name; senderRole = 'Marchand';
   }
   await loadHelpMessages();
   renderHelpChat();
+  // Email à l'admin — additif, ne bloque jamais l'envoi du message lui-même
+  notifySupportMessage('new_concern', 'supportzyntelo@gmail.com', senderName, senderRole, body, `${window.location.origin}/admin`);
+}
+
+// Envoie un email de notification (nouvelle préoccupation pour l'admin, ou
+// réponse pour le marchand/gérant) — toujours en arrière-plan, sans jamais
+// bloquer l'envoi du message lui-même en cas d'échec.
+async function notifySupportMessage(type, to, name, role, body, dashboardLink) {
+  try {
+    await sb.functions.invoke('notify-support-message', {
+      body: { type, to, name, role, body, dashboardLink }
+    });
+  } catch (e) { console.error('notifySupportMessage error', type, e); }
 }
 
 // ---- Côté admin : Préoccupations ----
@@ -5190,6 +5206,27 @@ async function sendAdminReply() {
   if (error) { toast('Erreur : ' + error.message, 'err'); ta.value = body; return; }
   await loadAdminThreads();
   renderAdminThreadView(admOpenPid);
+
+  // Email au marchand ou gérant concerné — additif, ne bloque jamais l'envoi du message
+  notifyParticipantOfReply(t, body);
+}
+
+// Récupère l'email du bon destinataire (marchand ou gérant) et lui envoie
+// l'email de notification, sans jamais bloquer l'enregistrement de la réponse.
+async function notifyParticipantOfReply(t, body) {
+  try {
+    let toEmail = null;
+    if (t.type === 'gerant') {
+      // Pour un gérant, participant_id correspond à son propre email
+      toEmail = t.pid;
+    } else {
+      const { data, error } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: t.owner_id });
+      if (!error && data && data.email) toEmail = data.email;
+    }
+    if (!toEmail) { console.error('notifyParticipantOfReply: email introuvable pour', t); return; }
+    const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
+    await notifySupportMessage('admin_reply', toEmail, t.name, role, body, `${window.location.origin}/login`);
+  } catch (e) { console.error('notifyParticipantOfReply error', e); }
 }
 
 function formatOrderDateTime(o) {
