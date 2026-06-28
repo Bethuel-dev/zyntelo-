@@ -1654,13 +1654,13 @@ async function init() {
   if (gerantSession) {
     try {
       const { gerantId, email } = JSON.parse(gerantSession);
-      const { data: g } = await sb.from('shop_gerants').select('*').eq('id', gerantId).eq('email', email).maybeSingle();
-      if (g && g.status === 'active') {
-        const { data: shop } = await sb.from('shops').select('*').eq('id', g.owner_id).maybeSingle();
-        if (shop && !shop.blocked) {
-          await loginAsGerant(g, shop);
-          hide('loading'); return;
-        }
+      const { data } = await sb.rpc('gerant_resume_session', { p_gerant_id: gerantId, p_email: email });
+      if (data && data.success) {
+        await loginAsGerant(
+          { id: data.gerant_id, email: data.email, name: data.name },
+          { id: data.owner_id, shop_name: data.shop_name, slug: data.shop_slug, wa: data.shop_wa, blocked: false }
+        );
+        hide('loading'); return;
       }
       // session invalide (révoquée, boutique bloquée, etc.)
       localStorage.removeItem('zyntelo_gerant_session');
@@ -1732,10 +1732,13 @@ async function goToMySpace() {
   if (gerantSession) {
     try {
       const { gerantId, email } = JSON.parse(gerantSession);
-      const { data: g } = await sb.from('shop_gerants').select('*').eq('id', gerantId).eq('email', email).maybeSingle();
-      if (g && g.status === 'active') {
-        const { data: shop } = await sb.from('shops').select('*').eq('id', g.owner_id).maybeSingle();
-        if (shop && !shop.blocked) { await loginAsGerant(g, shop); hide('loading'); return; }
+      const { data } = await sb.rpc('gerant_resume_session', { p_gerant_id: gerantId, p_email: email });
+      if (data && data.success) {
+        await loginAsGerant(
+          { id: data.gerant_id, email: data.email, name: data.name },
+          { id: data.owner_id, shop_name: data.shop_name, slug: data.shop_slug, wa: data.shop_wa, blocked: false }
+        );
+        hide('loading'); return;
       }
     } catch {}
   }
