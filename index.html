@@ -1052,6 +1052,10 @@ canvas{display:block;}
           <div class="card-title">💰 Évolution du chiffre d'affaires</div>
           <canvas id="chart-ca" height="180"></canvas>
         </div>
+        <div class="card">
+          <div class="card-title">🏅 Mon parcours des badges</div>
+          <div id="my-badges-progress"></div>
+        </div>
       </div>
 
       <!-- GÉRANT -->
@@ -4802,6 +4806,55 @@ function renderStats() {
   const months=Object.keys(caByMonth).sort();
   const caVals=months.map(m=>caByMonth[m]);
   drawLineChart('chart-ca', months.length?months:['Aucune donnée'], months.length?caVals:[0], '#1A56E8');
+  renderMyBadgesProgress(valide);
+}
+
+// Parcours des badges du marchand lui-même — affiché dans SA page Statistiques pour le
+// motiver à progresser vers les paliers Pro Bleu (100 ventes) et Meilleur Rouge (500).
+// Basé sur le nombre de commandes livrées de sa boutique (cohérent avec « Commandes validées »).
+function renderMyBadgesProgress(sales) {
+  const box = document.getElementById('my-badges-progress');
+  if (!box) return;
+  const s = sales || 0;
+  const bluePct = Math.min(100, (s / 100) * 100);
+  const redPct = Math.min(100, (s / 500) * 100);
+  const fmt = p => p.toFixed(p === 100 || p === 0 ? 0 : 1);
+
+  let encouragement;
+  if (s >= 500) {
+    encouragement = '🏆 Bravo ! Vous avez atteint le plus haut niveau : le badge Meilleur Rouge. Vous faites partie des vendeurs les plus performants de Zyntelo !';
+  } else if (s >= 100) {
+    const reste = 500 - s;
+    encouragement = `🏅 Badge Pro Bleu obtenu ! Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour décrocher le badge Meilleur Rouge.`;
+  } else {
+    const reste = 100 - s;
+    encouragement = `Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour débloquer votre premier badge : le Pro Bleu ! 🎉`;
+  }
+
+  box.innerHTML = `
+    <p style="font-size:12px;color:var(--gray);margin-top:-6px;margin-bottom:14px">${encouragement}</p>
+    <div class="badge-progress-row bleu">
+      <div class="badge-progress-icon">🏅</div>
+      <div class="badge-progress-body">
+        <div class="badge-progress-top">
+          <span class="badge-progress-title">Badge Pro Bleu</span>
+          <span class="badge-progress-pct">${fmt(bluePct)}%</span>
+        </div>
+        <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${bluePct}%"></div></div>
+        <div class="badge-progress-shop">${s} / 100 ventes confirmées</div>
+      </div>
+    </div>
+    <div class="badge-progress-row rouge">
+      <div class="badge-progress-icon">🏆</div>
+      <div class="badge-progress-body">
+        <div class="badge-progress-top">
+          <span class="badge-progress-title">Badge Meilleur Rouge</span>
+          <span class="badge-progress-pct">${fmt(redPct)}%</span>
+        </div>
+        <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${redPct}%"></div></div>
+        <div class="badge-progress-shop">${s} / 500 ventes confirmées</div>
+      </div>
+    </div>`;
 }
 
 function drawBarChart(canvasId, data, labels, colors) {
