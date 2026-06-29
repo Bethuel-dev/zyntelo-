@@ -3251,14 +3251,22 @@ async function paySubscriptionNow() {
 async function loadAdminPaymentsHistory() {
   const box = document.getElementById('adm-payments-history');
   if (!box) return;
-  const { data, error } = await sb.from('payments').select('*, shops:owner_id(shop_name)').order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await sb.from('payments').select('*').order('created_at', { ascending: false }).limit(100);
   if (error) { box.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur : ${error.message}</p>`; return; }
   if (!data || !data.length) { box.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucun paiement enregistré pour le moment.</p>`; return; }
+
+  // Récupère les noms de boutiques séparément (pas de relation déclarée
+  // entre payments.owner_id et shops.id, donc pas de jointure automatique possible)
+  const ownerIds = [...new Set(data.map(p => p.owner_id))];
+  const { data: shopsData } = await sb.from('shops').select('id, shop_name').in('id', ownerIds);
+  const shopNameById = {};
+  (shopsData || []).forEach(s => { shopNameById[s.id] = s.shop_name; });
+
   const statusLabels = { completed: '✅ Confirmé', pending: '⏳ En attente', failed: '❌ Échoué', refunded: '↩️ Remboursé' };
   box.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Boutique</th><th>Prestataire</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${
     data.map(p => {
       const d = new Date(p.created_at);
-      const shopName = (p.shops && p.shops.shop_name) || '—';
+      const shopName = shopNameById[p.owner_id] || '—';
       return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${shopName}</td><td>${p.provider}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
