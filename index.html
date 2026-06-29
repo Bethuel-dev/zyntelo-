@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#1A56E8">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
 :root{
   --blue:#1A56E8;--blue-d:#1240C0;--blue-l:#EEF3FF;
   --red:#E8221A;--red-d:#C01A12;--red-l:#FEE2E2;
@@ -193,7 +193,7 @@ tr:hover td{background:#fafafa;}
 .dash-main{flex:1;background:var(--gray-l);overflow-y:auto;}
 .dash-body{padding:24px;}
 .page-head{margin-bottom:20px;}
-.page-head h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;}
+.page-head h1{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;}
 .page-head p{font-size:12px;color:var(--gray);margin-top:3px;}
 .page-head-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
 .dash-page{display:none;}
@@ -499,6 +499,65 @@ canvas{display:block;}
   .dash-body{padding:16px 16px 16px 64px;}
   .bshop-body{padding:20px 14px;}
 }
+/* ═══ NOUVELLE PAGE D'ACCUEIL (premium, préfixe nl-) ═══ */
+#s-land.nl-screen{background:#0A0E1A;color:#EDF1F8;}
+.nl-wrap{max-width:1140px;margin:0 auto;padding:0 24px;}
+.nl-nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);background:rgba(10,14,26,0.75);border-bottom:1px solid rgba(255,255,255,0.07);}
+.nl-nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px;}
+.nl-logo{font-family:'Sora',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.5px;display:flex;align-items:center;gap:9px;color:#EDF1F8;}
+.nl-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2E6BFF,#4A7FFF);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;box-shadow:0 4px 16px rgba(46,107,255,0.4);}
+.nl-nav-btns{display:flex;gap:10px;align-items:center;}
+.nl-nav-btn{padding:9px 20px;border-radius:10px;font-weight:600;font-size:14px;background:#2E6BFF;color:#fff;border:none;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.nl-nav-btn:hover{background:#4A7FFF;transform:translateY(-1px);}
+.nl-nav-ghost{padding:9px 16px;border-radius:10px;font-weight:600;font-size:14px;background:transparent;color:#8B95AD;border:none;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.nl-nav-ghost:hover{color:#EDF1F8;}
+.nl-hero{position:relative;padding:110px 0 80px;text-align:center;overflow:hidden;}
+.nl-hero-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.18) 0%,transparent 60%);pointer-events:none;}
+.nl-badge-free{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:100px;margin-bottom:28px;background:rgba(46,107,255,0.12);border:1px solid rgba(46,107,255,0.3);font-size:14px;font-weight:600;color:#4A7FFF;position:relative;z-index:2;}
+.nl-badge-free .nl-dot{width:7px;height:7px;border-radius:50%;background:#4A7FFF;box-shadow:0 0 8px #4A7FFF;}
+.nl-hero h1{font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(34px,6vw,60px);line-height:1.08;letter-spacing:-1.5px;margin-bottom:22px;position:relative;z-index:2;color:#EDF1F8;}
+.nl-hero h1 .nl-grad{background:linear-gradient(120deg,#4A7FFF,#8FB0FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.nl-hero p{font-size:clamp(16px,2.2vw,19px);color:#8B95AD;max-width:560px;margin:0 auto 38px;position:relative;z-index:2;}
+.nl-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:2;}
+.nl-btn-primary{padding:15px 32px;border-radius:12px;font-weight:700;font-size:16px;background:linear-gradient(135deg,#2E6BFF,#4A7FFF);color:#fff;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:9px;box-shadow:0 8px 28px rgba(46,107,255,0.45);transition:all .25s;font-family:'Inter',sans-serif;}
+.nl-btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(46,107,255,0.6);}
+.nl-btn-ghost{padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;background:transparent;color:#EDF1F8;border:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.nl-btn-ghost:hover{border-color:#2E6BFF;background:rgba(46,107,255,0.12);}
+.nl-hero-note{margin-top:20px;font-size:13px;color:#8B95AD;position:relative;z-index:2;}
+.nl-trust{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;padding:36px 0;border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07);margin-top:60px;}
+.nl-trust-item{text-align:center;}
+.nl-trust-num{font-family:'Sora',sans-serif;font-weight:800;font-size:28px;color:#4A7FFF;}
+.nl-trust-lbl{font-size:13px;color:#8B95AD;margin-top:2px;}
+.nl-section{padding:80px 0;}
+.nl-section-head{text-align:center;max-width:620px;margin:0 auto 50px;}
+.nl-eyebrow{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#4A7FFF;margin-bottom:14px;}
+.nl-section-head h2{font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(26px,4vw,38px);letter-spacing:-1px;margin-bottom:14px;color:#EDF1F8;}
+.nl-section-head p{color:#8B95AD;font-size:17px;}
+.nl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.nl-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:30px;transition:all .25s;}
+.nl-card:hover{border-color:rgba(46,107,255,0.4);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.3);}
+.nl-card-ico{width:50px;height:50px;border-radius:13px;background:rgba(46,107,255,0.12);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px;}
+.nl-card h3{font-family:'Sora',sans-serif;font-weight:600;font-size:19px;margin-bottom:9px;color:#EDF1F8;}
+.nl-card p{color:#8B95AD;font-size:15px;}
+.nl-pricing{background:linear-gradient(135deg,#0F1525,#141B2E);border:1px solid rgba(255,255,255,0.07);border-radius:24px;padding:50px 40px;text-align:center;max-width:540px;margin:0 auto;position:relative;overflow:hidden;}
+.nl-pricing-glow{position:absolute;top:-100px;right:-100px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.15),transparent 65%);}
+.nl-free-tag{display:inline-block;padding:7px 16px;border-radius:100px;background:#2E6BFF;color:#fff;font-weight:700;font-size:14px;margin-bottom:20px;position:relative;z-index:2;}
+.nl-pricing h3{font-family:'Sora',sans-serif;font-weight:700;font-size:26px;margin-bottom:10px;position:relative;z-index:2;color:#EDF1F8;}
+.nl-price-line{position:relative;z-index:2;margin:18px 0;}
+.nl-price-amt{font-family:'Sora',sans-serif;font-weight:800;font-size:44px;color:#EDF1F8;}
+.nl-price-per{color:#8B95AD;font-size:16px;}
+.nl-pricing .nl-sub{color:#8B95AD;font-size:14px;margin-bottom:28px;position:relative;z-index:2;}
+.nl-pricing ul{list-style:none;text-align:left;max-width:320px;margin:0 auto 30px;position:relative;z-index:2;padding:0;}
+.nl-pricing li{display:flex;align-items:center;gap:11px;padding:7px 0;font-size:15px;color:#EDF1F8;}
+.nl-pricing li .nl-check{color:#4A7FFF;font-weight:800;}
+.nl-final{text-align:center;padding:80px 0;}
+.nl-final h2{font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(28px,5vw,46px);letter-spacing:-1px;margin-bottom:18px;color:#EDF1F8;}
+.nl-final p{color:#8B95AD;font-size:18px;margin-bottom:34px;}
+.nl-footer{border-top:1px solid rgba(255,255,255,0.07);padding:40px 0;text-align:center;color:#8B95AD;font-size:14px;}
+.nl-footer .nl-logo{justify-content:center;margin-bottom:14px;font-size:18px;}
+.nl-reveal{opacity:0;transform:translateY(24px);transition:all .7s cubic-bezier(.2,.7,.2,1);}
+.nl-reveal.nl-on{opacity:1;transform:none;}
+@media(max-width:600px){.nl-hero{padding:80px 0 50px;}.nl-trust{gap:24px;}.nl-section{padding:56px 0;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -540,53 +599,99 @@ canvas{display:block;}
 <!-- ═══════════════════════════════════════
      LANDING
 ═══════════════════════════════════════ -->
-<div id="s-land" class="screen">
-  <nav class="land-nav">
-    <div class="zlogo"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name">Zyntelo</span></div>
-    <div class="land-nav-btns">
-      <button class="btn btn-ghost" onclick="go('s-about')">À propos</button>
-      <button class="btn btn-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
-      <button class="btn btn-ghost" id="land-logout-btn" style="display:none;color:var(--red)" onclick="logout()">Déconnexion</button>
-      <button class="btn btn-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
-      <button class="btn btn-ghost" onclick="go('s-login')">Se connecter</button>
-      <button class="btn btn-blue" onclick="go('s-register')">Créer ma boutique</button>
+<div id="s-land" class="screen nl-screen">
+  <nav class="nl-nav">
+    <div class="nl-wrap nl-nav-inner">
+      <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
+      <div class="nl-nav-btns">
+        <button class="nl-nav-ghost" onclick="go('s-about')">À propos</button>
+        <button class="nl-nav-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
+        <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
+        <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
+        <button class="nl-nav-ghost" onclick="go('s-login')">Se connecter</button>
+        <button class="nl-nav-btn" onclick="go('s-register')">Créer ma boutique</button>
+      </div>
     </div>
   </nav>
-  <div class="land-hero">
-    <div class="land-badge">🚀 La plateforme des commerçants africains</div>
-    <h1>Votre boutique en ligne,<br><em>prête en 5 minutes</em></h1>
-    <p>Créez votre boutique, gérez vos stocks, recevez vos commandes. Tout ce qu'il faut pour vendre en ligne.</p>
-    <div class="land-btns">
-      <button class="btn btn-red" style="font-size:15px;padding:13px 28px" onclick="go('s-register')">Commencer maintenant</button>
-      <button class="btn btn-ghost" style="font-size:15px;padding:13px 28px" onclick="demoPreview()">👁 Voir une démo</button>
+
+  <header class="nl-hero">
+    <div class="nl-hero-glow"></div>
+    <div class="nl-wrap">
+      <div class="nl-badge-free"><span class="nl-dot"></span>1 mois d'essai gratuit — sans engagement</div>
+      <h1>Votre boutique en ligne,<br><span class="nl-grad">prête en quelques minutes</span></h1>
+      <p>Zyntelo donne aux commerçants africains tous les outils pour vendre en ligne, gérer leurs commandes et faire grandir leur activité — sans complexité, sans gros budget.</p>
+      <div class="nl-cta">
+        <button class="nl-btn-primary" onclick="go('s-register')">Créer ma boutique gratuitement →</button>
+        <button class="nl-btn-ghost" onclick="demoPreview()">👁 Voir une démo</button>
+      </div>
+      <div class="nl-hero-note">Aucune carte requise pour commencer · Configuration en 5 minutes</div>
+    </div>
+  </header>
+
+  <div class="nl-wrap">
+    <div class="nl-trust nl-reveal">
+      <div class="nl-trust-item"><div class="nl-trust-num">5 min</div><div class="nl-trust-lbl">pour ouvrir sa boutique</div></div>
+      <div class="nl-trust-item"><div class="nl-trust-num">0 F</div><div class="nl-trust-lbl">le premier mois</div></div>
+      <div class="nl-trust-item"><div class="nl-trust-num">100%</div><div class="nl-trust-lbl">depuis le téléphone</div></div>
     </div>
   </div>
-  <div class="land-feats">
-    <h2>Tout ce qu'il vous faut pour vendre</h2>
-    <div class="feat-grid">
-      <div class="feat-card"><div class="feat-ico">🛍️</div><h3>Boutique personnalisée</h3><p>Photos, prix barrés, variantes. Votre lien unique à partager partout.</p></div>
-      <div class="feat-card"><div class="feat-ico">📦</div><h3>Gestion de stock</h3><p>Quantités, marges, bénéfices. Mis à jour automatiquement après chaque livraison.</p></div>
-      <div class="feat-card"><div class="feat-ico">📲</div><h3>Reçu WhatsApp automatique</h3><p>Après validation de livraison, le reçu part au client en un clic.</p></div>
-      <div class="feat-card"><div class="feat-ico">📊</div><h3>Statistiques & graphiques</h3><p>Chiffre d'affaires, taux de conversion, commandes. Tout en temps réel.</p></div>
+
+  <section class="nl-section">
+    <div class="nl-wrap">
+      <div class="nl-section-head nl-reveal">
+        <div class="nl-eyebrow">Tout-en-un</div>
+        <h2>Tout ce qu'il faut pour vendre</h2>
+        <p>Une seule plateforme, pensée pour les vendeurs. Pas besoin de dix applications différentes.</p>
+      </div>
+      <div class="nl-grid">
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">🏪</div><h3>Boutique personnalisée</h3><p>Couleurs, logo, bannière, nom de domaine propre. Votre boutique vous ressemble, partageable par un simple lien.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">📦</div><h3>Produits &amp; stocks</h3><p>Fiches produits avec variantes, gestion du stock en temps réel, alertes automatiques.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">📋</div><h3>Commandes en direct</h3><p>Recevez et validez vos commandes en un clic, avec notification instantanée sur votre téléphone.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">📈</div><h3>Statistiques claires</h3><p>Chiffre d'affaires, bénéfices, performances — suivez tout en temps réel, sans calcul manuel.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">🔥</div><h3>Promotions intelligentes</h3><p>Créez des offres à paliers pour vendre plus, et fidélisez vos clients facilement.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">👥</div><h3>Gestion d'équipe</h3><p>Ajoutez des gérants avec des accès limités et sécurisés pour vous aider au quotidien.</p></div>
+      </div>
     </div>
-  </div>
-  <div class="land-price">
-    <h2>Simple et transparent</h2>
-    <div class="price-card">
-      <div style="font-size:11px;color:#666;font-weight:700;letter-spacing:1px;text-transform:uppercase">Abonnement mensuel</div>
-      <div class="price-amt">5 000 <span style="font-size:20px">FCFA</span></div>
-      <div class="price-per">par mois · sans engagement</div>
-      <ul class="price-list">
-        <li>Boutique en ligne complète</li>
-        <li>Gestion de stock avec marges</li>
-        <li>Commandes et reçus WhatsApp</li>
-        <li>Statistiques & graphiques</li>
-        <li>Ajout d'un gérant</li>
-        <li>Lien boutique personnalisé</li>
-      </ul>
-      <button class="btn btn-red btn-w" onclick="go('s-register')">Créer ma boutique</button>
+  </section>
+
+  <section class="nl-section" style="padding-top:20px;">
+    <div class="nl-wrap">
+      <div class="nl-section-head nl-reveal">
+        <div class="nl-eyebrow">Tarif unique</div>
+        <h2>Simple et transparent</h2>
+      </div>
+      <div class="nl-pricing nl-reveal">
+        <div class="nl-pricing-glow"></div>
+        <div class="nl-free-tag">★ 1er mois offert</div>
+        <h3>Accès complet</h3>
+        <div class="nl-price-line"><span class="nl-price-amt">5 000</span> <span class="nl-price-per">F CFA / mois</span></div>
+        <div class="nl-sub">après votre mois gratuit · sans engagement · résiliable à tout moment</div>
+        <ul>
+          <li><span class="nl-check">✓</span> Toutes les fonctionnalités, sans restriction</li>
+          <li><span class="nl-check">✓</span> Mises à jour incluses en continu</li>
+          <li><span class="nl-check">✓</span> Paiement automatique Mobile Money &amp; carte</li>
+          <li><span class="nl-check">✓</span> Support et centre d'aide intégré</li>
+        </ul>
+        <button class="nl-btn-primary" style="width:100%;justify-content:center;" onclick="go('s-register')">Commencer gratuitement</button>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="nl-final">
+    <div class="nl-wrap">
+      <h2 class="nl-reveal">Prêt à lancer votre boutique ?</h2>
+      <p class="nl-reveal">Rejoignez les entrepreneurs qui font grandir le commerce digital africain.</p>
+      <button class="nl-btn-primary nl-reveal" onclick="go('s-register')" style="font-size:17px;padding:17px 38px;">Créer ma boutique maintenant →</button>
+    </div>
+  </section>
+
+  <footer class="nl-footer">
+    <div class="nl-wrap">
+      <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
+      <p>Pour faire grandir le commerce digital africain.</p>
+      <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
+    </div>
+  </footer>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -1927,13 +2032,29 @@ function go(screenId) {
   });
   document.getElementById(screenId).classList.add('on');
   if (screenId === 's-about') loadAboutPage();
-  if (screenId === 's-land') navTo('/');
+  if (screenId === 's-land') { navTo('/'); triggerLandingReveal(); }
   if (screenId === 's-login') navTo('/login');
   if (screenId === 's-register') navTo('/register');
   if (screenId === 's-admin-login') navTo('/admin');
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
   refreshLucideIcons();
+}
+
+// Animation d'apparition au défilement pour la nouvelle page d'accueil.
+// Indépendante du reste de l'app : ne touche qu'aux éléments .nl-reveal.
+let _nlObserver = null;
+function triggerLandingReveal() {
+  // Sur petit écran ou si l'utilisateur préfère moins d'animations, on affiche tout directement.
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = document.querySelectorAll('#s-land .nl-reveal');
+  if (reduce) { els.forEach(el => el.classList.add('nl-on')); return; }
+  if (!_nlObserver) {
+    _nlObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('nl-on'); });
+    }, { threshold: 0.12 });
+  }
+  els.forEach((el, i) => { el.style.transitionDelay = ((i % 6) * 0.06) + 's'; _nlObserver.observe(el); });
 }
 
 function pg(pageId, el) {
