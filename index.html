@@ -1558,12 +1558,18 @@ const Store = {
         // Les commandes passent par le RPC sécurisé car elles sont privées
         if (S.isGerant && S.user && table !== 'gerants') {
           if (table === 'products') {
-            const { data, error, count } = await retryOnTimeout(() =>
-              sb.from('products').select('*', { count: 'exact' }).eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 49)
+            // On demande 51 produits (range 0-50) : si le 51e existe, on sait
+            // qu'il y en a "plus" sans le comptage exact coûteux. On n'affiche
+            // que les 50 premiers, le 51e sert juste d'indicateur.
+            const { data, error } = await retryOnTimeout(() =>
+              sb.from('products').select('*').eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 50)
             );
             if (error) { console.error('Store.get gerant products error', error); return []; }
-            S.productsTotalCount = count || 0;
-            return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+            const rows = data || [];
+            S.productsHasMore = rows.length > 50;
+            const shown = rows.slice(0, 50);
+            S.productsTotalCount = S.productsHasMore ? null : shown.length; // null = "au moins 50, total inconnu"
+            return shown.map(row => ({ ...row.data, _rowId: row.id }));
           }
           const { data, error } = await retryOnTimeout(() =>
             sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email })
@@ -1576,10 +1582,13 @@ const Store = {
         // un grand catalogue. Le reste se charge à la demande via "Charger plus" dans
         // la page Produits — jamais besoin de tout charger d'un coup.
         if (table === 'products') {
-          const { data, error, count } = await sb.from('products').select('*', { count: 'exact' }).eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 49);
+          const { data, error } = await sb.from('products').select('*').eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 50);
           if (error) { console.error('Store.get error', table, error); toast('Erreur de chargement : ' + error.message, 'err'); return null; }
-          S.productsTotalCount = count || 0;
-          return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+          const rows = data || [];
+          S.productsHasMore = rows.length > 50;
+          const shown = rows.slice(0, 50);
+          S.productsTotalCount = S.productsHasMore ? null : shown.length;
+          return shown.map(row => ({ ...row.data, _rowId: row.id }));
         }
         const { data, error } = await sb.from(table).select('*').eq('owner_id', targetOwnerId);
         if (error) { console.error('Store.get error', table, error); toast('Erreur de chargement : ' + error.message, 'err'); return null; }
@@ -3822,7 +3831,7 @@ function renderProds() {
     list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>`;
     return;
   }
-  const hasMore = (S.productsTotalCount || 0) > S.products.length;
+  const hasMore = S.productsHasMore === true;
   list.innerHTML = S.products.map(p => `
     <div class="prod-card">
       <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
@@ -3841,7 +3850,7 @@ function renderProds() {
       </div>
     </div>`).join('') + (hasMore ? `
     <div style="text-align:center;padding:16px">
-      <button class="btn btn-ghost" id="load-more-prods-btn" onclick="loadMoreProducts()">Charger plus de produits (${S.products.length} / ${S.productsTotalCount})</button>
+      <button class="btn btn-ghost" id="load-more-prods-btn" onclick="loadMoreProducts()">Charger plus de produits (${S.products.length} affichés)</button>
     </div>` : '');
 }
 
@@ -3850,9 +3859,14 @@ function renderProds() {
 async function loadMoreProducts() {
   const btn = document.getElementById('load-more-prods-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
-  const { data, error } = await sb.from('products').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: false }).range(S.products.length, S.products.length + 49);
+  // Même technique légère : on demande 51 lignes pour savoir s'il en reste
+  // encore après celles-ci, sans comptage exact.
+  const start = S.products.length;
+  const { data, error } = await sb.from('products').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: false }).range(start, start + 50);
   if (error) { console.error('loadMoreProducts error', error); toast('Erreur de chargement', 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Réessayer'; } return; }
-  const newProducts = (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+  const rows = data || [];
+  S.productsHasMore = rows.length > 50;
+  const newProducts = rows.slice(0, 50).map(row => ({ ...row.data, _rowId: row.id }));
   S.products = S.products.concat(newProducts);
   // Important : on étend aussi le snapshot de référence utilisé par la sauvegarde
   // différentielle — sans ça, ces produits nouvellement visibles seraient à tort
@@ -5067,6 +5081,7 @@ async function loadAllProductsForStock() {
   S.products = (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
   S._prevProductsSnapshot = JSON.parse(JSON.stringify(S.products));
   S.productsTotalCount = S.products.length; // tout est maintenant chargé, plus de "reste"
+  S.productsHasMore = false; // tout le catalogue est désormais en mémoire
   renderStock();
   renderProds();
   toast('Stock complet chargé ✓');
@@ -5075,7 +5090,7 @@ async function loadAllProductsForStock() {
 function renderStock() {
   const tbody=document.getElementById('stock-body');
   const warningBox = document.getElementById('stock-incomplete-warning');
-  const hasMore = (S.productsTotalCount || 0) > S.products.length;
+  const hasMore = S.productsHasMore === true;
   if (warningBox) warningBox.style.display = hasMore ? '' : 'none';
   if(!S.products.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--gray)">Aucun produit en stock</td></tr>`; return; }
   tbody.innerHTML=S.products.map(p=>{
@@ -5096,7 +5111,7 @@ function updateStats() {
   document.getElementById('st-cmds').textContent=S.orders.length;
   document.getElementById('st-ca').textContent=ca.toLocaleString()+' FCFA';
   document.getElementById('st-ben').textContent=ben.toLocaleString()+' FCFA';
-  document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length);
+  document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length + '+');
 }
 
 function renderStats() {
