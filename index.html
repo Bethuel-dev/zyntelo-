@@ -1018,6 +1018,10 @@ canvas{display:block;}
       <!-- STOCK -->
       <div class="dash-page" id="p-stock">
         <div class="page-head"><h1>Gestion de stock</h1><p>Suivi détaillé de votre inventaire</p></div>
+        <div id="stock-incomplete-warning" style="display:none;background:#fff3cd;color:#856404;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>⚠️ Seuls vos produits les plus récents sont affichés ici.</span>
+          <button class="btn btn-sm btn-ghost" onclick="loadAllProductsForStock()">Afficher tout le stock</button>
+        </div>
         <div class="tbl-wrap">
           <table>
             <thead><tr>
@@ -1477,7 +1481,47 @@ async function retryOnTimeout(queryFn, maxAttempts = 3) {
 }
 
 const Store = {
-  async get(key) {
+  // Cache mémoire interne : évite de recharger les mêmes données à chaque
+  // navigation entre pages. Chaque entrée a une durée de vie courte (30s),
+  // et le cache est AUTOMATIQUEMENT invalidé pour une clé dès qu'on fait
+  // un Store.set sur cette clé — donc jamais de risque de servir des données
+  // obsolètes après une vraie modification. Pour forcer un rechargement
+  // frais (par exemple après une action externe), passer { fresh: true }.
+  _cache: {},
+  _CACHE_TTL_MS: 30000,
+
+  _getCached(key) {
+    const entry = this._cache[key];
+    if (!entry) return null;
+    if (Date.now() - entry.at > this._CACHE_TTL_MS) { delete this._cache[key]; return null; }
+    return entry.value;
+  },
+  _setCached(key, value) {
+    this._cache[key] = { at: Date.now(), value };
+  },
+  _invalidate(key) {
+    delete this._cache[key];
+  },
+  invalidateAll() {
+    this._cache = {};
+  },
+
+  async get(key, opts) {
+    try {
+      const cacheable = key.startsWith('prods_') || key.startsWith('orders_') ||
+                        key.startsWith('gerants_') || key.startsWith('shop_') ||
+                        key === 'admin_settings';
+      if (cacheable && !(opts && opts.fresh)) {
+        const cached = this._getCached(key);
+        if (cached !== null && cached !== undefined) return cached;
+      }
+      const result = await this._fetchRaw(key);
+      if (cacheable && result !== null && result !== undefined) this._setCached(key, result);
+      return result;
+    } catch (e) { console.error('Store.get error', key, e); return null; }
+  },
+
+  async _fetchRaw(key) {
     try {
       if (key === 'session') {
         const { data } = await sb.auth.getSession();
@@ -1542,10 +1586,13 @@ const Store = {
         return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
       }
       return null;
-    } catch (e) { console.error('Store.get error', key, e); return null; }
+    } catch (e) { console.error('Store._fetchRaw error', key, e); return null; }
   },
 
   async set(key, val) {
+    // Invalide systématiquement le cache pour cette clé : toute écriture
+    // signifie que les données ont changé, donc le cache devient invalide.
+    this._invalidate(key);
     try {
       if (key.startsWith('shop_')) {
         const id = key.replace('shop_','');
@@ -2356,6 +2403,7 @@ async function logout() {
   stopStatsRealtimeListener();
   stopHelpPolling();
   stopAdminSupportPolling();
+  Store.invalidateAll(); // vide complètement le cache, sécurité essentielle entre utilisateurs
   S = { user:null, shop:null, products:[], orders:[], gerants:[], curProd:null, orderQty:1, selVariant:null, imgData:[], editImgs:null, isGerant:false };
   // Réafficher tous les onglets (au cas où on était en mode gérant restreint)
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => { item.style.display = ''; });
@@ -2378,7 +2426,12 @@ async function doLogin() {
   const email = document.getElementById('li-email').value.trim();
   const pass = document.getElementById('li-pass').value;
   if (!email || !pass) { toast('Remplissez tous les champs', 'err'); return; }
+  const _authStart = performance.now();
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  // Mesure le temps de l'authentification seule (étape jusqu'ici non mesurée),
+  // pour distinguer la lenteur de l'auth de celle du chargement des données.
+  window._zyntelloPerfLog = window._zyntelloPerfLog || [];
+  window._zyntelloPerfLog.push({ event: 'auth_signin', ms: Math.round(performance.now() - _authStart), ts: Date.now() });
   if (error) {
     if (error.message.includes('Email not confirmed')) {
       toast('Confirmez votre email avant de vous connecter (vérifiez votre boîte mail)', 'err');
@@ -5004,8 +5057,26 @@ function shareWA() {
 // ═══════════════════════════════════════════════
 // STOCK
 // ═══════════════════════════════════════════════
+// Charge absolument tous les produits (sans pagination), utilisé uniquement
+// quand le commerçant en a explicitement besoin (vue Stock complète), pour
+// ne jamais alourdir la connexion normale par défaut.
+async function loadAllProductsForStock() {
+  toast('Chargement de tout le stock…');
+  const { data, error } = await sb.from('products').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: false });
+  if (error) { console.error('loadAllProductsForStock error', error); toast('Erreur de chargement', 'err'); return; }
+  S.products = (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+  S._prevProductsSnapshot = JSON.parse(JSON.stringify(S.products));
+  S.productsTotalCount = S.products.length; // tout est maintenant chargé, plus de "reste"
+  renderStock();
+  renderProds();
+  toast('Stock complet chargé ✓');
+}
+
 function renderStock() {
   const tbody=document.getElementById('stock-body');
+  const warningBox = document.getElementById('stock-incomplete-warning');
+  const hasMore = (S.productsTotalCount || 0) > S.products.length;
+  if (warningBox) warningBox.style.display = hasMore ? '' : 'none';
   if(!S.products.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--gray)">Aucun produit en stock</td></tr>`; return; }
   tbody.innerHTML=S.products.map(p=>{
     const m=p.newP-(p.buyP||0); const ben=m*(p.qtySold||0);
@@ -5025,7 +5096,7 @@ function updateStats() {
   document.getElementById('st-cmds').textContent=S.orders.length;
   document.getElementById('st-ca').textContent=ca.toLocaleString()+' FCFA';
   document.getElementById('st-ben').textContent=ben.toLocaleString()+' FCFA';
-  document.getElementById('st-prods').textContent=S.products.length;
+  document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length);
 }
 
 function renderStats() {
