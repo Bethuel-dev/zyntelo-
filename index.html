@@ -1514,16 +1514,27 @@ const Store = {
         // Les commandes passent par le RPC sécurisé car elles sont privées
         if (S.isGerant && S.user && table !== 'gerants') {
           if (table === 'products') {
-            const { data, error } = await retryOnTimeout(() =>
-              sb.from('products').select('*').eq('owner_id', targetOwnerId)
+            const { data, error, count } = await retryOnTimeout(() =>
+              sb.from('products').select('*', { count: 'exact' }).eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 49)
             );
             if (error) { console.error('Store.get gerant products error', error); return []; }
+            S.productsTotalCount = count || 0;
             return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
           }
           const { data, error } = await retryOnTimeout(() =>
             sb.rpc('gerant_get_orders', { p_owner_id: targetOwnerId, p_gerant_id: S.gerantRecordId, p_email: S.user.email })
           );
           if (error) { console.error('Store.get gerant error', error); return []; }
+          return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+        }
+        // Pour les produits : on ne charge que les 50 premiers à la connexion (les plus
+        // récents en premier), afin que le temps de connexion reste rapide même avec
+        // un grand catalogue. Le reste se charge à la demande via "Charger plus" dans
+        // la page Produits — jamais besoin de tout charger d'un coup.
+        if (table === 'products') {
+          const { data, error, count } = await sb.from('products').select('*', { count: 'exact' }).eq('owner_id', targetOwnerId).order('created_at', { ascending: false }).range(0, 49);
+          if (error) { console.error('Store.get error', table, error); toast('Erreur de chargement : ' + error.message, 'err'); return null; }
+          S.productsTotalCount = count || 0;
           return (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
         }
         const { data, error } = await sb.from(table).select('*').eq('owner_id', targetOwnerId);
@@ -3758,6 +3769,7 @@ function renderProds() {
     list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Aucun produit encore. Ajoutez votre premier produit !</p></div>`;
     return;
   }
+  const hasMore = (S.productsTotalCount || 0) > S.products.length;
   list.innerHTML = S.products.map(p => `
     <div class="prod-card">
       <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
@@ -3774,7 +3786,27 @@ function renderProds() {
         <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="editProduct('${p.id}')">✏️ Modifier</button>
         <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="delProd('${p.id}')">Supprimer</button>
       </div>
-    </div>`).join('');
+    </div>`).join('') + (hasMore ? `
+    <div style="text-align:center;padding:16px">
+      <button class="btn btn-ghost" id="load-more-prods-btn" onclick="loadMoreProducts()">Charger plus de produits (${S.products.length} / ${S.productsTotalCount})</button>
+    </div>` : '');
+}
+
+// Charge la prochaine page de produits (50 suivants), et les ajoute à la
+// liste déjà affichée — sans jamais recharger ce qui était déjà visible.
+async function loadMoreProducts() {
+  const btn = document.getElementById('load-more-prods-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
+  const { data, error } = await sb.from('products').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: false }).range(S.products.length, S.products.length + 49);
+  if (error) { console.error('loadMoreProducts error', error); toast('Erreur de chargement', 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Réessayer'; } return; }
+  const newProducts = (data||[]).map(row => ({ ...row.data, _rowId: row.id }));
+  S.products = S.products.concat(newProducts);
+  // Important : on étend aussi le snapshot de référence utilisé par la sauvegarde
+  // différentielle — sans ça, ces produits nouvellement visibles seraient à tort
+  // considérés comme "supprimés" au prochain enregistrement, puisqu'absents de
+  // l'ancien snapshot limité aux 50 premiers.
+  S._prevProductsSnapshot = JSON.parse(JSON.stringify(S.products));
+  renderProds();
 }
 
 // ═══════════════════════════════════════════════
