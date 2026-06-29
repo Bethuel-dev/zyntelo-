@@ -3443,8 +3443,14 @@ async function migrateProductImagesToStorage() {
       }
 
       if (changed) {
-        const { error: updError } = await sb.from('products').update({ data: p }).eq('id', row.id);
-        if (updError) { failed++; failedDetails.push(`${p.name || row.id}: ${updError.message}`); }
+        // On passe par la fonction sécurisée réservée à l'admin : l'update
+        // direct était silencieusement bloqué par le RLS (qui n'autorise que
+        // le propriétaire de la boutique à modifier ses produits).
+        const { data: res, error: updError } = await sb.rpc('admin_update_product_data', { p_product_id: row.id, p_data: p });
+        if (updError || !res || !res.success) {
+          failed++;
+          failedDetails.push(`${p.name || row.id}: ${updError ? updError.message : (res && res.error) || 'échec inconnu'}`);
+        }
         else migrated++;
       } else {
         skipped++;
