@@ -1087,13 +1087,21 @@ canvas{display:block;}
             <div><div class="stat-lbl">Expiration</div><div style="font-weight:700" id="abo-exp">—</div></div>
             <div><div class="stat-lbl">Montant</div><div style="font-weight:700">5 000 FCFA/mois</div></div>
           </div>
-          <div class="card-title">Renouveler via mobile money</div>
+          <button class="btn btn-blue btn-w" id="abo-pay-btn" onclick="paySubscriptionNow()">💳 Payer mon abonnement maintenant</button>
+          <p style="font-size:11px;color:var(--gray);margin-top:8px;text-align:center">Paiement sécurisé par carte ou Mobile Money — activation automatique et immédiate.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Renouveler via mobile money (méthode manuelle)</div>
           <div class="pay-methods">
             <div class="pay-m"><div class="pay-ico">📱</div><div class="pay-name">Wave</div><div class="pay-num" id="pm-wave">—</div></div>
             <div class="pay-m"><div class="pay-ico">🟠</div><div class="pay-name">Orange Money</div><div class="pay-num" id="pm-om">—</div></div>
             <div class="pay-m"><div class="pay-ico">🟡</div><div class="pay-name">MTN Money</div><div class="pay-num" id="pm-mtn">—</div></div>
           </div>
           <p style="font-size:11px;color:var(--gray);margin-top:11px">Après paiement, envoyez votre reçu sur WhatsApp avec votre email. Activation sous 24h.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">📜 Historique des paiements</div>
+          <div id="abo-payments-history"><p style="font-size:13px;color:var(--gray)">Chargement…</p></div>
         </div>
       </div>
 
@@ -1335,6 +1343,9 @@ Merci pour votre confiance 🙏
       <div class="dash-page" id="adm-abos">
         <div class="page-head"><h1>Abonnements</h1><p>Gérez les accès boutiques</p></div>
         <div id="adm-abos-list"></div>
+
+        <div class="page-head" style="margin-top:24px"><h1>📜 Historique des paiements</h1><p>Tous les paiements automatiques, tous prestataires confondus</p></div>
+        <div id="adm-payments-history"><p style="font-size:13px;color:var(--gray)">Chargement…</p></div>
       </div>
 
       <!-- MON PROFIL (page À propos) -->
@@ -1494,7 +1505,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{} };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{} };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -1872,6 +1883,7 @@ function pg(pageId, el) {
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
+  if (pageId === 'p-abo') loadPaymentsHistory();
   if (pageId === 'p-aide') openHelpCenter(); else stopHelpPolling();
   closeMobileSidebar();
   refreshLucideIcons();
@@ -1883,7 +1895,7 @@ function admPg(pageId, el) {
   document.querySelectorAll('#s-admin .nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
   if (pageId === 'adm-clients') renderAdminClients();
-  if (pageId === 'adm-abos') renderAdminAbos();
+  if (pageId === 'adm-abos') { renderAdminAbos(); loadAdminPaymentsHistory(); }
   if (pageId === 'adm-messages') renderAdminMessages();
   if (pageId === 'adm-reviews') renderAdminReviews();
   if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
@@ -2598,6 +2610,22 @@ async function loginAs(user) {
     return;
   }
   if (!user.isAdmin && shopData && shopData.blocked) {
+    if (shopData.suspendedReason === 'payment_overdue') {
+      // Accès limité : on le laisse se connecter, mais uniquement pour
+      // atteindre la page de paiement et réactiver lui-même sa boutique.
+      S.user = user;
+      S.shop = shopData;
+      S.shop.id = ownerId;
+      S.paymentSuspendedAccess = true;
+      hide('loading');
+      go('s-dash');
+      document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => { item.style.display = 'none'; });
+      const aboNavItem = document.querySelector(`.nav-item[onclick*="'p-abo'"]`);
+      if (aboNavItem) aboNavItem.style.display = '';
+      pg('p-abo', aboNavItem);
+      toast('⛔ Boutique suspendue pour défaut de paiement. Renouvelez votre abonnement pour la réactiver immédiatement.', 'err');
+      return;
+    }
     await sb.auth.signOut();
     hide('loading');
     toast('⛔ Boutique bloquée. Contactez l\'administrateur pour la réactiver.', 'err');
@@ -3190,6 +3218,65 @@ async function removeCustomDomain() {
   document.getElementById('cd-domain-input').value = '';
   renderDomainStatus();
   toast('Domaine retiré');
+}
+
+// ═══════════════════════════════════════════════
+// PAIEMENT D'ABONNEMENT (GeniusPay, extensible à d'autres prestataires)
+// ═══════════════════════════════════════════════
+async function paySubscriptionNow() {
+  const btn = document.getElementById('abo-pay-btn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Préparation du paiement…';
+
+  try {
+    const { data, error } = await sb.functions.invoke('create-subscription-payment', {
+      body: { ownerId: ownerId(), shopName: S.shop.name, provider: 'geniuspay' }
+    });
+    if (error || !data || !data.success) {
+      toast('Erreur : impossible de préparer le paiement. Réessayez.', 'err');
+      console.error('paySubscriptionNow error', error, data);
+      btn.disabled = false; btn.textContent = '💳 Payer mon abonnement maintenant';
+      return;
+    }
+    // Redirige vers la page de paiement sécurisée du prestataire
+    window.location.href = data.checkoutUrl;
+  } catch (e) {
+    console.error('paySubscriptionNow exception', e);
+    toast('Erreur technique, réessayez plus tard', 'err');
+    btn.disabled = false; btn.textContent = '💳 Payer mon abonnement maintenant';
+  }
+}
+
+async function loadAdminPaymentsHistory() {
+  const box = document.getElementById('adm-payments-history');
+  if (!box) return;
+  const { data, error } = await sb.from('payments').select('*, shops:owner_id(shop_name)').order('created_at', { ascending: false }).limit(100);
+  if (error) { box.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur : ${error.message}</p>`; return; }
+  if (!data || !data.length) { box.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucun paiement enregistré pour le moment.</p>`; return; }
+  const statusLabels = { completed: '✅ Confirmé', pending: '⏳ En attente', failed: '❌ Échoué', refunded: '↩️ Remboursé' };
+  box.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Boutique</th><th>Prestataire</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${
+    data.map(p => {
+      const d = new Date(p.created_at);
+      const shopName = (p.shops && p.shops.shop_name) || '—';
+      return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${shopName}</td><td>${p.provider}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
+
+async function loadPaymentsHistory() {
+  const box = document.getElementById('abo-payments-history');
+  if (!box) return;
+  const { data, error } = await sb.from('payments').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: false }).limit(20);
+  if (error) { box.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur de chargement.</p>`; return; }
+  if (!data || !data.length) { box.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucun paiement encore enregistré.</p>`; return; }
+  const statusLabels = { completed: '✅ Confirmé', pending: '⏳ En attente', failed: '❌ Échoué', refunded: '↩️ Remboursé' };
+  box.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${
+    data.map(p => {
+      const d = new Date(p.created_at);
+      return `<tr><td>${d.toLocaleDateString('fr-FR')}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
 }
 
 async function saveShop() {
