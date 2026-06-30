@@ -558,86 +558,6 @@ canvas{display:block;}
 .nl-reveal{opacity:0;transform:translateY(24px);transition:all .7s cubic-bezier(.2,.7,.2,1);}
 .nl-reveal.nl-on{opacity:1;transform:none;}
 @media(max-width:600px){.nl-hero{padding:80px 0 50px;}.nl-trust{gap:24px;}.nl-section{padding:56px 0;}}
-
-/* ═══ MARKETPLACE ═══ */
-.mkt-cat-btn{padding:8px 16px;border-radius:100px;font-size:13px;font-weight:600;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:#8B95AD;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;}
-.mkt-cat-btn.active,.mkt-cat-btn:hover{background:#2E6BFF;color:#fff;border-color:#2E6BFF;}
-.mkt-sort-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:#8B95AD;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
-.mkt-sort-btn.active,.mkt-sort-btn:hover{background:rgba(46,107,255,0.15);color:#4A7FFF;border-color:rgba(46,107,255,0.4);}
-.mkt-prod-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;}
-.mkt-prod-card:hover{border-color:rgba(46,107,255,0.4);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.35);}
-.mkt-prod-img{width:100%;aspect-ratio:1;object-fit:cover;background:#0F1525;font-size:40px;display:flex;align-items:center;justify-content:center;position:relative;}
-.mkt-prod-img img{width:100%;height:100%;object-fit:cover;}
-.mkt-prod-body{padding:14px;}
-.mkt-prod-shop{font-size:11px;color:#4A7FFF;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:4px;}
-.mkt-prod-name{font-size:14px;font-weight:700;color:#EDF1F8;margin-bottom:8px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.mkt-prod-price{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#EDF1F8;}
-.mkt-prod-old-price{font-size:12px;color:#8B95AD;text-decoration:line-through;margin-left:6px;}
-.mkt-prod-score{display:flex;align-items:center;gap:4px;margin-top:8px;}
-.mkt-score-bar{flex:1;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
-.mkt-score-fill{height:100%;background:linear-gradient(90deg,#2E6BFF,#8FB0FF);border-radius:2px;transition:width .4s;}
-.mkt-prod-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:10px;font-weight:700;margin-top:8px;}
-.mkt-badge-new{background:rgba(22,163,74,0.15);color:#4ade80;}
-.mkt-badge-top{background:rgba(234,88,12,0.15);color:#fb923c;}
-#mkt-search::placeholder{color:rgba(255,255,255,0.3);}
-.mkt-toolbar-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:12.5px;font-weight:700;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#EDF1F8;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;}
-.mkt-toolbar-btn:hover{border-color:#2E6BFF;background:rgba(46,107,255,0.12);}
-.mkt-fav-toggle{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(15,21,37,0.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:2;transition:.2s;border:1px solid rgba(255,255,255,0.12);}
-.mkt-fav-toggle:hover{background:rgba(15,21,37,0.9);transform:scale(1.08);}
-.mkt-fav-toggle.on{color:#E8221A;}
-
-/* ═══ LIVRAISON ═══ */
-.deliv-row{display:flex;align-items:center;gap:10px;background:#f8f9fa;border-radius:9px;padding:10px 13px;margin-bottom:8px;}
-.deliv-sector{font-weight:600;font-size:13px;flex:1;}
-.deliv-price{font-size:13px;color:var(--blue);font-weight:700;white-space:nowrap;}
-.deliv-actions{display:flex;gap:5px;}
-.deliv-select-box{background:#f8f9fa;border-radius:12px;padding:14px;margin:12px 0;}
-.deliv-select-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px;}
-.deliv-calc-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--border);}
-.deliv-calc-row:last-child{border-bottom:none;font-weight:700;font-size:15px;color:var(--black);}
-.deliv-calc-row span:last-child{color:var(--blue);font-weight:700;}
-.deliv-free{color:var(--green);font-weight:700;}
-
-/* ═══ SÉLECTEUR INDICATIF TÉLÉPHONIQUE ═══ */
-.tel-input-row{display:flex;gap:6px;}
-.tel-cc{flex:0 0 112px;padding:10px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--black);cursor:pointer;}
-.tel-cc:focus{border-color:var(--blue);}
-.tel-local{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--black);}
-.tel-local:focus{border-color:var(--blue);}
-
-/* ═══ HISTORIQUE COMMANDES CLIENT ═══ */
-.client-order-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
-.client-order-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.client-order-prod{font-weight:700;font-size:14px;}
-.client-order-meta{font-size:12px;color:var(--gray);line-height:1.7;}
-.client-order-shop{font-size:12px;color:var(--blue);font-weight:600;margin-top:6px;}
-.client-order-contact{font-size:12px;color:var(--gray);margin-top:3px;}
-
-/* ═══ SIGNALEMENT ═══ */
-.report-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--red-l);color:var(--red);border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;margin-top:10px;}
-.report-btn:hover{background:var(--red);color:#fff;}
-.report-reason-btn{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;text-align:left;}
-.report-reason-btn.on{border-color:var(--red);background:var(--red-l);color:var(--red);}
-
-/* ═══ SIGNALEMENTS ADMIN ═══ */
-.report-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
-.report-card-hdr{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.report-card-shop{font-weight:700;font-size:15px;}
-.report-card-meta{font-size:12px;color:var(--gray);line-height:1.6;}
-.report-card-reason{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:var(--red-l);color:var(--red);margin-bottom:8px;}
-.report-card-msg{font-size:13px;color:var(--black);background:#f8f9fa;border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.5;}
-.report-card-proof{width:80px;height:80px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer;}
-.report-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
-.report-count-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;margin-left:5px;}
-
-/* ═══ POLITIQUE DE CONFIDENTIALITÉ ═══ */
-.privacy-wrap{max-width:720px;margin:0 auto;padding:0 20px 60px;}
-.privacy-section{margin-bottom:28px;}
-.privacy-section h2{font-size:16px;font-weight:700;margin-bottom:10px;color:var(--black);}
-.privacy-section p,.privacy-section li{font-size:14px;color:#374151;line-height:1.7;}
-.privacy-section ul{padding-left:18px;margin-top:6px;}
-.privacy-section li{margin-bottom:5px;}
-
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -685,7 +605,6 @@ canvas{display:block;}
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <div class="nl-nav-btns">
         <button class="nl-nav-ghost" onclick="go('s-about')">À propos</button>
-        <button class="nl-nav-ghost" onclick="openMarketplace()">Explorer</button>
         <button class="nl-nav-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
@@ -770,101 +689,6 @@ canvas{display:block;}
     <div class="nl-wrap">
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <p>Pour faire grandir le commerce digital africain.</p>
-      <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés · <button onclick="go('s-privacy')" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:14px;text-decoration:underline">Politique de confidentialité</button></p>
-    </div>
-  </footer>
-</div>
-
-<!-- ═══════════════════════════════════════
-     MARKETPLACE PUBLIQUE
-═══════════════════════════════════════ -->
-<div id="s-marketplace" class="screen nl-screen">
-  <nav class="nl-nav">
-    <div class="nl-wrap nl-nav-inner">
-      <div class="nl-logo" onclick="go('s-land')" style="cursor:pointer"><span class="nl-logo-mark">Z</span>Zyntelo</div>
-      <div class="nl-nav-btns">
-        <button class="nl-nav-ghost" onclick="go('s-land')">← Accueil</button>
-        <button class="nl-nav-ghost" onclick="go('s-login')">Se connecter</button>
-        <button class="nl-nav-btn" onclick="go('s-register')">Créer ma boutique</button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO COMPACT -->
-  <div style="padding:48px 0 32px;text-align:center;position:relative;overflow:hidden;">
-    <div style="position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.15) 0%,transparent 65%);pointer-events:none;"></div>
-    <div class="nl-wrap" style="position:relative;z-index:2;">
-      <div class="nl-badge-free" style="margin-bottom:16px;"><span class="nl-dot"></span>Boutiques vérifiées</div>
-      <h1 style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(26px,5vw,44px);line-height:1.1;letter-spacing:-1px;margin-bottom:12px;color:#EDF1F8;">Découvrez les meilleurs<br><span style="background:linear-gradient(120deg,#4A7FFF,#8FB0FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">produits tendance</span></h1>
-      <p style="font-size:16px;color:#8B95AD;max-width:480px;margin:0 auto 28px;">Des milliers de produits de boutiques vérifiées à travers toute l'Afrique francophone.</p>
-
-      <!-- BARRE DE RECHERCHE -->
-      <div style="max-width:520px;margin:0 auto 18px;position:relative;">
-        <input id="mkt-search" type="text" placeholder="Rechercher un produit, une boutique…"
-          style="width:100%;padding:14px 50px 14px 20px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.28);background:rgba(255,255,255,0.06);color:#EDF1F8;font-size:15px;font-family:'Inter',sans-serif;outline:none;backdrop-filter:blur(10px);"
-          oninput="filterMarketplace(this.value)"
-          onfocus="this.style.borderColor='rgba(46,107,255,0.8)'"
-          onblur="this.style.borderColor='rgba(255,255,255,0.28)'">
-        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
-      </div>
-
-      <!-- MES COMMANDES / FAVORIS -->
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button class="mkt-toolbar-btn" onclick="openClientOrderHistory()"><i data-lucide="receipt" style="width:14px;height:14px"></i>Mes commandes</button>
-        <button class="mkt-toolbar-btn" onclick="openClientFavorites()"><i data-lucide="heart" style="width:14px;height:14px"></i>Favoris <span id="mkt-fav-count" style="display:none;background:#E8221A;color:#fff;border-radius:100px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px;">0</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FILTRES CATÉGORIES -->
-  <div class="nl-wrap" style="margin-bottom:24px;">
-    <div id="mkt-cats" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-      <button class="mkt-cat-btn active" onclick="filterMktCat('', this)">Tout</button>
-    </div>
-  </div>
-
-  <!-- STATS RAPIDES -->
-  <div class="nl-wrap" style="margin-bottom:32px;">
-    <div style="display:flex;gap:24px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8B95AD;">
-        <span style="color:#4A7FFF;font-weight:700;" id="mkt-count-display">—</span> produits disponibles
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8B95AD;">
-        <span style="color:#4A7FFF;font-weight:700;" id="mkt-shops-count">—</span> boutiques actives
-      </div>
-    </div>
-  </div>
-
-  <!-- TRIER PAR -->
-  <div class="nl-wrap" style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-    <div style="font-size:13px;color:#8B95AD;">Trier par :</div>
-    <div style="display:flex;gap:8px;">
-      <button class="mkt-sort-btn active" onclick="sortMarketplace('score', this)">Recommandés</button>
-      <button class="mkt-sort-btn" onclick="sortMarketplace('recent', this)">Récents</button>
-      <button class="mkt-sort-btn" onclick="sortMarketplace('price_asc', this)">Prix ↑</button>
-      <button class="mkt-sort-btn" onclick="sortMarketplace('price_desc', this)">Prix ↓</button>
-    </div>
-  </div>
-
-  <!-- GRILLE PRODUITS -->
-  <div class="nl-wrap" style="padding-bottom:60px;">
-    <div id="mkt-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
-      <!-- chargement -->
-      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;">
-        <div class="spin" style="border-color:rgba(255,255,255,0.1);border-top-color:#4A7FFF;margin:0 auto 16px;"></div>
-        Chargement des produits…
-      </div>
-    </div>
-    <div id="mkt-empty" style="display:none;text-align:center;padding:60px 20px;color:#8B95AD;">
-      <div style="font-size:48px;margin-bottom:12px;">🔍</div>
-      <p style="font-size:16px;">Aucun produit trouvé pour cette recherche.</p>
-    </div>
-  </div>
-
-  <footer class="nl-footer">
-    <div class="nl-wrap">
-      <div class="nl-logo" style="justify-content:center;margin-bottom:14px;font-size:18px;cursor:pointer" onclick="go('s-land')"><span class="nl-logo-mark">Z</span>Zyntelo</div>
-      <p>Pour faire grandir le commerce digital africain.</p>
       <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
     </div>
   </footer>
@@ -928,7 +752,7 @@ canvas{display:block;}
       <h2>Créez votre boutique</h2>
       <p class="sub">Lancez-vous en quelques minutes</p>
       <div class="fgrp"><label>Nom complet *</label><input id="rg-name" placeholder="Jean Kouassi"></div>
-      <div class="fgrp"><label>WhatsApp *</label><div id="rg-wa-wrap"></div><input type="hidden" id="rg-wa"></div>
+      <div class="fgrp"><label>WhatsApp *</label><input id="rg-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
       <div class="fgrp"><label>Nom de la boutique *</label><input id="rg-shop" placeholder="Mode Abidjan"></div>
       <div class="fgrp"><label>Email *</label><input id="rg-email" type="email" placeholder="votre@email.com"></div>
       <div class="fgrp"><label>Mot de passe *</label><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"></div>
@@ -984,7 +808,6 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni"><i data-lucide="palette"></i></span>Apparence</div>
       <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
       <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
-      <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison & Expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
@@ -1074,7 +897,7 @@ canvas{display:block;}
           <div class="card-title">🏪 Informations boutique</div>
           <div class="fgrp"><label>Nom de la boutique</label><input id="sh-name" placeholder="Mode Abidjan"></div>
           <div class="fgrp"><label>Description courte</label><textarea id="sh-desc" rows="2" placeholder="Vêtements et accessoires…"></textarea></div>
-          <div class="fgrp"><label>WhatsApp (reçus clients)</label><div id="sh-wa-wrap"></div><input type="hidden" id="sh-wa"></div>
+          <div class="fgrp"><label>WhatsApp (reçus clients)</label><input id="sh-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
           <div class="fgrp" style="display:none"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
           <button class="btn btn-blue btn-sm" onclick="saveShop()">Enregistrer</button>
         </div>
@@ -1376,29 +1199,6 @@ canvas{display:block;}
         .hc-input{display:flex;gap:8px;margin-top:12px}
         .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;height:46px}
       </style>
-      <!-- LIVRAISON & EXPÉDITIONS -->
-      <div class="dash-page" id="p-livraison">
-        <div class="page-head page-head-row">
-          <div><h1>Livraison & Expéditions</h1><p>Définissez vos tarifs de livraison par secteur géographique</p></div>
-          <button class="btn btn-blue btn-sm" onclick="showDelivForm()">+ Ajouter un secteur</button>
-        </div>
-        <div class="card" id="deliv-form-card" style="display:none">
-          <div class="card-title"><i data-lucide="map-pin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px"></i> Nouveau tarif</div>
-          <input type="hidden" id="deliv-edit-id">
-          <div class="form-row">
-            <div class="fgrp"><label>Secteur (ville, commune, zone…) *</label><input id="deliv-sector" placeholder="Ex : Cocody, Yopougon, Bouaké…"></div>
-            <div class="fgrp"><label>Tarif de livraison *</label><input id="deliv-price" placeholder="Ex : 1000 ou Gratuit"></div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button class="btn btn-blue btn-sm" onclick="saveDelivRate()">Enregistrer</button>
-            <button class="btn btn-ghost btn-sm" onclick="hideDelivForm()">Annuler</button>
-          </div>
-        </div>
-        <div id="deliv-list">
-          <div class="empty card"><div class="empty-ico"><i data-lucide="truck"></i></div><p>Aucun tarif de livraison défini pour le moment.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>
-        </div>
-      </div>
-
       <!-- NOTIFICATIONS (gérant uniquement) -->
       <div class="dash-page gerant-only" id="p-gerant-notifs">
         <div class="page-head"><h1>Notifications</h1><p>Soyez averti instantanément des nouvelles commandes de la boutique.</p></div>
@@ -1421,15 +1221,12 @@ canvas{display:block;}
           </div>
         </div>
       </div>
-      <!-- SIGNALEMENTS MARCHANDS -->
-      <div class="dash-page" id="adm-reports">
-        <div class="page-head"><h1>Signalements marchands</h1><p>Plaintes déposées par les clients</p></div>
-        <div id="adm-reports-list"><div class="empty card"><div class="empty-ico"><i data-lucide="shield-check"></i></div><p>Aucun signalement pour le moment.</p></div></div>
-      </div>
-
     </div>
   </main>
 </div>
+
+<!-- ═══════════════════════════════════════
+     BOUTIQUE CLIENT
 ═══════════════════════════════════════ -->
 <div id="s-boutique" class="screen">
   <div id="bann-bar" style="display:none" class="ann-bar"></div>
@@ -1550,7 +1347,6 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni"><i data-lucide="star"></i></span>Avis</div>
       <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni"><i data-lucide="bar-chart-3"></i></span>Statistiques</div>
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
-      <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="alert-triangle"></i></span>Signalements <span id="adm-reports-badge" class="report-count-badge" style="display:none">0</span></div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1719,121 +1515,6 @@ Merci pour votre confiance 🙏
   </main>
 </div>
 
-<!-- MODALE SIGNALEMENT MARCHAND -->
-<div class="overlay" id="report-overlay" onclick="if(event.target===this)this.classList.remove('on')">
-  <div class="popup">
-    <div class="popup-handle"></div>
-    <h3><i data-lucide="alert-octagon" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--red)"></i>Signaler le marchand</h3>
-    <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Votre signalement sera étudié par l'équipe Zyntelo dans les plus brefs délais.</p>
-    <div class="fgrp"><label>Nom et prénom *</label><input id="rep-name" placeholder="Votre nom et prénom"></div>
-    <div class="fgrp"><label>Numéro de téléphone *</label><div id="rep-tel-wrap"></div><input type="hidden" id="rep-tel"></div>
-    <div class="fgrp"><label>Motif du signalement *</label>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">
-        <button class="report-reason-btn" onclick="selectReportReason(this,'arnaque')"><i data-lucide="x-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Arnaque — j'ai payé mais je n'ai rien reçu</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'livraison_lente')"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Livraison trop lente ou non confirmée</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'produit_non_conforme')"><i data-lucide="package-x" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Produit non conforme à l'annonce</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'autre')"><i data-lucide="message-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Autre problème</button>
-      </div>
-    </div>
-    <div class="fgrp"><label>Décrivez le problème *</label><textarea id="rep-msg" rows="3" placeholder="Expliquez brièvement ce qui s'est passé…"></textarea></div>
-    <div class="fgrp">
-      <label>Photo de preuve (facultatif)</label>
-      <input type="file" id="rep-proof-input" accept="image/*" style="display:none" onchange="handleReportProof(this)">
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-proof-input').click()"><i data-lucide="camera" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"></i>Joindre une photo</button>
-      <img id="rep-proof-preview" src="" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)">
-    </div>
-    <input type="hidden" id="rep-reason">
-    <button class="btn btn-red btn-w" onclick="submitReport()">Envoyer le signalement</button>
-  </div>
-</div>
-
-<!-- MODALE HISTORIQUE COMMANDES CLIENT -->
-<div class="overlay" id="client-orders-overlay" onclick="if(event.target===this)this.classList.remove('on')">
-  <div class="popup" style="max-height:85vh;overflow-y:auto">
-    <div class="popup-handle"></div>
-    <h3><i data-lucide="receipt" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i>Mes commandes</h3>
-    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Retrouvez toutes vos commandes passées sur Zyntelo, tous marchands confondus.</p>
-    <div class="fgrp">
-      <label>Votre numéro de téléphone *</label>
-      <div id="co-tel-wrap"></div>
-      <input type="hidden" id="co-tel">
-      <button class="btn btn-blue btn-w" style="margin-top:8px" onclick="loadClientOrders()">Rechercher</button>
-    </div>
-    <div id="client-orders-list"></div>
-  </div>
-</div>
-
-<!-- MODALE FAVORIS CLIENT -->
-<div class="overlay" id="client-favs-overlay" onclick="if(event.target===this)this.classList.remove('on')">
-  <div class="popup" style="max-height:85vh;overflow-y:auto">
-    <div class="popup-handle"></div>
-    <h3><i data-lucide="heart" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i>Mes favoris</h3>
-    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Les produits que vous avez enregistrés, conservés sur cet appareil.</p>
-    <div id="client-favs-list"></div>
-  </div>
-</div>
-
-<!-- PAGE POLITIQUE DE CONFIDENTIALITÉ -->
-<div id="s-privacy" class="screen">
-  <nav class="land-nav">
-    <div class="zlogo" onclick="go('s-land')" style="cursor:pointer"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name">Zyntelo</span></div>
-    <div class="land-nav-btns"><button class="btn btn-ghost" onclick="go('s-land')">← Accueil</button></div>
-  </nav>
-  <div class="privacy-wrap" style="padding-top:40px">
-    <h1 style="font-family:'Sora',sans-serif;font-size:28px;font-weight:800;margin-bottom:6px">Politique de confidentialité</h1>
-    <p style="font-size:13px;color:var(--gray);margin-bottom:36px">Dernière mise à jour : Juin 2026</p>
-
-    <div class="privacy-section">
-      <h2>1. Protection des données personnelles</h2>
-      <p>Zyntelo s'engage à protéger les informations personnelles de tous ses utilisateurs — acheteurs comme vendeurs. Les données collectées (nom, téléphone, adresse de livraison) servent uniquement à traiter les commandes et améliorer l'expérience sur la plateforme. Elles ne sont en aucun cas revendues à des tiers.</p>
-    </div>
-
-    <div class="privacy-section">
-      <h2>2. Sécurité des paiements</h2>
-      <p>Toutes les transactions sur Zyntelo sont traitées via des systèmes de paiement sécurisés (Wave, Orange Money, MTN Money). Zyntelo ne stocke jamais vos informations bancaires ou de paiement.</p>
-    </div>
-
-    <div class="privacy-section">
-      <h2>3. Responsabilité des marchands</h2>
-      <p>Les marchands inscrits sur Zyntelo sont entièrement responsables des informations, photos et descriptions publiées sur leurs boutiques. Zyntelo vérifie et surveille régulièrement le contenu pour s'assurer du respect des règles de la plateforme.</p>
-    </div>
-
-    <div class="privacy-section">
-      <h2>4. Surveillance et protection des acheteurs</h2>
-      <p>Zyntelo surveille activement les comportements des marchands afin de protéger les acheteurs. Tout comportement signalé fait l'objet d'une enquête interne. Les mesures suivantes peuvent être appliquées :</p>
-      <ul>
-        <li>Avertissement officiel au marchand</li>
-        <li>Suspension temporaire de la boutique</li>
-        <li>Blocage définitif du compte en cas de fraude avérée</li>
-      </ul>
-    </div>
-
-    <div class="privacy-section">
-      <h2>5. Signalements</h2>
-      <p>Tout acheteur peut signaler un marchand directement depuis une page produit. Chaque signalement est étudié sérieusement par l'équipe Zyntelo. Nous nous engageons à traiter chaque plainte dans les meilleurs délais et à prendre les mesures appropriées.</p>
-    </div>
-
-    <div class="privacy-section">
-      <h2>6. Engagements de Zyntelo</h2>
-      <ul>
-        <li>Vos données personnelles sont protégées et ne sont pas revendues.</li>
-        <li>Les paiements sont sécurisés.</li>
-        <li>Les marchands sont surveillés pour garantir votre sécurité.</li>
-        <li>Toute fraude ou arnaque peut entraîner la suppression définitive de la boutique.</li>
-        <li>Zyntelo offre un environnement fiable, transparent et sécurisé pour tous.</li>
-      </ul>
-    </div>
-
-    <div class="privacy-section">
-      <h2>7. Contact</h2>
-      <p>Pour toute question relative à vos données ou à la politique de confidentialité, contactez-nous via le Centre d'aide Zyntelo ou par WhatsApp.</p>
-    </div>
-  </div>
-  <footer style="border-top:1px solid var(--border);padding:24px;text-align:center;font-size:13px;color:var(--gray)">
-    © 2026 Zyntelo · <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px" onclick="go('s-land')">Accueil</button>
-  </footer>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════
 // STORAGE PERSISTANT
@@ -1846,105 +1527,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_As2pSbd0Jt7iB22CC-l7mg_-pGWnC7U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // UID du compte administrateur (à remplacer une fois le compte admin créé — voir instructions)
 const ADMIN_UID = '51f865a0-0231-4bf9-8828-3d793e0ad06a';
-
-// ═══════════════════════════════════════════════
-// INDICATIFS TÉLÉPHONIQUES (sélecteur pays)
-// Ajoute un indicatif pays devant chaque champ téléphone de l'app.
-// Le champ original (id existant) est conservé en hidden et reçoit
-// automatiquement le numéro complet au format international, donc
-// tout le reste du code (lecture via .value) continue de fonctionner
-// sans aucune modification.
-// ═══════════════════════════════════════════════
-const TEL_COUNTRIES = [
-  { c: 'CI', d: '+225', f: '🇨🇮', n: "Côte d'Ivoire" },
-  { c: 'SN', d: '+221', f: '🇸🇳', n: 'Sénégal' },
-  { c: 'ML', d: '+223', f: '🇲🇱', n: 'Mali' },
-  { c: 'BF', d: '+226', f: '🇧🇫', n: 'Burkina Faso' },
-  { c: 'BJ', d: '+229', f: '🇧🇯', n: 'Bénin' },
-  { c: 'TG', d: '+228', f: '🇹🇬', n: 'Togo' },
-  { c: 'NE', d: '+227', f: '🇳🇪', n: 'Niger' },
-  { c: 'GN', d: '+224', f: '🇬🇳', n: 'Guinée' },
-  { c: 'GH', d: '+233', f: '🇬🇭', n: 'Ghana' },
-  { c: 'NG', d: '+234', f: '🇳🇬', n: 'Nigeria' },
-  { c: 'CM', d: '+237', f: '🇨🇲', n: 'Cameroun' },
-  { c: 'GA', d: '+241', f: '🇬🇦', n: 'Gabon' },
-  { c: 'CD', d: '+243', f: '🇨🇩', n: 'RD Congo' },
-  { c: 'CG', d: '+242', f: '🇨🇬', n: 'Congo' },
-  { c: 'MA', d: '+212', f: '🇲🇦', n: 'Maroc' },
-  { c: 'DZ', d: '+213', f: '🇩🇿', n: 'Algérie' },
-  { c: 'TN', d: '+216', f: '🇹🇳', n: 'Tunisie' },
-  { c: 'FR', d: '+33', f: '🇫🇷', n: 'France' },
-  { c: 'BE', d: '+32', f: '🇧🇪', n: 'Belgique' },
-  { c: 'CH', d: '+41', f: '🇨🇭', n: 'Suisse' },
-  { c: 'CA', d: '+1', f: '🇨🇦', n: 'Canada' },
-  { c: 'US', d: '+1', f: '🇺🇸', n: 'États-Unis' },
-  { c: 'GB', d: '+44', f: '🇬🇧', n: 'Royaume-Uni' },
-];
-
-function telCountryOptionsHtml(selectedDial) {
-  return TEL_COUNTRIES.map(t => `<option value="${t.d}" ${t.d === selectedDial ? 'selected' : ''}>${t.f} ${t.d}</option>`).join('');
-}
-
-// Construit le petit widget (select indicatif + input local) au-dessus d'un
-// champ existant. `targetId` = id du champ original déjà utilisé partout
-// ailleurs dans le code (ex: 'rg-wa', 'or-tel'...). Ce champ original est
-// conservé tel quel mais caché, et reçoit la valeur complète composée.
-function telWidgetHtml(targetId, defaultDial) {
-  defaultDial = defaultDial || '+225';
-  return `<div class="tel-input-row">
-    <select class="tel-cc" id="${targetId}-cc" onchange="syncTelField('${targetId}')">${telCountryOptionsHtml(defaultDial)}</select>
-    <input class="tel-local" id="${targetId}-local" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX" oninput="syncTelField('${targetId}')">
-  </div>`;
-}
-
-// Recompose le numéro international complet dans le champ d'origine (hidden)
-function syncTelField(targetId) {
-  const cc = document.getElementById(targetId + '-cc');
-  const local = document.getElementById(targetId + '-local');
-  const target = document.getElementById(targetId);
-  if (!cc || !local || !target) return;
-  const digits = local.value.replace(/\D/g, '').replace(/^0+/, '');
-  target.value = digits ? `${cc.value} ${digits}` : '';
-}
-
-// Pré-remplit le widget (select + input local) à partir d'un numéro complet
-// déjà enregistré (ex: "+225 0712345678"), en essayant de reconnaître l'indicatif.
-function setTelFieldValue(targetId, fullValue) {
-  const cc = document.getElementById(targetId + '-cc');
-  const local = document.getElementById(targetId + '-local');
-  const target = document.getElementById(targetId);
-  if (!cc || !local || !target) return;
-  const val = (fullValue || '').trim();
-  if (!val) { local.value = ''; target.value = ''; return; }
-  const found = TEL_COUNTRIES
-    .slice().sort((a, b) => b.d.length - a.d.length)
-    .find(t => val.replace(/\s/g, '').startsWith(t.d));
-  if (found) {
-    cc.value = found.d;
-    local.value = val.replace(found.d, '').replace(/\D/g, '').replace(/^0+/, '');
-  } else {
-    local.value = val.replace(/\D/g, '');
-  }
-  target.value = val;
-}
-
-// Injecte le widget (select indicatif + input local) dans chaque conteneur
-// "-wrap" présent dans la page statique au chargement. Les champs ajoutés
-// dynamiquement (signalement, fiche produit, etc.) injectent les leurs
-// eux-mêmes au moment de leur rendu.
-function injectTelWidgets() {
-  [
-    ['rg-wa-wrap', 'rg-wa'],
-    ['sh-wa-wrap', 'sh-wa'],
-    ['co-tel-wrap', 'co-tel'],
-  ].forEach(([wrapId, targetId]) => {
-    const wrap = document.getElementById(wrapId);
-    if (wrap && !wrap.dataset.injected) {
-      wrap.innerHTML = telWidgetHtml(targetId);
-      wrap.dataset.injected = '1';
-    }
-  });
-}
 
 // ═══════════════════════════════════════════════
 // STORAGE PERSISTANT — connecté à Supabase
@@ -2248,12 +1830,10 @@ function parseRoute() {
   if (parts[0] === 'login') return { type: 'login' };
   if (parts[0] === 'register') return { type: 'register' };
   if (parts[0] === 'admin') return { type: 'admin' };
-  if (parts[0] === 'explorer') return { type: 'marketplace' };
   return { type: 'home' };
 }
 
 async function init() {
-  injectTelWidgets();
   const route = parseRoute();
 
   // Boutique publique : totalement indépendant de la session, accessible à tous
@@ -2269,13 +1849,6 @@ async function init() {
     hide('loading');
     go('s-land');
     checkSessionForMySpaceButton();
-    return;
-  }
-
-  // Marketplace publique
-  if (route.type === 'marketplace') {
-    hide('loading');
-    await openMarketplace();
     return;
   }
 
@@ -2460,7 +2033,6 @@ function pg(pageId, el) {
   if (pageId === 'p-gerant') renderGerants();
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
-  if (pageId === 'p-livraison') loadDelivRates();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-abo') loadPaymentsHistory();
@@ -2481,7 +2053,6 @@ function admPg(pageId, el) {
   if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
-  if (pageId === 'adm-reports') loadAdminReports();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -3352,8 +2923,7 @@ async function loginAs(user) {
 
   // Pré-remplir boutique
   document.getElementById('sh-name').value = S.shop.name;
-  injectTelWidgets();
-  setTelFieldValue('sh-wa', S.shop.wa);
+  document.getElementById('sh-wa').value = S.shop.wa;
   document.getElementById('sh-domain').value = S.shop.domain||'';
   document.getElementById('sh-public-link').value = getShopLink();
   document.getElementById('sh-slug-input').value = S.shop.slug || '';
@@ -4626,12 +4196,11 @@ function previewShop(prodId, isPublic) {
           </div>
           <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
           <div id="prod-offers-box"></div>
-          <div id="deliv-select-container"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
-          <div class="fgrp"><label>Téléphone *</label>${telWidgetHtml('or-tel')}<input type="hidden" id="or-tel"></div>
+          <div class="fgrp"><label>Téléphone *</label><input id="or-tel" type="tel" placeholder="+225 07 XX XX XX XX"></div>
           <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} FCFA</span> à la livraison</button>
         </div>
       </div>
@@ -4655,15 +4224,11 @@ function previewShop(prodId, isPublic) {
         <div class="fgrp"><label>Votre commentaire (facultatif)</label><textarea id="pr-comment" rows="3" placeholder="Votre avis sur ce produit…"></textarea></div>
         <button class="btn btn-blue btn-sm" onclick="submitProductReview()">Envoyer mon avis</button>
       </div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
-        <button class="report-btn" onclick="openReportModal()"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"></i>Signaler le marchand</button>
-      </div>
     </div>`;
   S.orderQty = 1;
   go('s-boutique');
   loadProductReviews(p.id);
   renderProductOffers(p);
-  loadAndRenderDeliverySelector(ownerId());
 }
 
 let prodReviewStars = 0;
@@ -5429,9 +4994,6 @@ function updTotal() {
   const t = Math.round(unitPrice*S.orderQty);
   document.getElementById('pp-total').textContent = t.toLocaleString()+' FCFA';
   document.getElementById('pp-btn-total').textContent = t.toLocaleString()+' FCFA';
-  // Recalculer la livraison si un secteur est déjà sélectionné
-  const sel = document.getElementById('deliv-selector');
-  if (sel && sel.value) onDelivSectorChange();
 }
 
 async function notifyOwnerNewOrder(orderData) {
@@ -5536,7 +5098,6 @@ async function submitOrder() {
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
   ['or-prenom','or-ville','or-qrt','or-tel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  resetTelField('or-tel');
   S.orderQty = 1;
   const qtyEl = document.getElementById('pp-qty'); if (qtyEl) qtyEl.textContent = 1;
   updTotal();
@@ -6066,17 +5627,6 @@ function renderAdminThreadView(pid) {
   document.getElementById('adm-thread-list').style.display = 'none';
   const view = document.getElementById('adm-thread-view');
   view.style.display = 'block';
-
-  // Corrige le bug où le texte en cours de frappe disparaissait : un nouveau
-  // message (temps réel ou polling) déclenchait un re-rendu complet qui
-  // recréait la zone de texte et perdait sa valeur. On la sauvegarde avant
-  // de réécrire le HTML, puis on la restaure (avec la position du curseur).
-  const existingTa = document.getElementById('adm-reply-text');
-  const draftValue = existingTa ? existingTa.value : '';
-  const hadFocus = existingTa === document.activeElement;
-  const selStart = existingTa ? existingTa.selectionStart : null;
-  const selEnd = existingTa ? existingTa.selectionEnd : null;
-
   const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
   const bubbles = t.msgs.map(m => {
     const safe = hcEscape(m.body);
@@ -6094,14 +5644,6 @@ function renderAdminThreadView(pid) {
       </div>
     </div>`;
   const m = view.querySelector('.hc-msgs'); if (m) m.scrollTop = m.scrollHeight;
-
-  if (draftValue) {
-    const ta = document.getElementById('adm-reply-text');
-    if (ta) {
-      ta.value = draftValue;
-      if (hadFocus) { ta.focus(); if (selStart !== null) ta.setSelectionRange(selStart, selEnd); }
-    }
-  }
 }
 
 function backToThreadList() { admOpenPid = null; renderAdminThreadList(); }
@@ -6384,676 +5926,6 @@ async function sendMsgAll() {
   const first=clients[0];
   window.open(`https://wa.me/${first.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   if(clients.length>1) toast(`WhatsApp ouvert pour ${first.name}. Répétez pour les ${clients.length-1} autres.`,'ok');
-}
-
-// ═══════════════════════════════════════════════
-// LIVRAISON & EXPÉDITIONS
-// ═══════════════════════════════════════════════
-function showDelivForm(id) {
-  const card = document.getElementById('deliv-form-card');
-  card.style.display = 'block';
-  card.scrollIntoView({ behavior: 'smooth' });
-  if (id) {
-    const rate = (S.delivRates||[]).find(r => r.id === id);
-    if (rate) {
-      document.getElementById('deliv-edit-id').value = id;
-      document.getElementById('deliv-sector').value = rate.sector;
-      document.getElementById('deliv-price').value = rate.price;
-    }
-  } else {
-    document.getElementById('deliv-edit-id').value = '';
-    document.getElementById('deliv-sector').value = '';
-    document.getElementById('deliv-price').value = '';
-  }
-}
-
-function hideDelivForm() {
-  document.getElementById('deliv-form-card').style.display = 'none';
-}
-
-async function loadDelivRates() {
-  const { data } = await sb.from('delivery_rates').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: true });
-  S.delivRates = data || [];
-  renderDelivRates();
-}
-
-function renderDelivRates() {
-  const list = document.getElementById('deliv-list');
-  if (!list) return;
-  if (!S.delivRates || !S.delivRates.length) {
-    list.innerHTML = `<div class="empty card"><div class="empty-ico">🚚</div><p>Aucun tarif de livraison défini.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>`;
-    return;
-  }
-  list.innerHTML = S.delivRates.map(r => {
-    const priceDisplay = r.price.toLowerCase() === 'gratuit' || r.price === '0'
-      ? `<span class="deliv-free">Gratuit</span>`
-      : `<span class="deliv-price">${r.price} FCFA</span>`;
-    return `
-    <div class="deliv-row">
-      <span class="deliv-sector">${r.sector}</span>
-      ${priceDisplay}
-      <div class="deliv-actions">
-        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="showDelivForm('${r.id}')"><i data-lucide="pencil" style="width:13px;height:13px"></i></button>
-        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDelivRate('${r.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function saveDelivRate() {
-  const editId = document.getElementById('deliv-edit-id').value;
-  const sector = document.getElementById('deliv-sector').value.trim();
-  const price = document.getElementById('deliv-price').value.trim();
-  if (!sector) { toast('Entrez le nom du secteur *', 'err'); return; }
-  if (!price) { toast('Entrez le tarif *', 'err'); return; }
-
-  if (editId) {
-    const { error } = await sb.from('delivery_rates').update({ sector, price }).eq('id', editId);
-    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-    toast('Tarif mis à jour ✓');
-  } else {
-    const { error } = await sb.from('delivery_rates').insert({ owner_id: ownerId(), sector, price });
-    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-    toast('Secteur ajouté ✓');
-  }
-  hideDelivForm();
-  await loadDelivRates();
-}
-
-async function deleteDelivRate(id) {
-  if (!confirm('Supprimer ce tarif de livraison ?')) return;
-  const { error } = await sb.from('delivery_rates').delete().eq('id', id);
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-  toast('Tarif supprimé');
-  await loadDelivRates();
-}
-
-// Affichage côté page produit publique
-async function loadAndRenderDeliverySelector(ownerIdVal) {
-  const { data: rates } = await sb.from('delivery_rates').select('*').eq('owner_id', ownerIdVal).order('created_at', { ascending: true });
-  if (!rates || !rates.length) return;
-  S.delivRatesPublic = rates;
-
-  const box = document.getElementById('deliv-select-container');
-  if (!box) return;
-
-  const options = rates.map(r => `<option value="${r.id}">${r.sector}</option>`).join('');
-  box.innerHTML = `
-    <div class="deliv-select-box">
-      <div class="deliv-select-label">Choisissez votre secteur de livraison</div>
-      <div class="fgrp" style="margin-bottom:10px">
-        <select id="deliv-selector" onchange="onDelivSectorChange()" style="font-size:14px">
-          <option value="">-- Sélectionnez votre secteur --</option>
-          ${options}
-        </select>
-      </div>
-      <div id="deliv-calc" style="display:none">
-        <div class="deliv-calc-row"><span>Prix du produit</span><span id="deliv-prod-price">—</span></div>
-        <div class="deliv-calc-row"><span>Livraison</span><span id="deliv-delivery-price">—</span></div>
-        <div class="deliv-calc-row"><span>Total à payer</span><span id="deliv-total-price">—</span></div>
-      </div>
-    </div>`;
-}
-
-function onDelivSectorChange() {
-  const sel = document.getElementById('deliv-selector');
-  const calc = document.getElementById('deliv-calc');
-  if (!sel || !sel.value) { if (calc) calc.style.display = 'none'; return; }
-  const rate = (S.delivRatesPublic||[]).find(r => r.id === sel.value);
-  if (!rate) return;
-  const p = S.curProd;
-  if (!p) return;
-  const offerPercent = S.selectedOffer ? S.selectedOffer.percent : 0;
-  const unitPrice = Math.round(p.newP * (1 - offerPercent/100));
-  const prodTotal = unitPrice * S.orderQty;
-  const isFree = rate.price.toLowerCase() === 'gratuit' || rate.price === '0';
-  const delivCost = isFree ? 0 : parseInt(rate.price.replace(/\s/g,'')) || 0;
-  const grandTotal = prodTotal + delivCost;
-
-  document.getElementById('deliv-prod-price').textContent = prodTotal.toLocaleString('fr-FR') + ' FCFA';
-  document.getElementById('deliv-delivery-price').innerHTML = isFree
-    ? `<span class="deliv-free">Gratuit</span>`
-    : delivCost.toLocaleString('fr-FR') + ' FCFA';
-  document.getElementById('deliv-total-price').textContent = grandTotal.toLocaleString('fr-FR') + ' FCFA';
-  calc.style.display = 'block';
-
-  // Met à jour le bouton commander avec le vrai total
-  const btnTotal = document.getElementById('pp-btn-total');
-  if (btnTotal) btnTotal.textContent = grandTotal.toLocaleString('fr-FR') + ' FCFA';
-}
-
-// ═══════════════════════════════════════════════
-// SIGNALEMENT MARCHAND
-// ═══════════════════════════════════════════════
-let _reportProofData = null;
-
-function openReportModal() {
-  document.getElementById('rep-name').value = '';
-  if (!document.getElementById('rep-tel-wrap').dataset.injected) {
-    document.getElementById('rep-tel-wrap').innerHTML = telWidgetHtml('rep-tel');
-    document.getElementById('rep-tel-wrap').dataset.injected = '1';
-  }
-  resetTelField('rep-tel');
-  document.getElementById('rep-msg').value = '';
-  document.getElementById('rep-reason').value = '';
-  document.getElementById('rep-proof-preview').style.display = 'none';
-  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
-  _reportProofData = null;
-  document.getElementById('report-overlay').classList.add('on');
-}
-
-function selectReportReason(btn, reason) {
-  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  document.getElementById('rep-reason').value = reason;
-}
-
-async function handleReportProof(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const compressed = await compressImage(file, 800, 0.7);
-  _reportProofData = compressed;
-  const preview = document.getElementById('rep-proof-preview');
-  preview.src = compressed;
-  preview.style.display = 'block';
-}
-
-async function submitReport() {
-  const name = document.getElementById('rep-name').value.trim();
-  const tel = document.getElementById('rep-tel').value.trim();
-  const reason = document.getElementById('rep-reason').value;
-  const msg = document.getElementById('rep-msg').value.trim();
-  if (!name) { toast('Entrez votre nom et prénom *', 'err'); return; }
-  if (!tel) { toast('Entrez votre numéro de téléphone *', 'err'); return; }
-  if (!reason) { toast('Choisissez un motif *', 'err'); return; }
-  if (!msg) { toast('Décrivez le problème *', 'err'); return; }
-  if (!S.curProd || !ownerId()) { toast('Erreur : boutique introuvable', 'err'); return; }
-
-  let proofUrl = null;
-  if (_reportProofData) {
-    try {
-      const blob = dataURLToBlob(_reportProofData);
-      const path = `reports/${ownerId()}/${Date.now()}.jpg`;
-      const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-      if (!upErr) {
-        const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
-        proofUrl = urlData.publicUrl;
-      }
-    } catch (e) { console.error('Report proof upload error', e); }
-  }
-
-  const reportPayload = {
-    owner_id: ownerId(),
-    shop_name: S.shop ? S.shop.name : '—',
-    product_id: S.curProd.id,
-    product_name: S.curProd.name,
-    client_name: name,
-    client_phone: tel,
-    reason,
-    message: msg,
-    proof_url: proofUrl
-  };
-  let { error } = await sb.from('reports').insert(reportPayload);
-  if (error && /client_phone/i.test(error.message || '')) {
-    // La colonne client_phone n'existe pas encore côté base : on retente sans elle
-    // pour ne jamais bloquer l'envoi du signalement (voir rapport pour la migration SQL).
-    delete reportPayload.client_phone;
-    ({ error } = await sb.from('reports').insert(reportPayload));
-  }
-
-  if (error) { toast('Erreur lors de l\'envoi : ' + error.message, 'err'); return; }
-  document.getElementById('report-overlay').classList.remove('on');
-  toast('Signalement envoyé. L\'équipe Zyntelo va l\'examiner. ✓');
-}
-
-// ═══════════════════════════════════════════════
-// HISTORIQUE COMMANDES CLIENT — toute la marketplace
-// ═══════════════════════════════════════════════
-function openClientOrderHistory() {
-  resetTelField('co-tel');
-  document.getElementById('client-orders-list').innerHTML = '';
-  document.getElementById('client-orders-overlay').classList.add('on');
-}
-
-async function loadClientOrders() {
-  const tel = document.getElementById('co-tel').value.trim();
-  if (!tel) { toast('Entrez votre numéro de téléphone', 'err'); return; }
-  const list = document.getElementById('client-orders-list');
-  list.innerHTML = `<p style="font-size:13px;color:var(--gray);margin-top:10px">Recherche en cours…</p>`;
-
-  // Recherche sur l'ensemble des commandes de la marketplace (tous marchands),
-  // filtrée côté client sur les 8 derniers chiffres du numéro.
-  const { data: rows, error } = await sb.from('orders').select('owner_id, data, created_at').order('created_at', { ascending: false }).limit(1000);
-  if (error || !rows) { list.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur lors de la recherche.</p>`; return; }
-
-  const telClean = tel.replace(/\D/g, '');
-  const matches = rows.filter(r => r.data && r.data.tel && r.data.tel.replace(/\D/g, '').includes(telClean.slice(-8)));
-
-  if (!matches.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.9 15.92a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.81 5h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 12.59a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 19.73v3z"/></svg></div><p>Aucune commande pour ce numéro.</p></div>`;
-    return;
-  }
-
-  // Résout les boutiques et produits concernés pour afficher le nom de la
-  // boutique et permettre la redirection vers la fiche produit exacte.
-  const ownerIds = [...new Set(matches.map(r => r.owner_id))];
-  const prodIds = [...new Set(matches.map(r => r.data.prodId).filter(Boolean))];
-  const [{ data: shops }, { data: prods }] = await Promise.all([
-    sb.from('shops').select('id, shop_name, slug, wa').in('id', ownerIds),
-    prodIds.length ? sb.from('products').select('id, owner_id, data').in('id', prodIds) : Promise.resolve({ data: [] }),
-  ]);
-  const shopById = {}; (shops || []).forEach(s => { shopById[s.id] = s; });
-  const prodById = {}; (prods || []).forEach(p => { prodById[p.id] = p; });
-
-  const statusLabel = { livree: 'Confirmée', annulee: 'Annulée', attente: 'En attente' };
-  list.innerHTML = matches.map(r => {
-    const o = r.data;
-    const shop = shopById[r.owner_id] || {};
-    const prodRow = prodById[o.prodId];
-    const prodSlug = prodRow && prodRow.data ? prodRow.data.slug : '';
-    const link = shop.slug ? (prodSlug ? `/b/${shop.slug}/p/${prodSlug}` : `/b/${shop.slug}`) : null;
-    return `
-    <div class="client-order-card" ${link ? `style="cursor:pointer" onclick="window.location.href='${link}'"` : ''}>
-      <div class="client-order-hdr">
-        <span class="client-order-prod">${o.prodName || '—'}</span>
-        <span class="badge ${o.status==='livree'?'b-green':o.status==='annulee'?'b-red':'b-yellow'}">${statusLabel[o.status]||'En attente'}</span>
-      </div>
-      <div class="client-order-meta">
-        ${(+o.total||0).toLocaleString('fr-FR')} FCFA · ${o.date||'—'} · Qté : ${o.qty||1}
-      </div>
-      <div class="client-order-shop">${shop.shop_name || '—'}</div>
-      ${shop.wa ? `<div class="client-order-contact">Contact marchand : <a href="https://wa.me/${shop.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-weight:600" onclick="event.stopPropagation()">${shop.wa}</a></div>` : ''}
-      ${link ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-top:6px">→ Voir le produit / signaler le marchand</div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════
-// FAVORIS CLIENT — sans compte, conservés sur l'appareil (localStorage)
-// ═══════════════════════════════════════════════
-const FAV_STORAGE_KEY = 'zyntelo_favorites';
-
-function getFavorites() {
-  try { return JSON.parse(localStorage.getItem(FAV_STORAGE_KEY) || '[]'); } catch { return []; }
-}
-
-function saveFavorites(favs) {
-  try { localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favs)); } catch (e) { console.error('saveFavorites error', e); }
-  updateMktFavCount();
-}
-
-function isFavorited(prodId) {
-  return getFavorites().some(f => f.prodId === prodId);
-}
-
-function toggleFavorite(prodId) {
-  const favs = getFavorites();
-  const idx = favs.findIndex(f => f.prodId === prodId);
-  if (idx >= 0) {
-    favs.splice(idx, 1);
-    saveFavorites(favs);
-    toast('Retiré des favoris');
-  } else {
-    const p = _mktAllProducts.find(x => x._rowId === prodId);
-    if (!p) return;
-    favs.push({
-      prodId: p._rowId, name: p.name, price: p.newP, oldPrice: p.oldP,
-      img: (p.imgs && p.imgs[0]) || '', shopName: p.shopName, shopSlug: p.shopSlug, slug: p.slug,
-      addedAt: new Date().toISOString(),
-    });
-    saveFavorites(favs);
-    toast('Ajouté aux favoris ❤️');
-  }
-  document.querySelectorAll(`.mkt-fav-toggle[data-pid="${prodId}"]`).forEach(btn => {
-    const on = isFavorited(prodId);
-    btn.classList.toggle('on', on);
-    btn.textContent = on ? '❤️' : '🤍';
-  });
-}
-
-function updateMktFavCount() {
-  const el = document.getElementById('mkt-fav-count');
-  if (!el) return;
-  const n = getFavorites().length;
-  el.textContent = n;
-  el.style.display = n > 0 ? 'inline-flex' : 'none';
-}
-
-function openClientFavorites() {
-  renderClientFavorites();
-  document.getElementById('client-favs-overlay').classList.add('on');
-}
-
-function renderClientFavorites() {
-  const favs = getFavorites();
-  const list = document.getElementById('client-favs-list');
-  if (!favs.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">🤍</div><p>Aucun favori pour le moment.</p></div>`;
-    return;
-  }
-  list.innerHTML = favs.slice().reverse().map(f => {
-    const link = f.shopSlug && f.slug ? `/b/${f.shopSlug}/p/${f.slug}` : (f.shopSlug ? `/b/${f.shopSlug}` : '#');
-    const imgHtml = f.img ? `<img src="${f.img}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : `<div style="width:56px;height:56px;border-radius:8px;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>`;
-    return `<div class="client-order-card" style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="window.location.href='${link}'">
-      ${imgHtml}
-      <div style="flex:1;min-width:0">
-        <div class="client-order-prod" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
-        <div class="client-order-meta">${(+f.price||0).toLocaleString('fr-FR')} FCFA · 🏪 ${f.shopName||'—'}</div>
-      </div>
-      <button class="btn-icon" title="Retirer des favoris" onclick="event.stopPropagation();toggleFavorite('${f.prodId}');renderClientFavorites();">🗑️</button>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════
-// SIGNALEMENTS — ESPACE ADMIN
-// ═══════════════════════════════════════════════
-async function loadAdminReports() {
-  const list = document.getElementById('adm-reports-list');
-  list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Chargement…</p>`;
-
-  const { data: reports, error } = await sb.from('reports').select('*').order('created_at', { ascending: false });
-  if (error) { list.innerHTML = `<p style="color:var(--red);font-size:13px">Erreur : ${error.message}</p>`; return; }
-  if (!reports || !reports.length) {
-    list.innerHTML = `<div class="empty card"><div class="empty-ico">🛡️</div><p>Aucun signalement pour le moment.</p></div>`;
-    document.getElementById('adm-reports-badge').style.display = 'none';
-    return;
-  }
-
-  // Badge compteur
-  const badge = document.getElementById('adm-reports-badge');
-  if (badge) { badge.textContent = reports.length; badge.style.display = 'flex'; }
-
-  // Regrouper par owner_id pour afficher le nb total
-  const countByOwner = {};
-  reports.forEach(r => { countByOwner[r.owner_id] = (countByOwner[r.owner_id] || 0) + 1; });
-
-  const reasonLabels = {
-    arnaque: 'Arnaque',
-    livraison_lente: 'Livraison trop lente',
-    produit_non_conforme: 'Produit non conforme',
-    autre: 'Autre'
-  };
-
-  list.innerHTML = reports.map(r => `
-    <div class="report-card">
-      <div class="report-card-hdr">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--red-l);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
-        <div style="flex:1">
-          <div class="report-card-shop">${r.shop_name || '—'} <span style="font-size:11px;color:var(--gray);font-weight:400">(${countByOwner[r.owner_id]} signalement(s) total)</span></div>
-          <div class="report-card-meta">Produit : <strong>${r.product_name || '—'}</strong> · Client : ${r.client_name}${r.client_phone ? ` · 📞 ${r.client_phone}` : ''} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
-        </div>
-      </div>
-      <div class="report-card-reason">${reasonLabels[r.reason] || r.reason}</div>
-      <div class="report-card-msg">${r.message}</div>
-      ${r.proof_url ? `<img src="${r.proof_url}" class="report-card-proof" onclick="window.open('${r.proof_url}','_blank')" title="Voir la preuve en grand">` : ''}
-      <div class="report-card-actions">
-        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="sendWarningToShop('${r.owner_id}','${(r.shop_name||'').replace(/'/g,"\\'")}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Avertissement
-        </button>
-        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="suspendShopFromReport('${r.owner_id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>Suspendre
-        </button>
-        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="toggleBlock('${r.owner_id}',true)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bloquer définitivement
-        </button>
-        <button class="btn btn-sm" style="background:var(--gray-l);color:var(--gray)" onclick="deleteReport('${r.id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Supprimer
-        </button>
-      </div>
-    </div>`).join('');
-}
-
-async function sendWarningToShop(uid, shopName) {
-  const users = await Store.get('users') || [];
-  const user = users.find(u => u.id === uid);
-  if (!user || !user.wa) { toast('Ce marchand n\'a pas de WhatsApp enregistré', 'err'); return; }
-  const msg = `⚠️ Avertissement Zyntelo\n\nBonjour,\n\nNous avons reçu un signalement concernant votre boutique "${shopName}".\n\nMerci de contacter vos clients et de résoudre ce problème dans les plus brefs délais.\n\nEn cas de récidive, votre boutique pourra être suspendue ou bloquée définitivement.\n\n— L'équipe Zyntelo`;
-  window.open(`https://wa.me/${user.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-  toast('Message WhatsApp ouvert ✓');
-}
-
-async function suspendShopFromReport(uid) {
-  if (!confirm('Suspendre temporairement cette boutique pour non-paiement / litige ?')) return;
-  const users = await Store.get('users') || [];
-  const user = users.find(u => u.id === uid);
-  if (!user) return;
-  user.blocked = true;
-  const shop = await Store.get('shop_' + uid) || {};
-  shop.blocked = true;
-  shop.suspendedReason = 'report';
-  await sb.from('shops').update({ blocked: true, suspended_reason: 'report' }).eq('id', uid);
-  await Store.set('shop_' + uid, shop);
-  await Store.set('users', users);
-  toast('Boutique suspendue suite au signalement ✓');
-  loadAdminReports();
-}
-
-async function deleteReport(id) {
-  if (!confirm('Supprimer ce signalement ?')) return;
-  const { error } = await sb.from('reports').delete().eq('id', id);
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-  toast('Signalement supprimé');
-  loadAdminReports();
-}
-
-// ═══════════════════════════════════════════════
-// MARKETPLACE PUBLIQUE
-// ═══════════════════════════════════════════════
-let _mktAllProducts = [];
-let _mktFilteredProducts = [];
-let _mktCurrentSort = 'score';
-let _mktCurrentCat = '';
-let _mktSearchQuery = '';
-
-async function openMarketplace() {
-  go('s-marketplace');
-  updateMktFavCount();
-  if (_mktAllProducts.length === 0) await loadMarketplaceProducts();
-}
-
-async function loadMarketplaceProducts() {
-  const grid = document.getElementById('mkt-grid');
-  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;"><div class="spin" style="border-color:rgba(255,255,255,0.1);border-top-color:#4A7FFF;margin:0 auto 16px;"></div>Chargement des produits…</div>`;
-
-  try {
-    // Charger toutes les boutiques actives (non bloquées)
-    const { data: shops, error: shopErr } = await sb.from('shops').select('id, shop_name, slug, badge, blocked').eq('blocked', false);
-    if (shopErr || !shops || !shops.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;"><div style="font-size:48px;margin-bottom:12px;">🏪</div><p>Aucune boutique active pour le moment.</p></div>`;
-      return;
-    }
-
-    // Charger les produits de toutes les boutiques actives
-    const shopIds = shops.map(s => s.id);
-    const shopMap = {};
-    shops.forEach(s => { shopMap[s.id] = s; });
-
-    const { data: prodRows, error: prodErr } = await sb.from('products').select('id, owner_id, data, created_at').in('owner_id', shopIds).order('created_at', { ascending: false }).limit(200);
-
-    if (prodErr) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#e74c3c;">Erreur de chargement.</div>`;
-      return;
-    }
-
-    // Construire les objets produits avec score de ranking
-    const products = (prodRows || []).map(row => {
-      const p = row.data || {};
-      const shop = shopMap[row.owner_id] || {};
-      const imgs = (p.imgs && p.imgs.length) ? p.imgs : [];
-      const hasImg = imgs.length > 0;
-      const hasDesc = p.desc && p.desc.length > 20;
-      const hasPrice = p.newP > 0;
-      const hasVars = p.vars && p.vars.length > 0;
-      const imgCount = imgs.length;
-
-      // Score qualité fiche (0–40)
-      let scoreQualite = 0;
-      if (hasImg) scoreQualite += 15;
-      if (imgCount >= 3) scoreQualite += 10;
-      if (hasDesc) scoreQualite += 10;
-      if (hasVars) scoreQualite += 5;
-
-      // Score réputation boutique (0–40)
-      let scoreShop = 0;
-      if (shop.badge === 'meilleur') scoreShop = 40;
-      else if (shop.badge === 'pro') scoreShop = 25;
-      else scoreShop = 10;
-
-      // Score fraîcheur (0–20) — produits récents boostés
-      const ageInDays = (Date.now() - new Date(row.created_at).getTime()) / (1000*60*60*24);
-      let scoreFraicheur = 0;
-      if (ageInDays < 3) scoreFraicheur = 20;
-      else if (ageInDays < 7) scoreFraicheur = 15;
-      else if (ageInDays < 30) scoreFraicheur = 10;
-      else if (ageInDays < 90) scoreFraicheur = 5;
-
-      const scoreTotal = scoreQualite + scoreShop + scoreFraicheur;
-
-      return {
-        _rowId: row.id,
-        ownerId: row.owner_id,
-        createdAt: row.created_at,
-        name: p.name || 'Produit',
-        newP: p.newP || 0,
-        oldP: p.oldP || 0,
-        imgs,
-        desc: p.desc || '',
-        vars: p.vars || [],
-        slug: p.slug || '',
-        cat: p.cat || '',
-        shopName: shop.shop_name || 'Boutique',
-        shopSlug: shop.slug || '',
-        shopBadge: shop.badge || '',
-        scoreTotal,
-        scorePct: Math.round((scoreTotal / 100) * 100),
-        ageInDays,
-      };
-    }).filter(p => p.newP > 0); // exclure les produits sans prix
-
-    _mktAllProducts = products;
-
-    // Construire les catégories uniques
-    const cats = [...new Set(products.map(p => p.cat).filter(Boolean))].slice(0, 12);
-    const catBar = document.getElementById('mkt-cats');
-    catBar.innerHTML = `<button class="mkt-cat-btn active" onclick="filterMktCat('', this)">Tout</button>` +
-      cats.map(c => `<button class="mkt-cat-btn" onclick="filterMktCat('${c.replace(/'/g,"\\'")}', this)">${c}</button>`).join('');
-
-    // Compter les boutiques uniques
-    const shopCount = new Set(products.map(p => p.ownerId)).size;
-    document.getElementById('mkt-shops-count').textContent = shopCount;
-
-    applyMktFilters();
-  } catch (e) {
-    console.error('loadMarketplaceProducts error', e);
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#8B95AD;">Erreur inattendue.</div>`;
-  }
-}
-
-function filterMktCat(cat, btn) {
-  _mktCurrentCat = cat;
-  document.querySelectorAll('.mkt-cat-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  applyMktFilters();
-}
-
-function filterMarketplace(query) {
-  _mktSearchQuery = query.toLowerCase().trim();
-  applyMktFilters();
-}
-
-function sortMarketplace(sort, btn) {
-  _mktCurrentSort = sort;
-  document.querySelectorAll('.mkt-sort-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  applyMktFilters();
-}
-
-function applyMktFilters() {
-  let results = [..._mktAllProducts];
-
-  // Filtre catégorie
-  if (_mktCurrentCat) results = results.filter(p => p.cat === _mktCurrentCat);
-
-  // Filtre recherche
-  if (_mktSearchQuery) {
-    results = results.filter(p =>
-      p.name.toLowerCase().includes(_mktSearchQuery) ||
-      p.shopName.toLowerCase().includes(_mktSearchQuery) ||
-      (p.desc && p.desc.toLowerCase().includes(_mktSearchQuery))
-    );
-  }
-
-  // Tri
-  if (_mktCurrentSort === 'score') {
-    results.sort((a, b) => b.scoreTotal - a.scoreTotal);
-  } else if (_mktCurrentSort === 'recent') {
-    results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  } else if (_mktCurrentSort === 'price_asc') {
-    results.sort((a, b) => a.newP - b.newP);
-  } else if (_mktCurrentSort === 'price_desc') {
-    results.sort((a, b) => b.newP - a.newP);
-  }
-
-  _mktFilteredProducts = results;
-  document.getElementById('mkt-count-display').textContent = results.length;
-  renderMktGrid(results);
-}
-
-function renderMktGrid(products) {
-  const grid = document.getElementById('mkt-grid');
-  const empty = document.getElementById('mkt-empty');
-
-  if (!products.length) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-
-  grid.innerHTML = products.map(p => {
-    const imgHtml = p.imgs.length
-      ? `<img src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='📦';">`
-      : '📦';
-
-    const priceHtml = p.oldP && p.oldP > p.newP
-      ? `<span class="mkt-prod-price">${p.newP.toLocaleString('fr-FR')} F</span><span class="mkt-prod-old-price">${p.oldP.toLocaleString('fr-FR')} F</span>`
-      : `<span class="mkt-prod-price">${p.newP.toLocaleString('fr-FR')} F</span>`;
-
-    const badgeHtml = p.ageInDays < 7
-      ? `<div class="mkt-prod-badge mkt-badge-new">Nouveau</div>`
-      : p.shopBadge === 'meilleur'
-        ? `<div class="mkt-prod-badge mkt-badge-top">Top vendeur</div>`
-        : p.shopBadge === 'pro'
-          ? `<div class="mkt-prod-badge mkt-badge-new">Vendeur Pro</div>`
-          : '';
-
-    const shopLink = p.shopSlug ? `/b/${p.shopSlug}` : '#';
-    const prodLink = p.shopSlug && p.slug ? `/b/${p.shopSlug}/p/${p.slug}` : shopLink;
-    const favOn = isFavorited(p._rowId);
-
-    return `
-      <div class="mkt-prod-card" onclick="window.location.href='${prodLink}'">
-        <div class="mkt-prod-img" style="height:180px;">
-          ${imgHtml}
-          <button type="button" class="mkt-fav-toggle ${favOn ? 'on' : ''}" data-pid="${p._rowId}" onclick="event.stopPropagation();toggleFavorite('${p._rowId}')">${favOn ? '❤️' : '🤍'}</button>
-        </div>
-        <div class="mkt-prod-body">
-          <div class="mkt-prod-shop">
-            🏪 ${p.shopName}
-          </div>
-          <div class="mkt-prod-name">${p.name}</div>
-          <div>${priceHtml}</div>
-          <div class="mkt-prod-score">
-            <div class="mkt-score-bar"><div class="mkt-score-fill" style="width:${p.scorePct}%"></div></div>
-            <span style="font-size:10px;color:#8B95AD;white-space:nowrap;">${p.scorePct}%</span>
-          </div>
-          ${badgeHtml}
-        </div>
-      </div>`;
-  }).join('');
 }
 
 // ═══════════════════════════════════════════════
