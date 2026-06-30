@@ -581,6 +581,51 @@ canvas{display:block;}
 .mkt-badge-top{background:rgba(234,88,12,0.15);color:#fb923c;}
 #mkt-search::placeholder{color:rgba(255,255,255,0.3);}
 
+/* ═══ LIVRAISON ═══ */
+.deliv-row{display:flex;align-items:center;gap:10px;background:#f8f9fa;border-radius:9px;padding:10px 13px;margin-bottom:8px;}
+.deliv-sector{font-weight:600;font-size:13px;flex:1;}
+.deliv-price{font-size:13px;color:var(--blue);font-weight:700;white-space:nowrap;}
+.deliv-actions{display:flex;gap:5px;}
+.deliv-select-box{background:#f8f9fa;border-radius:12px;padding:14px;margin:12px 0;}
+.deliv-select-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px;}
+.deliv-calc-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.deliv-calc-row:last-child{border-bottom:none;font-weight:700;font-size:15px;color:var(--black);}
+.deliv-calc-row span:last-child{color:var(--blue);font-weight:700;}
+.deliv-free{color:var(--green);font-weight:700;}
+
+/* ═══ HISTORIQUE COMMANDES CLIENT ═══ */
+.client-order-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.client-order-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.client-order-prod{font-weight:700;font-size:14px;}
+.client-order-meta{font-size:12px;color:var(--gray);line-height:1.7;}
+.client-order-shop{font-size:12px;color:var(--blue);font-weight:600;margin-top:6px;}
+.client-order-contact{font-size:12px;color:var(--gray);margin-top:3px;}
+
+/* ═══ SIGNALEMENT ═══ */
+.report-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--red-l);color:var(--red);border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;margin-top:10px;}
+.report-btn:hover{background:var(--red);color:#fff;}
+.report-reason-btn{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;text-align:left;}
+.report-reason-btn.on{border-color:var(--red);background:var(--red-l);color:var(--red);}
+
+/* ═══ SIGNALEMENTS ADMIN ═══ */
+.report-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.report-card-hdr{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.report-card-shop{font-weight:700;font-size:15px;}
+.report-card-meta{font-size:12px;color:var(--gray);line-height:1.6;}
+.report-card-reason{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:var(--red-l);color:var(--red);margin-bottom:8px;}
+.report-card-msg{font-size:13px;color:var(--black);background:#f8f9fa;border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.5;}
+.report-card-proof{width:80px;height:80px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer;}
+.report-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.report-count-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;margin-left:5px;}
+
+/* ═══ POLITIQUE DE CONFIDENTIALITÉ ═══ */
+.privacy-wrap{max-width:720px;margin:0 auto;padding:0 20px 60px;}
+.privacy-section{margin-bottom:28px;}
+.privacy-section h2{font-size:16px;font-weight:700;margin-bottom:10px;color:var(--black);}
+.privacy-section p,.privacy-section li{font-size:14px;color:#374151;line-height:1.7;}
+.privacy-section ul{padding-left:18px;margin-top:6px;}
+.privacy-section li{margin-bottom:5px;}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -713,7 +758,7 @@ canvas{display:block;}
     <div class="nl-wrap">
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <p>Pour faire grandir le commerce digital africain.</p>
-      <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
+      <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés · <button onclick="go('s-privacy')" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:14px;text-decoration:underline">Politique de confidentialité</button></p>
     </div>
   </footer>
 </div>
@@ -921,6 +966,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni"><i data-lucide="palette"></i></span>Apparence</div>
       <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
       <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
+      <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison & Expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
@@ -1312,6 +1358,29 @@ canvas{display:block;}
         .hc-input{display:flex;gap:8px;margin-top:12px}
         .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;height:46px}
       </style>
+      <!-- LIVRAISON & EXPÉDITIONS -->
+      <div class="dash-page" id="p-livraison">
+        <div class="page-head page-head-row">
+          <div><h1>Livraison & Expéditions</h1><p>Définissez vos tarifs de livraison par secteur géographique</p></div>
+          <button class="btn btn-blue btn-sm" onclick="showDelivForm()">+ Ajouter un secteur</button>
+        </div>
+        <div class="card" id="deliv-form-card" style="display:none">
+          <div class="card-title">📍 Nouveau tarif</div>
+          <input type="hidden" id="deliv-edit-id">
+          <div class="form-row">
+            <div class="fgrp"><label>Secteur (ville, commune, zone…) *</label><input id="deliv-sector" placeholder="Ex : Cocody, Yopougon, Bouaké…"></div>
+            <div class="fgrp"><label>Tarif de livraison *</label><input id="deliv-price" placeholder="Ex : 1000 ou Gratuit"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-blue btn-sm" onclick="saveDelivRate()">Enregistrer</button>
+            <button class="btn btn-ghost btn-sm" onclick="hideDelivForm()">Annuler</button>
+          </div>
+        </div>
+        <div id="deliv-list">
+          <div class="empty card"><div class="empty-ico">🚚</div><p>Aucun tarif de livraison défini pour le moment.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>
+        </div>
+      </div>
+
       <!-- NOTIFICATIONS (gérant uniquement) -->
       <div class="dash-page gerant-only" id="p-gerant-notifs">
         <div class="page-head"><h1>Notifications</h1><p>Soyez averti instantanément des nouvelles commandes de la boutique.</p></div>
@@ -1334,12 +1403,15 @@ canvas{display:block;}
           </div>
         </div>
       </div>
+      <!-- SIGNALEMENTS MARCHANDS -->
+      <div class="dash-page" id="adm-reports">
+        <div class="page-head"><h1>Signalements marchands</h1><p>Plaintes déposées par les clients</p></div>
+        <div id="adm-reports-list"><div class="empty card"><div class="empty-ico">🛡️</div><p>Aucun signalement pour le moment.</p></div></div>
+      </div>
+
     </div>
   </main>
 </div>
-
-<!-- ═══════════════════════════════════════
-     BOUTIQUE CLIENT
 ═══════════════════════════════════════ -->
 <div id="s-boutique" class="screen">
   <div id="bann-bar" style="display:none" class="ann-bar"></div>
@@ -1460,6 +1532,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni"><i data-lucide="star"></i></span>Avis</div>
       <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni"><i data-lucide="bar-chart-3"></i></span>Statistiques</div>
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
+      <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="alert-triangle"></i></span>Signalements <span id="adm-reports-badge" class="report-count-badge" style="display:none">0</span></div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1626,6 +1699,111 @@ Merci pour votre confiance 🙏
       </div>
     </div>
   </main>
+</div>
+
+<!-- MODALE SIGNALEMENT MARCHAND -->
+<div class="overlay" id="report-overlay" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="popup">
+    <div class="popup-handle"></div>
+    <h3>🚨 Signaler le marchand</h3>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Votre signalement sera étudié par l'équipe Zyntelo dans les plus brefs délais.</p>
+    <div class="fgrp"><label>Votre prénom *</label><input id="rep-name" placeholder="Votre prénom"></div>
+    <div class="fgrp"><label>Motif du signalement *</label>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">
+        <button class="report-reason-btn" onclick="selectReportReason(this,'arnaque')">❌ Arnaque — j'ai payé mais je n'ai rien reçu</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'livraison_lente')">🐢 Livraison trop lente ou non confirmée</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'produit_non_conforme')">📦 Produit non conforme à l'annonce</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'autre')">📝 Autre problème</button>
+      </div>
+    </div>
+    <div class="fgrp"><label>Décrivez le problème *</label><textarea id="rep-msg" rows="3" placeholder="Expliquez brièvement ce qui s'est passé…"></textarea></div>
+    <div class="fgrp">
+      <label>Photo de preuve (facultatif)</label>
+      <input type="file" id="rep-proof-input" accept="image/*" style="display:none" onchange="handleReportProof(this)">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-proof-input').click()">📷 Joindre une photo</button>
+      <img id="rep-proof-preview" src="" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)">
+    </div>
+    <input type="hidden" id="rep-reason">
+    <button class="btn btn-red btn-w" onclick="submitReport()">Envoyer le signalement</button>
+  </div>
+</div>
+
+<!-- MODALE HISTORIQUE COMMANDES CLIENT -->
+<div class="overlay" id="client-orders-overlay" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="popup" style="max-height:85vh;overflow-y:auto">
+    <div class="popup-handle"></div>
+    <h3>📋 Mes commandes</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Retrouvez toutes vos commandes passées sur cette boutique.</p>
+    <div class="fgrp">
+      <label>Votre numéro de téléphone *</label>
+      <div style="display:flex;gap:8px">
+        <input id="co-tel" type="tel" placeholder="+225 07 XX XX XX XX" style="flex:1">
+        <button class="btn btn-blue btn-sm" onclick="loadClientOrders()">Rechercher</button>
+      </div>
+    </div>
+    <div id="client-orders-list"></div>
+  </div>
+</div>
+
+<!-- PAGE POLITIQUE DE CONFIDENTIALITÉ -->
+<div id="s-privacy" class="screen">
+  <nav class="land-nav">
+    <div class="zlogo" onclick="go('s-land')" style="cursor:pointer"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name">Zyntelo</span></div>
+    <div class="land-nav-btns"><button class="btn btn-ghost" onclick="go('s-land')">← Accueil</button></div>
+  </nav>
+  <div class="privacy-wrap" style="padding-top:40px">
+    <h1 style="font-family:'Sora',sans-serif;font-size:28px;font-weight:800;margin-bottom:6px">Politique de confidentialité</h1>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:36px">Dernière mise à jour : Juin 2026</p>
+
+    <div class="privacy-section">
+      <h2>1. Protection des données personnelles</h2>
+      <p>Zyntelo s'engage à protéger les informations personnelles de tous ses utilisateurs — acheteurs comme vendeurs. Les données collectées (nom, téléphone, adresse de livraison) servent uniquement à traiter les commandes et améliorer l'expérience sur la plateforme. Elles ne sont en aucun cas revendues à des tiers.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>2. Sécurité des paiements</h2>
+      <p>Toutes les transactions sur Zyntelo sont traitées via des systèmes de paiement sécurisés (Wave, Orange Money, MTN Money). Zyntelo ne stocke jamais vos informations bancaires ou de paiement.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>3. Responsabilité des marchands</h2>
+      <p>Les marchands inscrits sur Zyntelo sont entièrement responsables des informations, photos et descriptions publiées sur leurs boutiques. Zyntelo vérifie et surveille régulièrement le contenu pour s'assurer du respect des règles de la plateforme.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>4. Surveillance et protection des acheteurs</h2>
+      <p>Zyntelo surveille activement les comportements des marchands afin de protéger les acheteurs. Tout comportement signalé fait l'objet d'une enquête interne. Les mesures suivantes peuvent être appliquées :</p>
+      <ul>
+        <li>Avertissement officiel au marchand</li>
+        <li>Suspension temporaire de la boutique</li>
+        <li>Blocage définitif du compte en cas de fraude avérée</li>
+      </ul>
+    </div>
+
+    <div class="privacy-section">
+      <h2>5. Signalements</h2>
+      <p>Tout acheteur peut signaler un marchand directement depuis une page produit. Chaque signalement est étudié sérieusement par l'équipe Zyntelo. Nous nous engageons à traiter chaque plainte dans les meilleurs délais et à prendre les mesures appropriées.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>6. Engagements de Zyntelo</h2>
+      <ul>
+        <li>Vos données personnelles sont protégées et ne sont pas revendues.</li>
+        <li>Les paiements sont sécurisés.</li>
+        <li>Les marchands sont surveillés pour garantir votre sécurité.</li>
+        <li>Toute fraude ou arnaque peut entraîner la suppression définitive de la boutique.</li>
+        <li>Zyntelo offre un environnement fiable, transparent et sécurisé pour tous.</li>
+      </ul>
+    </div>
+
+    <div class="privacy-section">
+      <h2>7. Contact</h2>
+      <p>Pour toute question relative à vos données ou à la politique de confidentialité, contactez-nous via le Centre d'aide Zyntelo ou par WhatsApp.</p>
+    </div>
+  </div>
+  <footer style="border-top:1px solid var(--border);padding:24px;text-align:center;font-size:13px;color:var(--gray)">
+    © 2026 Zyntelo · <button style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px" onclick="go('s-land')">Accueil</button>
+  </footer>
 </div>
 
 <script>
@@ -2154,6 +2332,7 @@ function pg(pageId, el) {
   if (pageId === 'p-gerant') renderGerants();
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
+  if (pageId === 'p-livraison') loadDelivRates();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-abo') loadPaymentsHistory();
@@ -2174,6 +2353,7 @@ function admPg(pageId, el) {
   if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
+  if (pageId === 'adm-reports') loadAdminReports();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -4317,6 +4497,7 @@ function previewShop(prodId, isPublic) {
           </div>
           <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
           <div id="prod-offers-box"></div>
+          <div id="deliv-select-container"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
@@ -4345,11 +4526,16 @@ function previewShop(prodId, isPublic) {
         <div class="fgrp"><label>Votre commentaire (facultatif)</label><textarea id="pr-comment" rows="3" placeholder="Votre avis sur ce produit…"></textarea></div>
         <button class="btn btn-blue btn-sm" onclick="submitProductReview()">Envoyer mon avis</button>
       </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
+        <button class="report-btn" onclick="openReportModal()">🚨 Signaler le marchand</button>
+        <button class="btn btn-ghost btn-sm" onclick="openClientOrderHistory()">📋 Mes commandes</button>
+      </div>
     </div>`;
   S.orderQty = 1;
   go('s-boutique');
   loadProductReviews(p.id);
   renderProductOffers(p);
+  loadAndRenderDeliverySelector(ownerId());
 }
 
 let prodReviewStars = 0;
@@ -5115,6 +5301,9 @@ function updTotal() {
   const t = Math.round(unitPrice*S.orderQty);
   document.getElementById('pp-total').textContent = t.toLocaleString()+' FCFA';
   document.getElementById('pp-btn-total').textContent = t.toLocaleString()+' FCFA';
+  // Recalculer la livraison si un secteur est déjà sélectionné
+  const sel = document.getElementById('deliv-selector');
+  if (sel && sel.value) onDelivSectorChange();
 }
 
 async function notifyOwnerNewOrder(orderData) {
@@ -6047,6 +6236,332 @@ async function sendMsgAll() {
   const first=clients[0];
   window.open(`https://wa.me/${first.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   if(clients.length>1) toast(`WhatsApp ouvert pour ${first.name}. Répétez pour les ${clients.length-1} autres.`,'ok');
+}
+
+// ═══════════════════════════════════════════════
+// LIVRAISON & EXPÉDITIONS
+// ═══════════════════════════════════════════════
+function showDelivForm(id) {
+  const card = document.getElementById('deliv-form-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth' });
+  if (id) {
+    const rate = (S.delivRates||[]).find(r => r.id === id);
+    if (rate) {
+      document.getElementById('deliv-edit-id').value = id;
+      document.getElementById('deliv-sector').value = rate.sector;
+      document.getElementById('deliv-price').value = rate.price;
+    }
+  } else {
+    document.getElementById('deliv-edit-id').value = '';
+    document.getElementById('deliv-sector').value = '';
+    document.getElementById('deliv-price').value = '';
+  }
+}
+
+function hideDelivForm() {
+  document.getElementById('deliv-form-card').style.display = 'none';
+}
+
+async function loadDelivRates() {
+  const { data } = await sb.from('delivery_rates').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: true });
+  S.delivRates = data || [];
+  renderDelivRates();
+}
+
+function renderDelivRates() {
+  const list = document.getElementById('deliv-list');
+  if (!list) return;
+  if (!S.delivRates || !S.delivRates.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">🚚</div><p>Aucun tarif de livraison défini.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>`;
+    return;
+  }
+  list.innerHTML = S.delivRates.map(r => {
+    const priceDisplay = r.price.toLowerCase() === 'gratuit' || r.price === '0'
+      ? `<span class="deliv-free">✓ Gratuit</span>`
+      : `<span class="deliv-price">${r.price} FCFA</span>`;
+    return `
+    <div class="deliv-row">
+      <span class="deliv-sector">📍 ${r.sector}</span>
+      ${priceDisplay}
+      <div class="deliv-actions">
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="showDelivForm('${r.id}')">✏️</button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDelivRate('${r.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveDelivRate() {
+  const editId = document.getElementById('deliv-edit-id').value;
+  const sector = document.getElementById('deliv-sector').value.trim();
+  const price = document.getElementById('deliv-price').value.trim();
+  if (!sector) { toast('Entrez le nom du secteur *', 'err'); return; }
+  if (!price) { toast('Entrez le tarif *', 'err'); return; }
+
+  if (editId) {
+    const { error } = await sb.from('delivery_rates').update({ sector, price }).eq('id', editId);
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    toast('Tarif mis à jour ✓');
+  } else {
+    const { error } = await sb.from('delivery_rates').insert({ owner_id: ownerId(), sector, price });
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    toast('Secteur ajouté ✓');
+  }
+  hideDelivForm();
+  await loadDelivRates();
+}
+
+async function deleteDelivRate(id) {
+  if (!confirm('Supprimer ce tarif de livraison ?')) return;
+  const { error } = await sb.from('delivery_rates').delete().eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  toast('Tarif supprimé');
+  await loadDelivRates();
+}
+
+// Affichage côté page produit publique
+async function loadAndRenderDeliverySelector(ownerIdVal) {
+  const { data: rates } = await sb.from('delivery_rates').select('*').eq('owner_id', ownerIdVal).order('created_at', { ascending: true });
+  if (!rates || !rates.length) return;
+  S.delivRatesPublic = rates;
+
+  const box = document.getElementById('deliv-select-container');
+  if (!box) return;
+
+  const options = rates.map(r => `<option value="${r.id}">${r.sector}</option>`).join('');
+  box.innerHTML = `
+    <div class="deliv-select-box">
+      <div class="deliv-select-label">🚚 Choisissez votre secteur de livraison</div>
+      <div class="fgrp" style="margin-bottom:10px">
+        <select id="deliv-selector" onchange="onDelivSectorChange()" style="font-size:14px">
+          <option value="">-- Sélectionnez votre secteur --</option>
+          ${options}
+        </select>
+      </div>
+      <div id="deliv-calc" style="display:none">
+        <div class="deliv-calc-row"><span>Prix du produit</span><span id="deliv-prod-price">—</span></div>
+        <div class="deliv-calc-row"><span>Livraison</span><span id="deliv-delivery-price">—</span></div>
+        <div class="deliv-calc-row"><span>Total à payer</span><span id="deliv-total-price">—</span></div>
+      </div>
+    </div>`;
+}
+
+function onDelivSectorChange() {
+  const sel = document.getElementById('deliv-selector');
+  const calc = document.getElementById('deliv-calc');
+  if (!sel || !sel.value) { if (calc) calc.style.display = 'none'; return; }
+  const rate = (S.delivRatesPublic||[]).find(r => r.id === sel.value);
+  if (!rate) return;
+  const p = S.curProd;
+  if (!p) return;
+  const offerPercent = S.selectedOffer ? S.selectedOffer.percent : 0;
+  const unitPrice = Math.round(p.newP * (1 - offerPercent/100));
+  const prodTotal = unitPrice * S.orderQty;
+  const isFree = rate.price.toLowerCase() === 'gratuit' || rate.price === '0';
+  const delivCost = isFree ? 0 : parseInt(rate.price.replace(/\s/g,'')) || 0;
+  const grandTotal = prodTotal + delivCost;
+
+  document.getElementById('deliv-prod-price').textContent = prodTotal.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('deliv-delivery-price').innerHTML = isFree
+    ? `<span class="deliv-free">Gratuit</span>`
+    : delivCost.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('deliv-total-price').textContent = grandTotal.toLocaleString('fr-FR') + ' FCFA';
+  calc.style.display = 'block';
+
+  // Met à jour le bouton commander avec le vrai total
+  const btnTotal = document.getElementById('pp-btn-total');
+  if (btnTotal) btnTotal.textContent = grandTotal.toLocaleString('fr-FR') + ' FCFA';
+}
+
+// ═══════════════════════════════════════════════
+// SIGNALEMENT MARCHAND
+// ═══════════════════════════════════════════════
+let _reportProofData = null;
+
+function openReportModal() {
+  document.getElementById('rep-name').value = '';
+  document.getElementById('rep-msg').value = '';
+  document.getElementById('rep-reason').value = '';
+  document.getElementById('rep-proof-preview').style.display = 'none';
+  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
+  _reportProofData = null;
+  document.getElementById('report-overlay').classList.add('on');
+}
+
+function selectReportReason(btn, reason) {
+  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('rep-reason').value = reason;
+}
+
+async function handleReportProof(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const compressed = await compressImage(file, 800, 0.7);
+  _reportProofData = compressed;
+  const preview = document.getElementById('rep-proof-preview');
+  preview.src = compressed;
+  preview.style.display = 'block';
+}
+
+async function submitReport() {
+  const name = document.getElementById('rep-name').value.trim();
+  const reason = document.getElementById('rep-reason').value;
+  const msg = document.getElementById('rep-msg').value.trim();
+  if (!name) { toast('Entrez votre prénom *', 'err'); return; }
+  if (!reason) { toast('Choisissez un motif *', 'err'); return; }
+  if (!msg) { toast('Décrivez le problème *', 'err'); return; }
+  if (!S.curProd || !ownerId()) { toast('Erreur : boutique introuvable', 'err'); return; }
+
+  let proofUrl = null;
+  if (_reportProofData) {
+    try {
+      const blob = dataURLToBlob(_reportProofData);
+      const path = `reports/${ownerId()}/${Date.now()}.jpg`;
+      const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
+        proofUrl = urlData.publicUrl;
+      }
+    } catch (e) { console.error('Report proof upload error', e); }
+  }
+
+  const { error } = await sb.from('reports').insert({
+    owner_id: ownerId(),
+    shop_name: S.shop ? S.shop.name : '—',
+    product_id: S.curProd.id,
+    product_name: S.curProd.name,
+    client_name: name,
+    reason,
+    message: msg,
+    proof_url: proofUrl
+  });
+
+  if (error) { toast('Erreur lors de l\'envoi : ' + error.message, 'err'); return; }
+  document.getElementById('report-overlay').classList.remove('on');
+  toast('Signalement envoyé. L\'équipe Zyntelo va l\'examiner. ✓');
+}
+
+// ═══════════════════════════════════════════════
+// HISTORIQUE COMMANDES CLIENT
+// ═══════════════════════════════════════════════
+function openClientOrderHistory() {
+  document.getElementById('co-tel').value = '';
+  document.getElementById('client-orders-list').innerHTML = '';
+  document.getElementById('client-orders-overlay').classList.add('on');
+}
+
+async function loadClientOrders() {
+  const tel = document.getElementById('co-tel').value.trim();
+  if (!tel) { toast('Entrez votre numéro de téléphone', 'err'); return; }
+  const list = document.getElementById('client-orders-list');
+  list.innerHTML = `<p style="font-size:13px;color:var(--gray);margin-top:10px">Recherche en cours…</p>`;
+
+  const { data: rows } = await sb.from('orders').select('data, created_at').eq('owner_id', ownerId());
+  if (!rows) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune commande trouvée.</p>`; return; }
+
+  const telClean = tel.replace(/\s/g, '');
+  const orders = rows.map(r => r.data).filter(o => o && o.tel && o.tel.replace(/\s/g,'').includes(telClean.slice(-8)));
+
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📭</div><p>Aucune commande pour ce numéro.</p></div>`;
+    return;
+  }
+
+  const statusLabel = { livree: '✅ Livrée', annulee: '❌ Annulée', attente: '⏳ En attente' };
+  const wa = S.shop ? S.shop.wa : '';
+  list.innerHTML = orders.slice().reverse().map(o => `
+    <div class="client-order-card">
+      <div class="client-order-hdr">
+        <span class="client-order-prod">${o.prodName || '—'}</span>
+        <span class="badge ${o.status==='livree'?'b-green':o.status==='annulee'?'b-red':'b-yellow'}">${statusLabel[o.status]||'En attente'}</span>
+      </div>
+      <div class="client-order-meta">
+        💰 ${(+o.total||0).toLocaleString('fr-FR')} FCFA · 📅 ${o.date||'—'} · Qté : ${o.qty||1}
+      </div>
+      <div class="client-order-shop">🏪 ${S.shop ? S.shop.name : '—'}</div>
+      ${wa ? `<div class="client-order-contact">📞 Contact marchand : <a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-weight:600">${wa}</a></div>` : ''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// SIGNALEMENTS — ESPACE ADMIN
+// ═══════════════════════════════════════════════
+async function loadAdminReports() {
+  const list = document.getElementById('adm-reports-list');
+  list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Chargement…</p>`;
+
+  const { data: reports, error } = await sb.from('reports').select('*').order('created_at', { ascending: false });
+  if (error) { list.innerHTML = `<p style="color:var(--red);font-size:13px">Erreur : ${error.message}</p>`; return; }
+  if (!reports || !reports.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">🛡️</div><p>Aucun signalement pour le moment.</p></div>`;
+    document.getElementById('adm-reports-badge').style.display = 'none';
+    return;
+  }
+
+  // Badge compteur
+  const badge = document.getElementById('adm-reports-badge');
+  if (badge) { badge.textContent = reports.length; badge.style.display = 'flex'; }
+
+  // Regrouper par owner_id pour afficher le nb total
+  const countByOwner = {};
+  reports.forEach(r => { countByOwner[r.owner_id] = (countByOwner[r.owner_id] || 0) + 1; });
+
+  const reasonLabels = { arnaque: '❌ Arnaque', livraison_lente: '🐢 Livraison trop lente', produit_non_conforme: '📦 Produit non conforme', autre: '📝 Autre' };
+
+  list.innerHTML = reports.map(r => `
+    <div class="report-card">
+      <div class="report-card-hdr">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--red-l);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏪</div>
+        <div style="flex:1">
+          <div class="report-card-shop">${r.shop_name || '—'} <span style="font-size:11px;color:var(--gray);font-weight:400">(${countByOwner[r.owner_id]} signalement(s) total)</span></div>
+          <div class="report-card-meta">Produit : <strong>${r.product_name || '—'}</strong> · Client : ${r.client_name} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+      </div>
+      <div class="report-card-reason">${reasonLabels[r.reason] || r.reason}</div>
+      <div class="report-card-msg">${r.message}</div>
+      ${r.proof_url ? `<img src="${r.proof_url}" class="report-card-proof" onclick="window.open('${r.proof_url}','_blank')" title="Voir la preuve en grand">` : ''}
+      <div class="report-card-actions">
+        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="sendWarningToShop('${r.owner_id}','${(r.shop_name||'').replace(/'/g,"\\'")}')">⚠️ Avertissement</button>
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="suspendShopFromReport('${r.owner_id}')">⏸️ Suspendre</button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="toggleBlock('${r.owner_id}',true)">🔒 Bloquer définitivement</button>
+        <button class="btn btn-sm" style="background:var(--gray-l);color:var(--gray)" onclick="deleteReport('${r.id}')">🗑️ Supprimer le signalement</button>
+      </div>
+    </div>`).join('');
+}
+
+async function sendWarningToShop(uid, shopName) {
+  const users = await Store.get('users') || [];
+  const user = users.find(u => u.id === uid);
+  if (!user || !user.wa) { toast('Ce marchand n\'a pas de WhatsApp enregistré', 'err'); return; }
+  const msg = `⚠️ Avertissement Zyntelo\n\nBonjour,\n\nNous avons reçu un signalement concernant votre boutique "${shopName}".\n\nMerci de contacter vos clients et de résoudre ce problème dans les plus brefs délais.\n\nEn cas de récidive, votre boutique pourra être suspendue ou bloquée définitivement.\n\n— L'équipe Zyntelo`;
+  window.open(`https://wa.me/${user.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+  toast('Message WhatsApp ouvert ✓');
+}
+
+async function suspendShopFromReport(uid) {
+  if (!confirm('Suspendre temporairement cette boutique pour non-paiement / litige ?')) return;
+  const users = await Store.get('users') || [];
+  const user = users.find(u => u.id === uid);
+  if (!user) return;
+  user.blocked = true;
+  const shop = await Store.get('shop_' + uid) || {};
+  shop.blocked = true;
+  shop.suspendedReason = 'report';
+  await sb.from('shops').update({ blocked: true, suspended_reason: 'report' }).eq('id', uid);
+  await Store.set('shop_' + uid, shop);
+  await Store.set('users', users);
+  toast('Boutique suspendue suite au signalement ✓');
+  loadAdminReports();
+}
+
+async function deleteReport(id) {
+  if (!confirm('Supprimer ce signalement ?')) return;
+  const { error } = await sb.from('reports').delete().eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  toast('Signalement supprimé');
+  loadAdminReports();
 }
 
 // ═══════════════════════════════════════════════
