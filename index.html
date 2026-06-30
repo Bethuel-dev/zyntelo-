@@ -4738,8 +4738,10 @@ function renderShopHome(isPublic) {
   if (S.shop.coverImage) { coverEl.src = S.shop.coverImage; coverEl.style.display = 'block'; }
   else { coverEl.style.display = 'none'; }
   document.getElementById('shh-prods-title').textContent = S.shop.productsTitle || 'Nos produits';
-  const domain = S.shop.domain || getShopLink();
-  document.getElementById('shh-footer').innerHTML = `Propulsé par <strong>${domain}</strong>`;
+  // Pied de page : "Zyntelo.app" par défaut. Si le commerçant a connecté son
+  // propre domaine (et qu'il est bien actif), on affiche son domaine à la place.
+  const footerDomain = (S.shop.domain && S.shop.domainStatus === 'active') ? S.shop.domain : 'Zyntelo.app';
+  document.getElementById('shh-footer').innerHTML = `Propulsé par <strong>${footerDomain}</strong>`;
   renderShopBadge('shh-badge', S.shop.badge);
   const grid = document.getElementById('shh-prods-grid');
   if (!S.products.length) {
