@@ -566,7 +566,7 @@ canvas{display:block;}
 .mkt-sort-btn.active,.mkt-sort-btn:hover{background:rgba(46,107,255,0.15);color:#4A7FFF;border-color:rgba(46,107,255,0.4);}
 .mkt-prod-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;}
 .mkt-prod-card:hover{border-color:rgba(46,107,255,0.4);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.35);}
-.mkt-prod-img{width:100%;aspect-ratio:1;object-fit:cover;background:#0F1525;font-size:40px;display:flex;align-items:center;justify-content:center;}
+.mkt-prod-img{width:100%;aspect-ratio:1;object-fit:cover;background:#0F1525;font-size:40px;display:flex;align-items:center;justify-content:center;position:relative;}
 .mkt-prod-img img{width:100%;height:100%;object-fit:cover;}
 .mkt-prod-body{padding:14px;}
 .mkt-prod-shop{font-size:11px;color:#4A7FFF;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:4px;}
@@ -580,6 +580,11 @@ canvas{display:block;}
 .mkt-badge-new{background:rgba(22,163,74,0.15);color:#4ade80;}
 .mkt-badge-top{background:rgba(234,88,12,0.15);color:#fb923c;}
 #mkt-search::placeholder{color:rgba(255,255,255,0.3);}
+.mkt-toolbar-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:12.5px;font-weight:700;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#EDF1F8;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;}
+.mkt-toolbar-btn:hover{border-color:#2E6BFF;background:rgba(46,107,255,0.12);}
+.mkt-fav-toggle{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(15,21,37,0.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:2;transition:.2s;border:1px solid rgba(255,255,255,0.12);}
+.mkt-fav-toggle:hover{background:rgba(15,21,37,0.9);transform:scale(1.08);}
+.mkt-fav-toggle.on{color:#E8221A;}
 
 /* ═══ LIVRAISON ═══ */
 .deliv-row{display:flex;align-items:center;gap:10px;background:#f8f9fa;border-radius:9px;padding:10px 13px;margin-bottom:8px;}
@@ -592,6 +597,13 @@ canvas{display:block;}
 .deliv-calc-row:last-child{border-bottom:none;font-weight:700;font-size:15px;color:var(--black);}
 .deliv-calc-row span:last-child{color:var(--blue);font-weight:700;}
 .deliv-free{color:var(--green);font-weight:700;}
+
+/* ═══ SÉLECTEUR INDICATIF TÉLÉPHONIQUE ═══ */
+.tel-input-row{display:flex;gap:6px;}
+.tel-cc{flex:0 0 112px;padding:10px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--black);cursor:pointer;}
+.tel-cc:focus{border-color:var(--blue);}
+.tel-local{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--black);}
+.tel-local:focus{border-color:var(--blue);}
 
 /* ═══ HISTORIQUE COMMANDES CLIENT ═══ */
 .client-order-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
@@ -673,7 +685,7 @@ canvas{display:block;}
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <div class="nl-nav-btns">
         <button class="nl-nav-ghost" onclick="go('s-about')">À propos</button>
-        <button class="nl-nav-ghost" onclick="openMarketplace()">🛍️ Explorer</button>
+        <button class="nl-nav-ghost" onclick="openMarketplace()">Explorer</button>
         <button class="nl-nav-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
@@ -783,17 +795,23 @@ canvas{display:block;}
     <div style="position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.15) 0%,transparent 65%);pointer-events:none;"></div>
     <div class="nl-wrap" style="position:relative;z-index:2;">
       <div class="nl-badge-free" style="margin-bottom:16px;"><span class="nl-dot"></span>Boutiques vérifiées</div>
-      <h1 style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(26px,5vw,44px);line-height:1.1;letter-spacing:-1px;margin-bottom:12px;color:#EDF1F8;">Découvrez les meilleurs<br><span style="background:linear-gradient(120deg,#4A7FFF,#8FB0FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">produits africains</span></h1>
+      <h1 style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(26px,5vw,44px);line-height:1.1;letter-spacing:-1px;margin-bottom:12px;color:#EDF1F8;">Découvrez les meilleurs<br><span style="background:linear-gradient(120deg,#4A7FFF,#8FB0FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">produits tendance</span></h1>
       <p style="font-size:16px;color:#8B95AD;max-width:480px;margin:0 auto 28px;">Des milliers de produits de boutiques vérifiées à travers toute l'Afrique francophone.</p>
 
       <!-- BARRE DE RECHERCHE -->
-      <div style="max-width:520px;margin:0 auto;position:relative;">
+      <div style="max-width:520px;margin:0 auto 18px;position:relative;">
         <input id="mkt-search" type="text" placeholder="Rechercher un produit, une boutique…"
-          style="width:100%;padding:14px 50px 14px 20px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#EDF1F8;font-size:15px;font-family:'Inter',sans-serif;outline:none;backdrop-filter:blur(10px);"
+          style="width:100%;padding:14px 50px 14px 20px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.28);background:rgba(255,255,255,0.06);color:#EDF1F8;font-size:15px;font-family:'Inter',sans-serif;outline:none;backdrop-filter:blur(10px);"
           oninput="filterMarketplace(this.value)"
-          onfocus="this.style.borderColor='rgba(46,107,255,0.6)'"
-          onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+          onfocus="this.style.borderColor='rgba(46,107,255,0.8)'"
+          onblur="this.style.borderColor='rgba(255,255,255,0.28)'">
         <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
+      </div>
+
+      <!-- MES COMMANDES / FAVORIS -->
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="mkt-toolbar-btn" onclick="openClientOrderHistory()"><i data-lucide="receipt" style="width:14px;height:14px"></i>Mes commandes</button>
+        <button class="mkt-toolbar-btn" onclick="openClientFavorites()"><i data-lucide="heart" style="width:14px;height:14px"></i>Favoris <span id="mkt-fav-count" style="display:none;background:#E8221A;color:#fff;border-radius:100px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px;">0</span></button>
       </div>
     </div>
   </div>
@@ -821,8 +839,8 @@ canvas{display:block;}
   <div class="nl-wrap" style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
     <div style="font-size:13px;color:#8B95AD;">Trier par :</div>
     <div style="display:flex;gap:8px;">
-      <button class="mkt-sort-btn active" onclick="sortMarketplace('score', this)">⭐ Recommandés</button>
-      <button class="mkt-sort-btn" onclick="sortMarketplace('recent', this)">🆕 Récents</button>
+      <button class="mkt-sort-btn active" onclick="sortMarketplace('score', this)">Recommandés</button>
+      <button class="mkt-sort-btn" onclick="sortMarketplace('recent', this)">Récents</button>
       <button class="mkt-sort-btn" onclick="sortMarketplace('price_asc', this)">Prix ↑</button>
       <button class="mkt-sort-btn" onclick="sortMarketplace('price_desc', this)">Prix ↓</button>
     </div>
@@ -910,7 +928,7 @@ canvas{display:block;}
       <h2>Créez votre boutique</h2>
       <p class="sub">Lancez-vous en quelques minutes</p>
       <div class="fgrp"><label>Nom complet *</label><input id="rg-name" placeholder="Jean Kouassi"></div>
-      <div class="fgrp"><label>WhatsApp *</label><input id="rg-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+      <div class="fgrp"><label>WhatsApp *</label><div id="rg-wa-wrap"></div><input type="hidden" id="rg-wa"></div>
       <div class="fgrp"><label>Nom de la boutique *</label><input id="rg-shop" placeholder="Mode Abidjan"></div>
       <div class="fgrp"><label>Email *</label><input id="rg-email" type="email" placeholder="votre@email.com"></div>
       <div class="fgrp"><label>Mot de passe *</label><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"></div>
@@ -1056,7 +1074,7 @@ canvas{display:block;}
           <div class="card-title">🏪 Informations boutique</div>
           <div class="fgrp"><label>Nom de la boutique</label><input id="sh-name" placeholder="Mode Abidjan"></div>
           <div class="fgrp"><label>Description courte</label><textarea id="sh-desc" rows="2" placeholder="Vêtements et accessoires…"></textarea></div>
-          <div class="fgrp"><label>WhatsApp (reçus clients)</label><input id="sh-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fgrp"><label>WhatsApp (reçus clients)</label><div id="sh-wa-wrap"></div><input type="hidden" id="sh-wa"></div>
           <div class="fgrp" style="display:none"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
           <button class="btn btn-blue btn-sm" onclick="saveShop()">Enregistrer</button>
         </div>
@@ -1365,7 +1383,7 @@ canvas{display:block;}
           <button class="btn btn-blue btn-sm" onclick="showDelivForm()">+ Ajouter un secteur</button>
         </div>
         <div class="card" id="deliv-form-card" style="display:none">
-          <div class="card-title">📍 Nouveau tarif</div>
+          <div class="card-title"><i data-lucide="map-pin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px"></i> Nouveau tarif</div>
           <input type="hidden" id="deliv-edit-id">
           <div class="form-row">
             <div class="fgrp"><label>Secteur (ville, commune, zone…) *</label><input id="deliv-sector" placeholder="Ex : Cocody, Yopougon, Bouaké…"></div>
@@ -1377,7 +1395,7 @@ canvas{display:block;}
           </div>
         </div>
         <div id="deliv-list">
-          <div class="empty card"><div class="empty-ico">🚚</div><p>Aucun tarif de livraison défini pour le moment.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>
+          <div class="empty card"><div class="empty-ico"><i data-lucide="truck"></i></div><p>Aucun tarif de livraison défini pour le moment.<br>Cliquez sur <strong>Ajouter un secteur</strong> pour commencer.</p></div>
         </div>
       </div>
 
@@ -1406,7 +1424,7 @@ canvas{display:block;}
       <!-- SIGNALEMENTS MARCHANDS -->
       <div class="dash-page" id="adm-reports">
         <div class="page-head"><h1>Signalements marchands</h1><p>Plaintes déposées par les clients</p></div>
-        <div id="adm-reports-list"><div class="empty card"><div class="empty-ico">🛡️</div><p>Aucun signalement pour le moment.</p></div></div>
+        <div id="adm-reports-list"><div class="empty card"><div class="empty-ico"><i data-lucide="shield-check"></i></div><p>Aucun signalement pour le moment.</p></div></div>
       </div>
 
     </div>
@@ -1705,22 +1723,23 @@ Merci pour votre confiance 🙏
 <div class="overlay" id="report-overlay" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="popup">
     <div class="popup-handle"></div>
-    <h3>🚨 Signaler le marchand</h3>
+    <h3><i data-lucide="alert-octagon" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--red)"></i>Signaler le marchand</h3>
     <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Votre signalement sera étudié par l'équipe Zyntelo dans les plus brefs délais.</p>
-    <div class="fgrp"><label>Votre prénom *</label><input id="rep-name" placeholder="Votre prénom"></div>
+    <div class="fgrp"><label>Nom et prénom *</label><input id="rep-name" placeholder="Votre nom et prénom"></div>
+    <div class="fgrp"><label>Numéro de téléphone *</label><div id="rep-tel-wrap"></div><input type="hidden" id="rep-tel"></div>
     <div class="fgrp"><label>Motif du signalement *</label>
       <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">
-        <button class="report-reason-btn" onclick="selectReportReason(this,'arnaque')">❌ Arnaque — j'ai payé mais je n'ai rien reçu</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'livraison_lente')">🐢 Livraison trop lente ou non confirmée</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'produit_non_conforme')">📦 Produit non conforme à l'annonce</button>
-        <button class="report-reason-btn" onclick="selectReportReason(this,'autre')">📝 Autre problème</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'arnaque')"><i data-lucide="x-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Arnaque — j'ai payé mais je n'ai rien reçu</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'livraison_lente')"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Livraison trop lente ou non confirmée</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'produit_non_conforme')"><i data-lucide="package-x" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Produit non conforme à l'annonce</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'autre')"><i data-lucide="message-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Autre problème</button>
       </div>
     </div>
     <div class="fgrp"><label>Décrivez le problème *</label><textarea id="rep-msg" rows="3" placeholder="Expliquez brièvement ce qui s'est passé…"></textarea></div>
     <div class="fgrp">
       <label>Photo de preuve (facultatif)</label>
       <input type="file" id="rep-proof-input" accept="image/*" style="display:none" onchange="handleReportProof(this)">
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-proof-input').click()">📷 Joindre une photo</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-proof-input').click()"><i data-lucide="camera" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"></i>Joindre une photo</button>
       <img id="rep-proof-preview" src="" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)">
     </div>
     <input type="hidden" id="rep-reason">
@@ -1732,16 +1751,25 @@ Merci pour votre confiance 🙏
 <div class="overlay" id="client-orders-overlay" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="popup" style="max-height:85vh;overflow-y:auto">
     <div class="popup-handle"></div>
-    <h3>📋 Mes commandes</h3>
-    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Retrouvez toutes vos commandes passées sur cette boutique.</p>
+    <h3><i data-lucide="receipt" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i>Mes commandes</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Retrouvez toutes vos commandes passées sur Zyntelo, tous marchands confondus.</p>
     <div class="fgrp">
       <label>Votre numéro de téléphone *</label>
-      <div style="display:flex;gap:8px">
-        <input id="co-tel" type="tel" placeholder="+225 07 XX XX XX XX" style="flex:1">
-        <button class="btn btn-blue btn-sm" onclick="loadClientOrders()">Rechercher</button>
-      </div>
+      <div id="co-tel-wrap"></div>
+      <input type="hidden" id="co-tel">
+      <button class="btn btn-blue btn-w" style="margin-top:8px" onclick="loadClientOrders()">Rechercher</button>
     </div>
     <div id="client-orders-list"></div>
+  </div>
+</div>
+
+<!-- MODALE FAVORIS CLIENT -->
+<div class="overlay" id="client-favs-overlay" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="popup" style="max-height:85vh;overflow-y:auto">
+    <div class="popup-handle"></div>
+    <h3><i data-lucide="heart" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i>Mes favoris</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Les produits que vous avez enregistrés, conservés sur cet appareil.</p>
+    <div id="client-favs-list"></div>
   </div>
 </div>
 
@@ -1818,6 +1846,105 @@ const SUPABASE_ANON_KEY = 'sb_publishable_As2pSbd0Jt7iB22CC-l7mg_-pGWnC7U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // UID du compte administrateur (à remplacer une fois le compte admin créé — voir instructions)
 const ADMIN_UID = '51f865a0-0231-4bf9-8828-3d793e0ad06a';
+
+// ═══════════════════════════════════════════════
+// INDICATIFS TÉLÉPHONIQUES (sélecteur pays)
+// Ajoute un indicatif pays devant chaque champ téléphone de l'app.
+// Le champ original (id existant) est conservé en hidden et reçoit
+// automatiquement le numéro complet au format international, donc
+// tout le reste du code (lecture via .value) continue de fonctionner
+// sans aucune modification.
+// ═══════════════════════════════════════════════
+const TEL_COUNTRIES = [
+  { c: 'CI', d: '+225', f: '🇨🇮', n: "Côte d'Ivoire" },
+  { c: 'SN', d: '+221', f: '🇸🇳', n: 'Sénégal' },
+  { c: 'ML', d: '+223', f: '🇲🇱', n: 'Mali' },
+  { c: 'BF', d: '+226', f: '🇧🇫', n: 'Burkina Faso' },
+  { c: 'BJ', d: '+229', f: '🇧🇯', n: 'Bénin' },
+  { c: 'TG', d: '+228', f: '🇹🇬', n: 'Togo' },
+  { c: 'NE', d: '+227', f: '🇳🇪', n: 'Niger' },
+  { c: 'GN', d: '+224', f: '🇬🇳', n: 'Guinée' },
+  { c: 'GH', d: '+233', f: '🇬🇭', n: 'Ghana' },
+  { c: 'NG', d: '+234', f: '🇳🇬', n: 'Nigeria' },
+  { c: 'CM', d: '+237', f: '🇨🇲', n: 'Cameroun' },
+  { c: 'GA', d: '+241', f: '🇬🇦', n: 'Gabon' },
+  { c: 'CD', d: '+243', f: '🇨🇩', n: 'RD Congo' },
+  { c: 'CG', d: '+242', f: '🇨🇬', n: 'Congo' },
+  { c: 'MA', d: '+212', f: '🇲🇦', n: 'Maroc' },
+  { c: 'DZ', d: '+213', f: '🇩🇿', n: 'Algérie' },
+  { c: 'TN', d: '+216', f: '🇹🇳', n: 'Tunisie' },
+  { c: 'FR', d: '+33', f: '🇫🇷', n: 'France' },
+  { c: 'BE', d: '+32', f: '🇧🇪', n: 'Belgique' },
+  { c: 'CH', d: '+41', f: '🇨🇭', n: 'Suisse' },
+  { c: 'CA', d: '+1', f: '🇨🇦', n: 'Canada' },
+  { c: 'US', d: '+1', f: '🇺🇸', n: 'États-Unis' },
+  { c: 'GB', d: '+44', f: '🇬🇧', n: 'Royaume-Uni' },
+];
+
+function telCountryOptionsHtml(selectedDial) {
+  return TEL_COUNTRIES.map(t => `<option value="${t.d}" ${t.d === selectedDial ? 'selected' : ''}>${t.f} ${t.d}</option>`).join('');
+}
+
+// Construit le petit widget (select indicatif + input local) au-dessus d'un
+// champ existant. `targetId` = id du champ original déjà utilisé partout
+// ailleurs dans le code (ex: 'rg-wa', 'or-tel'...). Ce champ original est
+// conservé tel quel mais caché, et reçoit la valeur complète composée.
+function telWidgetHtml(targetId, defaultDial) {
+  defaultDial = defaultDial || '+225';
+  return `<div class="tel-input-row">
+    <select class="tel-cc" id="${targetId}-cc" onchange="syncTelField('${targetId}')">${telCountryOptionsHtml(defaultDial)}</select>
+    <input class="tel-local" id="${targetId}-local" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX" oninput="syncTelField('${targetId}')">
+  </div>`;
+}
+
+// Recompose le numéro international complet dans le champ d'origine (hidden)
+function syncTelField(targetId) {
+  const cc = document.getElementById(targetId + '-cc');
+  const local = document.getElementById(targetId + '-local');
+  const target = document.getElementById(targetId);
+  if (!cc || !local || !target) return;
+  const digits = local.value.replace(/\D/g, '').replace(/^0+/, '');
+  target.value = digits ? `${cc.value} ${digits}` : '';
+}
+
+// Pré-remplit le widget (select + input local) à partir d'un numéro complet
+// déjà enregistré (ex: "+225 0712345678"), en essayant de reconnaître l'indicatif.
+function setTelFieldValue(targetId, fullValue) {
+  const cc = document.getElementById(targetId + '-cc');
+  const local = document.getElementById(targetId + '-local');
+  const target = document.getElementById(targetId);
+  if (!cc || !local || !target) return;
+  const val = (fullValue || '').trim();
+  if (!val) { local.value = ''; target.value = ''; return; }
+  const found = TEL_COUNTRIES
+    .slice().sort((a, b) => b.d.length - a.d.length)
+    .find(t => val.replace(/\s/g, '').startsWith(t.d));
+  if (found) {
+    cc.value = found.d;
+    local.value = val.replace(found.d, '').replace(/\D/g, '').replace(/^0+/, '');
+  } else {
+    local.value = val.replace(/\D/g, '');
+  }
+  target.value = val;
+}
+
+// Injecte le widget (select indicatif + input local) dans chaque conteneur
+// "-wrap" présent dans la page statique au chargement. Les champs ajoutés
+// dynamiquement (signalement, fiche produit, etc.) injectent les leurs
+// eux-mêmes au moment de leur rendu.
+function injectTelWidgets() {
+  [
+    ['rg-wa-wrap', 'rg-wa'],
+    ['sh-wa-wrap', 'sh-wa'],
+    ['co-tel-wrap', 'co-tel'],
+  ].forEach(([wrapId, targetId]) => {
+    const wrap = document.getElementById(wrapId);
+    if (wrap && !wrap.dataset.injected) {
+      wrap.innerHTML = telWidgetHtml(targetId);
+      wrap.dataset.injected = '1';
+    }
+  });
+}
 
 // ═══════════════════════════════════════════════
 // STORAGE PERSISTANT — connecté à Supabase
@@ -2126,6 +2253,7 @@ function parseRoute() {
 }
 
 async function init() {
+  injectTelWidgets();
   const route = parseRoute();
 
   // Boutique publique : totalement indépendant de la session, accessible à tous
@@ -3224,7 +3352,8 @@ async function loginAs(user) {
 
   // Pré-remplir boutique
   document.getElementById('sh-name').value = S.shop.name;
-  document.getElementById('sh-wa').value = S.shop.wa;
+  injectTelWidgets();
+  setTelFieldValue('sh-wa', S.shop.wa);
   document.getElementById('sh-domain').value = S.shop.domain||'';
   document.getElementById('sh-public-link').value = getShopLink();
   document.getElementById('sh-slug-input').value = S.shop.slug || '';
@@ -4502,7 +4631,7 @@ function previewShop(prodId, isPublic) {
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
-          <div class="fgrp"><label>Téléphone *</label><input id="or-tel" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fgrp"><label>Téléphone *</label>${telWidgetHtml('or-tel')}<input type="hidden" id="or-tel"></div>
           <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} FCFA</span> à la livraison</button>
         </div>
       </div>
@@ -4527,8 +4656,7 @@ function previewShop(prodId, isPublic) {
         <button class="btn btn-blue btn-sm" onclick="submitProductReview()">Envoyer mon avis</button>
       </div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
-        <button class="report-btn" onclick="openReportModal()">🚨 Signaler le marchand</button>
-        <button class="btn btn-ghost btn-sm" onclick="openClientOrderHistory()">📋 Mes commandes</button>
+        <button class="report-btn" onclick="openReportModal()"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"></i>Signaler le marchand</button>
       </div>
     </div>`;
   S.orderQty = 1;
@@ -5408,6 +5536,7 @@ async function submitOrder() {
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
   ['or-prenom','or-ville','or-qrt','or-tel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  resetTelField('or-tel');
   S.orderQty = 1;
   const qtyEl = document.getElementById('pp-qty'); if (qtyEl) qtyEl.textContent = 1;
   updTotal();
@@ -5937,6 +6066,17 @@ function renderAdminThreadView(pid) {
   document.getElementById('adm-thread-list').style.display = 'none';
   const view = document.getElementById('adm-thread-view');
   view.style.display = 'block';
+
+  // Corrige le bug où le texte en cours de frappe disparaissait : un nouveau
+  // message (temps réel ou polling) déclenchait un re-rendu complet qui
+  // recréait la zone de texte et perdait sa valeur. On la sauvegarde avant
+  // de réécrire le HTML, puis on la restaure (avec la position du curseur).
+  const existingTa = document.getElementById('adm-reply-text');
+  const draftValue = existingTa ? existingTa.value : '';
+  const hadFocus = existingTa === document.activeElement;
+  const selStart = existingTa ? existingTa.selectionStart : null;
+  const selEnd = existingTa ? existingTa.selectionEnd : null;
+
   const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
   const bubbles = t.msgs.map(m => {
     const safe = hcEscape(m.body);
@@ -5954,6 +6094,14 @@ function renderAdminThreadView(pid) {
       </div>
     </div>`;
   const m = view.querySelector('.hc-msgs'); if (m) m.scrollTop = m.scrollHeight;
+
+  if (draftValue) {
+    const ta = document.getElementById('adm-reply-text');
+    if (ta) {
+      ta.value = draftValue;
+      if (hadFocus) { ta.focus(); if (selStart !== null) ta.setSelectionRange(selStart, selEnd); }
+    }
+  }
 }
 
 function backToThreadList() { admOpenPid = null; renderAdminThreadList(); }
@@ -6278,15 +6426,15 @@ function renderDelivRates() {
   }
   list.innerHTML = S.delivRates.map(r => {
     const priceDisplay = r.price.toLowerCase() === 'gratuit' || r.price === '0'
-      ? `<span class="deliv-free">✓ Gratuit</span>`
+      ? `<span class="deliv-free">Gratuit</span>`
       : `<span class="deliv-price">${r.price} FCFA</span>`;
     return `
     <div class="deliv-row">
-      <span class="deliv-sector">📍 ${r.sector}</span>
+      <span class="deliv-sector">${r.sector}</span>
       ${priceDisplay}
       <div class="deliv-actions">
-        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="showDelivForm('${r.id}')">✏️</button>
-        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDelivRate('${r.id}')">🗑️</button>
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="showDelivForm('${r.id}')"><i data-lucide="pencil" style="width:13px;height:13px"></i></button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDelivRate('${r.id}')"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>
       </div>
     </div>`;
   }).join('');
@@ -6332,7 +6480,7 @@ async function loadAndRenderDeliverySelector(ownerIdVal) {
   const options = rates.map(r => `<option value="${r.id}">${r.sector}</option>`).join('');
   box.innerHTML = `
     <div class="deliv-select-box">
-      <div class="deliv-select-label">🚚 Choisissez votre secteur de livraison</div>
+      <div class="deliv-select-label">Choisissez votre secteur de livraison</div>
       <div class="fgrp" style="margin-bottom:10px">
         <select id="deliv-selector" onchange="onDelivSectorChange()" style="font-size:14px">
           <option value="">-- Sélectionnez votre secteur --</option>
@@ -6381,6 +6529,11 @@ let _reportProofData = null;
 
 function openReportModal() {
   document.getElementById('rep-name').value = '';
+  if (!document.getElementById('rep-tel-wrap').dataset.injected) {
+    document.getElementById('rep-tel-wrap').innerHTML = telWidgetHtml('rep-tel');
+    document.getElementById('rep-tel-wrap').dataset.injected = '1';
+  }
+  resetTelField('rep-tel');
   document.getElementById('rep-msg').value = '';
   document.getElementById('rep-reason').value = '';
   document.getElementById('rep-proof-preview').style.display = 'none';
@@ -6407,9 +6560,11 @@ async function handleReportProof(input) {
 
 async function submitReport() {
   const name = document.getElementById('rep-name').value.trim();
+  const tel = document.getElementById('rep-tel').value.trim();
   const reason = document.getElementById('rep-reason').value;
   const msg = document.getElementById('rep-msg').value.trim();
-  if (!name) { toast('Entrez votre prénom *', 'err'); return; }
+  if (!name) { toast('Entrez votre nom et prénom *', 'err'); return; }
+  if (!tel) { toast('Entrez votre numéro de téléphone *', 'err'); return; }
   if (!reason) { toast('Choisissez un motif *', 'err'); return; }
   if (!msg) { toast('Décrivez le problème *', 'err'); return; }
   if (!S.curProd || !ownerId()) { toast('Erreur : boutique introuvable', 'err'); return; }
@@ -6427,16 +6582,24 @@ async function submitReport() {
     } catch (e) { console.error('Report proof upload error', e); }
   }
 
-  const { error } = await sb.from('reports').insert({
+  const reportPayload = {
     owner_id: ownerId(),
     shop_name: S.shop ? S.shop.name : '—',
     product_id: S.curProd.id,
     product_name: S.curProd.name,
     client_name: name,
+    client_phone: tel,
     reason,
     message: msg,
     proof_url: proofUrl
-  });
+  };
+  let { error } = await sb.from('reports').insert(reportPayload);
+  if (error && /client_phone/i.test(error.message || '')) {
+    // La colonne client_phone n'existe pas encore côté base : on retente sans elle
+    // pour ne jamais bloquer l'envoi du signalement (voir rapport pour la migration SQL).
+    delete reportPayload.client_phone;
+    ({ error } = await sb.from('reports').insert(reportPayload));
+  }
 
   if (error) { toast('Erreur lors de l\'envoi : ' + error.message, 'err'); return; }
   document.getElementById('report-overlay').classList.remove('on');
@@ -6444,10 +6607,10 @@ async function submitReport() {
 }
 
 // ═══════════════════════════════════════════════
-// HISTORIQUE COMMANDES CLIENT
+// HISTORIQUE COMMANDES CLIENT — toute la marketplace
 // ═══════════════════════════════════════════════
 function openClientOrderHistory() {
-  document.getElementById('co-tel').value = '';
+  resetTelField('co-tel');
   document.getElementById('client-orders-list').innerHTML = '';
   document.getElementById('client-orders-overlay').classList.add('on');
 }
@@ -6458,31 +6621,128 @@ async function loadClientOrders() {
   const list = document.getElementById('client-orders-list');
   list.innerHTML = `<p style="font-size:13px;color:var(--gray);margin-top:10px">Recherche en cours…</p>`;
 
-  const { data: rows } = await sb.from('orders').select('data, created_at').eq('owner_id', ownerId());
-  if (!rows) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune commande trouvée.</p>`; return; }
+  // Recherche sur l'ensemble des commandes de la marketplace (tous marchands),
+  // filtrée côté client sur les 8 derniers chiffres du numéro.
+  const { data: rows, error } = await sb.from('orders').select('owner_id, data, created_at').order('created_at', { ascending: false }).limit(1000);
+  if (error || !rows) { list.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur lors de la recherche.</p>`; return; }
 
-  const telClean = tel.replace(/\s/g, '');
-  const orders = rows.map(r => r.data).filter(o => o && o.tel && o.tel.replace(/\s/g,'').includes(telClean.slice(-8)));
+  const telClean = tel.replace(/\D/g, '');
+  const matches = rows.filter(r => r.data && r.data.tel && r.data.tel.replace(/\D/g, '').includes(telClean.slice(-8)));
 
-  if (!orders.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">📭</div><p>Aucune commande pour ce numéro.</p></div>`;
+  if (!matches.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.9 15.92a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.81 5h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 12.59a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 19.73v3z"/></svg></div><p>Aucune commande pour ce numéro.</p></div>`;
     return;
   }
 
-  const statusLabel = { livree: '✅ Livrée', annulee: '❌ Annulée', attente: '⏳ En attente' };
-  const wa = S.shop ? S.shop.wa : '';
-  list.innerHTML = orders.slice().reverse().map(o => `
-    <div class="client-order-card">
+  // Résout les boutiques et produits concernés pour afficher le nom de la
+  // boutique et permettre la redirection vers la fiche produit exacte.
+  const ownerIds = [...new Set(matches.map(r => r.owner_id))];
+  const prodIds = [...new Set(matches.map(r => r.data.prodId).filter(Boolean))];
+  const [{ data: shops }, { data: prods }] = await Promise.all([
+    sb.from('shops').select('id, shop_name, slug, wa').in('id', ownerIds),
+    prodIds.length ? sb.from('products').select('id, owner_id, data').in('id', prodIds) : Promise.resolve({ data: [] }),
+  ]);
+  const shopById = {}; (shops || []).forEach(s => { shopById[s.id] = s; });
+  const prodById = {}; (prods || []).forEach(p => { prodById[p.id] = p; });
+
+  const statusLabel = { livree: 'Confirmée', annulee: 'Annulée', attente: 'En attente' };
+  list.innerHTML = matches.map(r => {
+    const o = r.data;
+    const shop = shopById[r.owner_id] || {};
+    const prodRow = prodById[o.prodId];
+    const prodSlug = prodRow && prodRow.data ? prodRow.data.slug : '';
+    const link = shop.slug ? (prodSlug ? `/b/${shop.slug}/p/${prodSlug}` : `/b/${shop.slug}`) : null;
+    return `
+    <div class="client-order-card" ${link ? `style="cursor:pointer" onclick="window.location.href='${link}'"` : ''}>
       <div class="client-order-hdr">
         <span class="client-order-prod">${o.prodName || '—'}</span>
         <span class="badge ${o.status==='livree'?'b-green':o.status==='annulee'?'b-red':'b-yellow'}">${statusLabel[o.status]||'En attente'}</span>
       </div>
       <div class="client-order-meta">
-        💰 ${(+o.total||0).toLocaleString('fr-FR')} FCFA · 📅 ${o.date||'—'} · Qté : ${o.qty||1}
+        ${(+o.total||0).toLocaleString('fr-FR')} FCFA · ${o.date||'—'} · Qté : ${o.qty||1}
       </div>
-      <div class="client-order-shop">🏪 ${S.shop ? S.shop.name : '—'}</div>
-      ${wa ? `<div class="client-order-contact">📞 Contact marchand : <a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-weight:600">${wa}</a></div>` : ''}
-    </div>`).join('');
+      <div class="client-order-shop">${shop.shop_name || '—'}</div>
+      ${shop.wa ? `<div class="client-order-contact">Contact marchand : <a href="https://wa.me/${shop.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-weight:600" onclick="event.stopPropagation()">${shop.wa}</a></div>` : ''}
+      ${link ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-top:6px">→ Voir le produit / signaler le marchand</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// FAVORIS CLIENT — sans compte, conservés sur l'appareil (localStorage)
+// ═══════════════════════════════════════════════
+const FAV_STORAGE_KEY = 'zyntelo_favorites';
+
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAV_STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function saveFavorites(favs) {
+  try { localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favs)); } catch (e) { console.error('saveFavorites error', e); }
+  updateMktFavCount();
+}
+
+function isFavorited(prodId) {
+  return getFavorites().some(f => f.prodId === prodId);
+}
+
+function toggleFavorite(prodId) {
+  const favs = getFavorites();
+  const idx = favs.findIndex(f => f.prodId === prodId);
+  if (idx >= 0) {
+    favs.splice(idx, 1);
+    saveFavorites(favs);
+    toast('Retiré des favoris');
+  } else {
+    const p = _mktAllProducts.find(x => x._rowId === prodId);
+    if (!p) return;
+    favs.push({
+      prodId: p._rowId, name: p.name, price: p.newP, oldPrice: p.oldP,
+      img: (p.imgs && p.imgs[0]) || '', shopName: p.shopName, shopSlug: p.shopSlug, slug: p.slug,
+      addedAt: new Date().toISOString(),
+    });
+    saveFavorites(favs);
+    toast('Ajouté aux favoris ❤️');
+  }
+  document.querySelectorAll(`.mkt-fav-toggle[data-pid="${prodId}"]`).forEach(btn => {
+    const on = isFavorited(prodId);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '❤️' : '🤍';
+  });
+}
+
+function updateMktFavCount() {
+  const el = document.getElementById('mkt-fav-count');
+  if (!el) return;
+  const n = getFavorites().length;
+  el.textContent = n;
+  el.style.display = n > 0 ? 'inline-flex' : 'none';
+}
+
+function openClientFavorites() {
+  renderClientFavorites();
+  document.getElementById('client-favs-overlay').classList.add('on');
+}
+
+function renderClientFavorites() {
+  const favs = getFavorites();
+  const list = document.getElementById('client-favs-list');
+  if (!favs.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico">🤍</div><p>Aucun favori pour le moment.</p></div>`;
+    return;
+  }
+  list.innerHTML = favs.slice().reverse().map(f => {
+    const link = f.shopSlug && f.slug ? `/b/${f.shopSlug}/p/${f.slug}` : (f.shopSlug ? `/b/${f.shopSlug}` : '#');
+    const imgHtml = f.img ? `<img src="${f.img}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : `<div style="width:56px;height:56px;border-radius:8px;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>`;
+    return `<div class="client-order-card" style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="window.location.href='${link}'">
+      ${imgHtml}
+      <div style="flex:1;min-width:0">
+        <div class="client-order-prod" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
+        <div class="client-order-meta">${(+f.price||0).toLocaleString('fr-FR')} FCFA · 🏪 ${f.shopName||'—'}</div>
+      </div>
+      <button class="btn-icon" title="Retirer des favoris" onclick="event.stopPropagation();toggleFavorite('${f.prodId}');renderClientFavorites();">🗑️</button>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════
@@ -6508,25 +6768,40 @@ async function loadAdminReports() {
   const countByOwner = {};
   reports.forEach(r => { countByOwner[r.owner_id] = (countByOwner[r.owner_id] || 0) + 1; });
 
-  const reasonLabels = { arnaque: '❌ Arnaque', livraison_lente: '🐢 Livraison trop lente', produit_non_conforme: '📦 Produit non conforme', autre: '📝 Autre' };
+  const reasonLabels = {
+    arnaque: 'Arnaque',
+    livraison_lente: 'Livraison trop lente',
+    produit_non_conforme: 'Produit non conforme',
+    autre: 'Autre'
+  };
 
   list.innerHTML = reports.map(r => `
     <div class="report-card">
       <div class="report-card-hdr">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--red-l);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏪</div>
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--red-l);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
         <div style="flex:1">
           <div class="report-card-shop">${r.shop_name || '—'} <span style="font-size:11px;color:var(--gray);font-weight:400">(${countByOwner[r.owner_id]} signalement(s) total)</span></div>
-          <div class="report-card-meta">Produit : <strong>${r.product_name || '—'}</strong> · Client : ${r.client_name} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+          <div class="report-card-meta">Produit : <strong>${r.product_name || '—'}</strong> · Client : ${r.client_name}${r.client_phone ? ` · 📞 ${r.client_phone}` : ''} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
         </div>
       </div>
       <div class="report-card-reason">${reasonLabels[r.reason] || r.reason}</div>
       <div class="report-card-msg">${r.message}</div>
       ${r.proof_url ? `<img src="${r.proof_url}" class="report-card-proof" onclick="window.open('${r.proof_url}','_blank')" title="Voir la preuve en grand">` : ''}
       <div class="report-card-actions">
-        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="sendWarningToShop('${r.owner_id}','${(r.shop_name||'').replace(/'/g,"\\'")}')">⚠️ Avertissement</button>
-        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="suspendShopFromReport('${r.owner_id}')">⏸️ Suspendre</button>
-        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="toggleBlock('${r.owner_id}',true)">🔒 Bloquer définitivement</button>
-        <button class="btn btn-sm" style="background:var(--gray-l);color:var(--gray)" onclick="deleteReport('${r.id}')">🗑️ Supprimer le signalement</button>
+        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="sendWarningToShop('${r.owner_id}','${(r.shop_name||'').replace(/'/g,"\\'")}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Avertissement
+        </button>
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="suspendShopFromReport('${r.owner_id}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>Suspendre
+        </button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="toggleBlock('${r.owner_id}',true)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bloquer définitivement
+        </button>
+        <button class="btn btn-sm" style="background:var(--gray-l);color:var(--gray)" onclick="deleteReport('${r.id}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Supprimer
+        </button>
       </div>
     </div>`).join('');
 }
@@ -6575,6 +6850,7 @@ let _mktSearchQuery = '';
 
 async function openMarketplace() {
   go('s-marketplace');
+  updateMktFavCount();
   if (_mktAllProducts.length === 0) await loadMarketplaceProducts();
 }
 
@@ -6747,19 +7023,23 @@ function renderMktGrid(products) {
       : `<span class="mkt-prod-price">${p.newP.toLocaleString('fr-FR')} F</span>`;
 
     const badgeHtml = p.ageInDays < 7
-      ? `<div class="mkt-prod-badge mkt-badge-new">✦ Nouveau</div>`
+      ? `<div class="mkt-prod-badge mkt-badge-new">Nouveau</div>`
       : p.shopBadge === 'meilleur'
-        ? `<div class="mkt-prod-badge mkt-badge-top">🏆 Top vendeur</div>`
+        ? `<div class="mkt-prod-badge mkt-badge-top">Top vendeur</div>`
         : p.shopBadge === 'pro'
-          ? `<div class="mkt-prod-badge mkt-badge-new">🏅 Vendeur Pro</div>`
+          ? `<div class="mkt-prod-badge mkt-badge-new">Vendeur Pro</div>`
           : '';
 
     const shopLink = p.shopSlug ? `/b/${p.shopSlug}` : '#';
     const prodLink = p.shopSlug && p.slug ? `/b/${p.shopSlug}/p/${p.slug}` : shopLink;
+    const favOn = isFavorited(p._rowId);
 
     return `
       <div class="mkt-prod-card" onclick="window.location.href='${prodLink}'">
-        <div class="mkt-prod-img" style="height:180px;">${imgHtml}</div>
+        <div class="mkt-prod-img" style="height:180px;">
+          ${imgHtml}
+          <button type="button" class="mkt-fav-toggle ${favOn ? 'on' : ''}" data-pid="${p._rowId}" onclick="event.stopPropagation();toggleFavorite('${p._rowId}')">${favOn ? '❤️' : '🤍'}</button>
+        </div>
         <div class="mkt-prod-body">
           <div class="mkt-prod-shop">
             🏪 ${p.shopName}
