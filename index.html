@@ -298,7 +298,7 @@ tr:hover td{background:#fafafa;}
 .star{color:#e0e0e0;cursor:pointer;transition:.15s;user-select:none;}
 .star.on{color:var(--yellow);}
 .reviews-section{max-width:420px;width:100%;margin:64px auto 0;padding-top:32px;border-top:1px solid var(--border);}
-.review-box-sep{border-top:1px solid var(--border);padding-top:32px;}
+
 .reviews-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;margin-bottom:16px;text-align:center;}
 .reviews-summary{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
 .reviews-summary-stars{color:var(--yellow);font-size:20px;}
@@ -739,24 +739,6 @@ canvas{display:block;}
       <div class="auth-switch">Pas de compte ? <a onclick="go('s-register')">Créer une boutique</a></div>
       <div class="auth-admin-link"><a onclick="go('s-admin-login')">Accès administrateur</a></div>
     </div>
-
-    <div class="auth-box review-box-sep" style="margin-top:70px">
-      <h2 style="font-size:17px">⭐ Laissez votre avis</h2>
-      <p class="sub" style="margin-bottom:14px">Vous utilisez déjà Zyntelo ? Partagez votre expérience.</p>
-      <div class="fgrp"><label>Votre email (compte boutique)</label><input id="rv-email" type="email" placeholder="votre@email.com"></div>
-      <div class="fgrp">
-        <label>Note</label>
-        <div class="star-picker" id="rv-stars">
-          <span class="star" data-v="1" onclick="setReviewStars(1)">★</span>
-          <span class="star" data-v="2" onclick="setReviewStars(2)">★</span>
-          <span class="star" data-v="3" onclick="setReviewStars(3)">★</span>
-          <span class="star" data-v="4" onclick="setReviewStars(4)">★</span>
-          <span class="star" data-v="5" onclick="setReviewStars(5)">★</span>
-        </div>
-      </div>
-      <div class="fgrp"><label>Votre message (facultatif)</label><textarea id="rv-comment" rows="3" placeholder="Dites-nous ce que vous pensez de Zyntelo…"></textarea></div>
-      <button class="btn btn-blue btn-w" onclick="submitReview()">Envoyer mon avis</button>
-    </div>
   </div>
 </div>
 
@@ -776,24 +758,6 @@ canvas{display:block;}
       <div class="fgrp"><label>Mot de passe *</label><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"></div>
       <button class="btn btn-red btn-w" onclick="doRegister()">Créer ma boutique</button>
       <div class="auth-switch">Déjà un compte ? <a onclick="go('s-login')">Se connecter</a></div>
-    </div>
-
-    <div class="auth-box review-box-sep" style="margin-top:70px">
-      <h2 style="font-size:17px">⭐ Laissez votre avis</h2>
-      <p class="sub" style="margin-bottom:14px">Vous utilisez déjà Zyntelo ? Partagez votre expérience.</p>
-      <div class="fgrp"><label>Votre email (compte boutique)</label><input id="rv-email-2" type="email" placeholder="votre@email.com"></div>
-      <div class="fgrp">
-        <label>Note</label>
-        <div class="star-picker" id="rv-stars-2">
-          <span class="star" data-v="1" onclick="setReviewStars2(1)">★</span>
-          <span class="star" data-v="2" onclick="setReviewStars2(2)">★</span>
-          <span class="star" data-v="3" onclick="setReviewStars2(3)">★</span>
-          <span class="star" data-v="4" onclick="setReviewStars2(4)">★</span>
-          <span class="star" data-v="5" onclick="setReviewStars2(5)">★</span>
-        </div>
-      </div>
-      <div class="fgrp"><label>Votre message (facultatif)</label><textarea id="rv-comment-2" rows="3" placeholder="Dites-nous ce que vous pensez de Zyntelo…"></textarea></div>
-      <button class="btn btn-blue btn-w" onclick="submitReview2()">Envoyer mon avis</button>
     </div>
   </div>
 </div>
@@ -1654,7 +1618,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{} };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -2504,6 +2468,100 @@ function hasPushPromptBeenSeen() {
   try { return localStorage.getItem('zyntelo_push_prompt_seen') === '1'; } catch { return false; }
 }
 
+// ═══════════════════════════════════════════════
+// INVITATION INTELLIGENTE À LAISSER UN AVIS
+// Apparaît après 10 commandes, une seule fois par session. Si le commerçant
+// dit "Plus tard", on repropose 7 jours après. S'il donne son avis, on ne
+// redemande plus jamais. État mémorisé en base (review_given,
+// review_prompt_snoozed_until) pour suivre l'utilisateur sur tous ses appareils.
+// ═══════════════════════════════════════════════
+let _reviewPromptShownThisSession = false;
+const REVIEW_PROMPT_MIN_ORDERS = 10;
+
+function maybeShowReviewPrompt() {
+  try {
+    // Conditions de base : commerçant connecté (pas gérant, pas admin), boutique non bloquée
+    if (!S.user || S.isGerant || S.user.isAdmin || S.isAdmin) return;
+    if (S.shop && S.shop.blocked) return;
+    if (_reviewPromptShownThisSession) return;
+    // Déjà donné son avis → ne plus jamais demander
+    if (S.shop && S.shop.review_given) return;
+    // Assez de commandes ?
+    const orderCount = (S.orders && S.orders.length) || 0;
+    if (orderCount < REVIEW_PROMPT_MIN_ORDERS) return;
+    // En période de report ("Plus tard") ?
+    if (S.shop && S.shop.review_prompt_snoozed_until) {
+      const until = new Date(S.shop.review_prompt_snoozed_until);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (today < until) return; // encore dans la période de report
+    }
+    // Toutes les conditions réunies : on affiche, après un court délai pour ne pas surgir brutalement
+    _reviewPromptShownThisSession = true;
+    setTimeout(showReviewPrompt, 1500);
+  } catch (e) { console.error('maybeShowReviewPrompt error', e); }
+}
+
+let _reviewPromptStars = 0;
+function setPromptStars(n) {
+  _reviewPromptStars = n;
+  document.querySelectorAll('#rp-stars .star').forEach(s => {
+    s.style.opacity = (parseInt(s.dataset.v) <= n) ? '1' : '0.3';
+  });
+}
+
+function showReviewPrompt() {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'review-prompt-overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `<div class="popup" style="text-align:center;max-width:400px">
+    <div class="popup-handle"></div>
+    <div style="font-size:44px;margin-bottom:8px">⭐</div>
+    <h3 style="margin-bottom:8px">Vous appréciez Zyntelo ?</h3>
+    <p style="font-size:14px;color:var(--gray);margin-bottom:18px">Vous avez déjà reçu plusieurs commandes — votre avis nous aiderait beaucoup, et encouragerait d'autres commerçants à se lancer !</p>
+    <div class="star-picker" id="rp-stars" style="justify-content:center;font-size:32px;margin-bottom:16px">
+      <span class="star" data-v="1" onclick="setPromptStars(1)" style="opacity:0.3;cursor:pointer">★</span>
+      <span class="star" data-v="2" onclick="setPromptStars(2)" style="opacity:0.3;cursor:pointer">★</span>
+      <span class="star" data-v="3" onclick="setPromptStars(3)" style="opacity:0.3;cursor:pointer">★</span>
+      <span class="star" data-v="4" onclick="setPromptStars(4)" style="opacity:0.3;cursor:pointer">★</span>
+      <span class="star" data-v="5" onclick="setPromptStars(5)" style="opacity:0.3;cursor:pointer">★</span>
+    </div>
+    <div class="fgrp" style="text-align:left"><textarea id="rp-comment" rows="3" placeholder="Votre message (facultatif)…"></textarea></div>
+    <button class="btn btn-blue btn-w" onclick="submitReviewPrompt()">Envoyer mon avis</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="snoozeReviewPrompt()">Plus tard</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  _reviewPromptStars = 0;
+}
+
+async function submitReviewPrompt() {
+  if (!_reviewPromptStars) { toast('Choisissez une note en étoiles', 'err'); return; }
+  const comment = (document.getElementById('rp-comment').value || '').trim();
+  const { data, error } = await sb.rpc('submit_review', { p_email: S.user.email, p_rating: _reviewPromptStars, p_comment: comment });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (data && !data.success) { toast(data.error || 'Erreur', 'err'); return; }
+  // Marque l'avis comme donné → on ne redemandera plus jamais
+  await sb.from('shops').update({ review_given: true }).eq('id', S.user.id);
+  if (S.shop) S.shop.review_given = true;
+  Store.invalidateAll();
+  toast('Merci beaucoup pour votre avis ! ⭐');
+  const ov = document.getElementById('review-prompt-overlay');
+  if (ov) ov.remove();
+}
+
+async function snoozeReviewPrompt() {
+  // Reporte de 7 jours
+  const until = new Date(); until.setDate(until.getDate() + 7);
+  const untilStr = until.toISOString().split('T')[0];
+  try {
+    await sb.from('shops').update({ review_prompt_snoozed_until: untilStr }).eq('id', S.user.id);
+    if (S.shop) S.shop.review_prompt_snoozed_until = untilStr;
+    Store.invalidateAll();
+  } catch (e) { console.error('snooze error', e); }
+  const ov = document.getElementById('review-prompt-overlay');
+  if (ov) ov.remove();
+}
+
 // Propose l'activation une seule fois par appareil, après inscription ou connexion —
 // n'interrompt jamais si l'utilisateur a déjà répondu (accepté ou refusé) une fois.
 function maybePromptPushNotifications() {
@@ -2895,6 +2953,7 @@ async function loginAs(user) {
 
   go('s-dash');
   toast(`Bienvenue ${user.name} ! 👋`);
+  maybeShowReviewPrompt();
 
   // Si l'utilisateur arrive depuis le lien d'un email de notification (ex: nouvelle
   // commande), on l'amène directement sur l'onglet Commandes, sans rien changer
@@ -3194,41 +3253,9 @@ async function loadReviews() {
     </div>`).join('');
 }
 
-let reviewStars = 0;
-function setReviewStars(n) {
-  reviewStars = n;
-  document.querySelectorAll('#rv-stars .star').forEach(s => {
-    s.classList.toggle('on', +s.dataset.v <= n);
-  });
-}
-function setReviewStars2(n) {
-  reviewStars2 = n;
-  document.querySelectorAll('#rv-stars-2 .star').forEach(s => {
-    s.classList.toggle('on', +s.dataset.v <= n);
-  });
-}
-let reviewStars2 = 0;
+// (Les anciens formulaires d'avis sur les pages connexion/inscription ont été
+// retirés au profit de l'invitation intelligente après 10 commandes.)
 
-async function submitReviewGeneric(emailId, commentId, starsValue, resetStars) {
-  const email = document.getElementById(emailId).value.trim();
-  const comment = document.getElementById(commentId).value.trim();
-  if (!email) { toast('Entrez votre email', 'err'); return; }
-  if (!starsValue) { toast('Choisissez une note en étoiles', 'err'); return; }
-  const { data, error } = await sb.rpc('submit_review', { p_email: email, p_rating: starsValue, p_comment: comment });
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-  if (!data.success) { toast(data.error === 'Email introuvable' ? 'Email introuvable. Vérifiez qu\'il correspond à votre compte boutique.' : data.error, 'err'); return; }
-  toast('Merci pour votre avis ! ⭐');
-  document.getElementById(emailId).value = '';
-  document.getElementById(commentId).value = '';
-  resetStars();
-}
-
-async function submitReview() {
-  await submitReviewGeneric('rv-email', 'rv-comment', reviewStars, () => setReviewStars(0));
-}
-async function submitReview2() {
-  await submitReviewGeneric('rv-email-2', 'rv-comment-2', reviewStars2, () => setReviewStars2(0));
-}
 
 function nextMonth() {
   const d = new Date(); d.setMonth(d.getMonth()+1);
