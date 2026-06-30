@@ -558,6 +558,29 @@ canvas{display:block;}
 .nl-reveal{opacity:0;transform:translateY(24px);transition:all .7s cubic-bezier(.2,.7,.2,1);}
 .nl-reveal.nl-on{opacity:1;transform:none;}
 @media(max-width:600px){.nl-hero{padding:80px 0 50px;}.nl-trust{gap:24px;}.nl-section{padding:56px 0;}}
+
+/* ═══ MARKETPLACE ═══ */
+.mkt-cat-btn{padding:8px 16px;border-radius:100px;font-size:13px;font-weight:600;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:#8B95AD;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;}
+.mkt-cat-btn.active,.mkt-cat-btn:hover{background:#2E6BFF;color:#fff;border-color:#2E6BFF;}
+.mkt-sort-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:#8B95AD;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+.mkt-sort-btn.active,.mkt-sort-btn:hover{background:rgba(46,107,255,0.15);color:#4A7FFF;border-color:rgba(46,107,255,0.4);}
+.mkt-prod-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;}
+.mkt-prod-card:hover{border-color:rgba(46,107,255,0.4);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.35);}
+.mkt-prod-img{width:100%;aspect-ratio:1;object-fit:cover;background:#0F1525;font-size:40px;display:flex;align-items:center;justify-content:center;}
+.mkt-prod-img img{width:100%;height:100%;object-fit:cover;}
+.mkt-prod-body{padding:14px;}
+.mkt-prod-shop{font-size:11px;color:#4A7FFF;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+.mkt-prod-name{font-size:14px;font-weight:700;color:#EDF1F8;margin-bottom:8px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.mkt-prod-price{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#EDF1F8;}
+.mkt-prod-old-price{font-size:12px;color:#8B95AD;text-decoration:line-through;margin-left:6px;}
+.mkt-prod-score{display:flex;align-items:center;gap:4px;margin-top:8px;}
+.mkt-score-bar{flex:1;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.mkt-score-fill{height:100%;background:linear-gradient(90deg,#2E6BFF,#8FB0FF);border-radius:2px;transition:width .4s;}
+.mkt-prod-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:10px;font-weight:700;margin-top:8px;}
+.mkt-badge-new{background:rgba(22,163,74,0.15);color:#4ade80;}
+.mkt-badge-top{background:rgba(234,88,12,0.15);color:#fb923c;}
+#mkt-search::placeholder{color:rgba(255,255,255,0.3);}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -605,6 +628,7 @@ canvas{display:block;}
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <div class="nl-nav-btns">
         <button class="nl-nav-ghost" onclick="go('s-about')">À propos</button>
+        <button class="nl-nav-ghost" onclick="openMarketplace()">🛍️ Explorer</button>
         <button class="nl-nav-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
@@ -688,6 +712,95 @@ canvas{display:block;}
   <footer class="nl-footer">
     <div class="nl-wrap">
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
+      <p>Pour faire grandir le commerce digital africain.</p>
+      <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MARKETPLACE PUBLIQUE
+═══════════════════════════════════════ -->
+<div id="s-marketplace" class="screen nl-screen">
+  <nav class="nl-nav">
+    <div class="nl-wrap nl-nav-inner">
+      <div class="nl-logo" onclick="go('s-land')" style="cursor:pointer"><span class="nl-logo-mark">Z</span>Zyntelo</div>
+      <div class="nl-nav-btns">
+        <button class="nl-nav-ghost" onclick="go('s-land')">← Accueil</button>
+        <button class="nl-nav-ghost" onclick="go('s-login')">Se connecter</button>
+        <button class="nl-nav-btn" onclick="go('s-register')">Créer ma boutique</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO COMPACT -->
+  <div style="padding:48px 0 32px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.15) 0%,transparent 65%);pointer-events:none;"></div>
+    <div class="nl-wrap" style="position:relative;z-index:2;">
+      <div class="nl-badge-free" style="margin-bottom:16px;"><span class="nl-dot"></span>Boutiques vérifiées</div>
+      <h1 style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(26px,5vw,44px);line-height:1.1;letter-spacing:-1px;margin-bottom:12px;color:#EDF1F8;">Découvrez les meilleurs<br><span style="background:linear-gradient(120deg,#4A7FFF,#8FB0FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">produits africains</span></h1>
+      <p style="font-size:16px;color:#8B95AD;max-width:480px;margin:0 auto 28px;">Des milliers de produits de boutiques vérifiées à travers toute l'Afrique francophone.</p>
+
+      <!-- BARRE DE RECHERCHE -->
+      <div style="max-width:520px;margin:0 auto;position:relative;">
+        <input id="mkt-search" type="text" placeholder="Rechercher un produit, une boutique…"
+          style="width:100%;padding:14px 50px 14px 20px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#EDF1F8;font-size:15px;font-family:'Inter',sans-serif;outline:none;backdrop-filter:blur(10px);"
+          oninput="filterMarketplace(this.value)"
+          onfocus="this.style.borderColor='rgba(46,107,255,0.6)'"
+          onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTRES CATÉGORIES -->
+  <div class="nl-wrap" style="margin-bottom:24px;">
+    <div id="mkt-cats" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+      <button class="mkt-cat-btn active" onclick="filterMktCat('', this)">Tout</button>
+    </div>
+  </div>
+
+  <!-- STATS RAPIDES -->
+  <div class="nl-wrap" style="margin-bottom:32px;">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8B95AD;">
+        <span style="color:#4A7FFF;font-weight:700;" id="mkt-count-display">—</span> produits disponibles
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8B95AD;">
+        <span style="color:#4A7FFF;font-weight:700;" id="mkt-shops-count">—</span> boutiques actives
+      </div>
+    </div>
+  </div>
+
+  <!-- TRIER PAR -->
+  <div class="nl-wrap" style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:13px;color:#8B95AD;">Trier par :</div>
+    <div style="display:flex;gap:8px;">
+      <button class="mkt-sort-btn active" onclick="sortMarketplace('score', this)">⭐ Recommandés</button>
+      <button class="mkt-sort-btn" onclick="sortMarketplace('recent', this)">🆕 Récents</button>
+      <button class="mkt-sort-btn" onclick="sortMarketplace('price_asc', this)">Prix ↑</button>
+      <button class="mkt-sort-btn" onclick="sortMarketplace('price_desc', this)">Prix ↓</button>
+    </div>
+  </div>
+
+  <!-- GRILLE PRODUITS -->
+  <div class="nl-wrap" style="padding-bottom:60px;">
+    <div id="mkt-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
+      <!-- chargement -->
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;">
+        <div class="spin" style="border-color:rgba(255,255,255,0.1);border-top-color:#4A7FFF;margin:0 auto 16px;"></div>
+        Chargement des produits…
+      </div>
+    </div>
+    <div id="mkt-empty" style="display:none;text-align:center;padding:60px 20px;color:#8B95AD;">
+      <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+      <p style="font-size:16px;">Aucun produit trouvé pour cette recherche.</p>
+    </div>
+  </div>
+
+  <footer class="nl-footer">
+    <div class="nl-wrap">
+      <div class="nl-logo" style="justify-content:center;margin-bottom:14px;font-size:18px;cursor:pointer" onclick="go('s-land')"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <p>Pour faire grandir le commerce digital africain.</p>
       <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
     </div>
@@ -1830,6 +1943,7 @@ function parseRoute() {
   if (parts[0] === 'login') return { type: 'login' };
   if (parts[0] === 'register') return { type: 'register' };
   if (parts[0] === 'admin') return { type: 'admin' };
+  if (parts[0] === 'explorer') return { type: 'marketplace' };
   return { type: 'home' };
 }
 
@@ -1849,6 +1963,13 @@ async function init() {
     hide('loading');
     go('s-land');
     checkSessionForMySpaceButton();
+    return;
+  }
+
+  // Marketplace publique
+  if (route.type === 'marketplace') {
+    hide('loading');
+    await openMarketplace();
     return;
   }
 
@@ -5926,6 +6047,218 @@ async function sendMsgAll() {
   const first=clients[0];
   window.open(`https://wa.me/${first.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   if(clients.length>1) toast(`WhatsApp ouvert pour ${first.name}. Répétez pour les ${clients.length-1} autres.`,'ok');
+}
+
+// ═══════════════════════════════════════════════
+// MARKETPLACE PUBLIQUE
+// ═══════════════════════════════════════════════
+let _mktAllProducts = [];
+let _mktFilteredProducts = [];
+let _mktCurrentSort = 'score';
+let _mktCurrentCat = '';
+let _mktSearchQuery = '';
+
+async function openMarketplace() {
+  go('s-marketplace');
+  if (_mktAllProducts.length === 0) await loadMarketplaceProducts();
+}
+
+async function loadMarketplaceProducts() {
+  const grid = document.getElementById('mkt-grid');
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;"><div class="spin" style="border-color:rgba(255,255,255,0.1);border-top-color:#4A7FFF;margin:0 auto 16px;"></div>Chargement des produits…</div>`;
+
+  try {
+    // Charger toutes les boutiques actives (non bloquées)
+    const { data: shops, error: shopErr } = await sb.from('shops').select('id, shop_name, slug, badge, blocked').eq('blocked', false);
+    if (shopErr || !shops || !shops.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#8B95AD;"><div style="font-size:48px;margin-bottom:12px;">🏪</div><p>Aucune boutique active pour le moment.</p></div>`;
+      return;
+    }
+
+    // Charger les produits de toutes les boutiques actives
+    const shopIds = shops.map(s => s.id);
+    const shopMap = {};
+    shops.forEach(s => { shopMap[s.id] = s; });
+
+    const { data: prodRows, error: prodErr } = await sb.from('products').select('id, owner_id, data, created_at').in('owner_id', shopIds).order('created_at', { ascending: false }).limit(200);
+
+    if (prodErr) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#e74c3c;">Erreur de chargement.</div>`;
+      return;
+    }
+
+    // Construire les objets produits avec score de ranking
+    const products = (prodRows || []).map(row => {
+      const p = row.data || {};
+      const shop = shopMap[row.owner_id] || {};
+      const imgs = (p.imgs && p.imgs.length) ? p.imgs : [];
+      const hasImg = imgs.length > 0;
+      const hasDesc = p.desc && p.desc.length > 20;
+      const hasPrice = p.newP > 0;
+      const hasVars = p.vars && p.vars.length > 0;
+      const imgCount = imgs.length;
+
+      // Score qualité fiche (0–40)
+      let scoreQualite = 0;
+      if (hasImg) scoreQualite += 15;
+      if (imgCount >= 3) scoreQualite += 10;
+      if (hasDesc) scoreQualite += 10;
+      if (hasVars) scoreQualite += 5;
+
+      // Score réputation boutique (0–40)
+      let scoreShop = 0;
+      if (shop.badge === 'meilleur') scoreShop = 40;
+      else if (shop.badge === 'pro') scoreShop = 25;
+      else scoreShop = 10;
+
+      // Score fraîcheur (0–20) — produits récents boostés
+      const ageInDays = (Date.now() - new Date(row.created_at).getTime()) / (1000*60*60*24);
+      let scoreFraicheur = 0;
+      if (ageInDays < 3) scoreFraicheur = 20;
+      else if (ageInDays < 7) scoreFraicheur = 15;
+      else if (ageInDays < 30) scoreFraicheur = 10;
+      else if (ageInDays < 90) scoreFraicheur = 5;
+
+      const scoreTotal = scoreQualite + scoreShop + scoreFraicheur;
+
+      return {
+        _rowId: row.id,
+        ownerId: row.owner_id,
+        createdAt: row.created_at,
+        name: p.name || 'Produit',
+        newP: p.newP || 0,
+        oldP: p.oldP || 0,
+        imgs,
+        desc: p.desc || '',
+        vars: p.vars || [],
+        slug: p.slug || '',
+        cat: p.cat || '',
+        shopName: shop.shop_name || 'Boutique',
+        shopSlug: shop.slug || '',
+        shopBadge: shop.badge || '',
+        scoreTotal,
+        scorePct: Math.round((scoreTotal / 100) * 100),
+        ageInDays,
+      };
+    }).filter(p => p.newP > 0); // exclure les produits sans prix
+
+    _mktAllProducts = products;
+
+    // Construire les catégories uniques
+    const cats = [...new Set(products.map(p => p.cat).filter(Boolean))].slice(0, 12);
+    const catBar = document.getElementById('mkt-cats');
+    catBar.innerHTML = `<button class="mkt-cat-btn active" onclick="filterMktCat('', this)">Tout</button>` +
+      cats.map(c => `<button class="mkt-cat-btn" onclick="filterMktCat('${c.replace(/'/g,"\\'")}', this)">${c}</button>`).join('');
+
+    // Compter les boutiques uniques
+    const shopCount = new Set(products.map(p => p.ownerId)).size;
+    document.getElementById('mkt-shops-count').textContent = shopCount;
+
+    applyMktFilters();
+  } catch (e) {
+    console.error('loadMarketplaceProducts error', e);
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#8B95AD;">Erreur inattendue.</div>`;
+  }
+}
+
+function filterMktCat(cat, btn) {
+  _mktCurrentCat = cat;
+  document.querySelectorAll('.mkt-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyMktFilters();
+}
+
+function filterMarketplace(query) {
+  _mktSearchQuery = query.toLowerCase().trim();
+  applyMktFilters();
+}
+
+function sortMarketplace(sort, btn) {
+  _mktCurrentSort = sort;
+  document.querySelectorAll('.mkt-sort-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyMktFilters();
+}
+
+function applyMktFilters() {
+  let results = [..._mktAllProducts];
+
+  // Filtre catégorie
+  if (_mktCurrentCat) results = results.filter(p => p.cat === _mktCurrentCat);
+
+  // Filtre recherche
+  if (_mktSearchQuery) {
+    results = results.filter(p =>
+      p.name.toLowerCase().includes(_mktSearchQuery) ||
+      p.shopName.toLowerCase().includes(_mktSearchQuery) ||
+      (p.desc && p.desc.toLowerCase().includes(_mktSearchQuery))
+    );
+  }
+
+  // Tri
+  if (_mktCurrentSort === 'score') {
+    results.sort((a, b) => b.scoreTotal - a.scoreTotal);
+  } else if (_mktCurrentSort === 'recent') {
+    results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } else if (_mktCurrentSort === 'price_asc') {
+    results.sort((a, b) => a.newP - b.newP);
+  } else if (_mktCurrentSort === 'price_desc') {
+    results.sort((a, b) => b.newP - a.newP);
+  }
+
+  _mktFilteredProducts = results;
+  document.getElementById('mkt-count-display').textContent = results.length;
+  renderMktGrid(results);
+}
+
+function renderMktGrid(products) {
+  const grid = document.getElementById('mkt-grid');
+  const empty = document.getElementById('mkt-empty');
+
+  if (!products.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = products.map(p => {
+    const imgHtml = p.imgs.length
+      ? `<img src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='📦';">`
+      : '📦';
+
+    const priceHtml = p.oldP && p.oldP > p.newP
+      ? `<span class="mkt-prod-price">${p.newP.toLocaleString('fr-FR')} F</span><span class="mkt-prod-old-price">${p.oldP.toLocaleString('fr-FR')} F</span>`
+      : `<span class="mkt-prod-price">${p.newP.toLocaleString('fr-FR')} F</span>`;
+
+    const badgeHtml = p.ageInDays < 7
+      ? `<div class="mkt-prod-badge mkt-badge-new">✦ Nouveau</div>`
+      : p.shopBadge === 'meilleur'
+        ? `<div class="mkt-prod-badge mkt-badge-top">🏆 Top vendeur</div>`
+        : p.shopBadge === 'pro'
+          ? `<div class="mkt-prod-badge mkt-badge-new">🏅 Vendeur Pro</div>`
+          : '';
+
+    const shopLink = p.shopSlug ? `/b/${p.shopSlug}` : '#';
+    const prodLink = p.shopSlug && p.slug ? `/b/${p.shopSlug}/p/${p.slug}` : shopLink;
+
+    return `
+      <div class="mkt-prod-card" onclick="window.location.href='${prodLink}'">
+        <div class="mkt-prod-img" style="height:180px;">${imgHtml}</div>
+        <div class="mkt-prod-body">
+          <div class="mkt-prod-shop">
+            🏪 ${p.shopName}
+          </div>
+          <div class="mkt-prod-name">${p.name}</div>
+          <div>${priceHtml}</div>
+          <div class="mkt-prod-score">
+            <div class="mkt-score-bar"><div class="mkt-score-fill" style="width:${p.scorePct}%"></div></div>
+            <span style="font-size:10px;color:#8B95AD;white-space:nowrap;">${p.scorePct}%</span>
+          </div>
+          ${badgeHtml}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════
