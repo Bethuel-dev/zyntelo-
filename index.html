@@ -1515,7 +1515,7 @@ canvas{display:block;}
     <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">0 FCFA</span></div>
     <hr class="divider">
     <div class="sec-lbl">📍 Informations de livraison</div>
-    <div class="fgrp"><label>Secteur de livraison *</label>
+    <div class="fgrp"><label>Secteur de livraison (facultatif)</label>
       <select id="or-sector" onchange="updTotal()"><option value="">Sélectionnez votre secteur…</option></select>
     </div>
     <div id="or-delivery-summary" style="display:none;font-size:12.5px;color:var(--gray);margin:-6px 0 10px;line-height:1.6">
@@ -4652,7 +4652,7 @@ function previewShop(prodId, isPublic) {
           <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
           <div id="prod-offers-box"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
-          <div class="fgrp"><label>Secteur de livraison *</label>
+          <div class="fgrp"><label>Secteur de livraison (facultatif)</label>
             <select id="or-sector" onchange="updTotal()"><option value="">Sélectionnez votre secteur…</option></select>
           </div>
           <div id="or-delivery-summary" style="display:none;font-size:12.5px;color:var(--gray);margin:-6px 0 10px;line-height:1.6">
@@ -5416,9 +5416,59 @@ function showClientLoginPopup() {
     <div class="fgrp"><label>Email</label><input id="cl-email" type="email" placeholder="votre@email.com"></div>
     <div class="fgrp"><label>Mot de passe</label><input id="cl-password" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitClientLogin()"></div>
     <button class="btn btn-blue btn-w" onclick="submitClientLogin()">Se connecter</button>
+    <div style="text-align:center;margin-top:12px;font-size:13px">
+      Pas de compte ? <a onclick="document.getElementById('client-login-overlay').remove(); showClientRegisterPopup();" style="color:var(--blue);text-decoration:underline;cursor:pointer">Créer un compte</a>
+    </div>
     <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('client-login-overlay').remove()">Annuler</button>
   </div>`;
   document.body.appendChild(overlay);
+}
+
+function showClientRegisterPopup() {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'client-register-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="popup" style="max-width:380px">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">Créer un compte</h3>
+    <p style="font-size:13px;color:var(--gray);text-align:center;margin-bottom:16px">Pour retrouver vos commandes et favoris, sur toutes les boutiques.</p>
+    <div class="fgrp"><label>Nom complet</label><input id="cr-name" placeholder="Votre nom"></div>
+    <div class="fgrp"><label>Email</label><input id="cr-email" type="email" placeholder="votre@email.com"></div>
+    <div class="fgrp"><label>Numéro (facultatif)</label>
+      <div class="phone-grp">
+        <select id="cr-phone-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+        <input id="cr-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+      </div>
+    </div>
+    <div class="fgrp"><label>Mot de passe (6 caractères minimum)</label><input id="cr-password" type="password" placeholder="••••••"></div>
+    <button class="btn btn-blue btn-w" onclick="submitClientRegisterFromMarketplace()">Créer mon compte</button>
+    <div style="text-align:center;margin-top:12px;font-size:13px">
+      Déjà un compte ? <a onclick="document.getElementById('client-register-overlay').remove(); showClientLoginPopup();" style="color:var(--blue);text-decoration:underline;cursor:pointer">Se connecter</a>
+    </div>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('client-register-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitClientRegisterFromMarketplace() {
+  const name = document.getElementById('cr-name').value.trim();
+  const email = document.getElementById('cr-email').value.trim();
+  const cc = document.getElementById('cr-phone-cc').value;
+  const num = document.getElementById('cr-phone-num').value.replace(/\D/g,'');
+  const password = document.getElementById('cr-password').value;
+  if (!name || !email) { toast('Remplissez au moins votre nom et email', 'err'); return; }
+  if (!password || password.length < 6) { toast('Le mot de passe doit faire au moins 6 caractères', 'err'); return; }
+  const { data, error } = await sb.rpc('client_register', { p_email: email, p_phone: num ? (cc+num) : null, p_password: password, p_name: name });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (!data.success) {
+    toast(data.error === 'email_exists' ? 'Un compte existe déjà avec cet email — connectez-vous plutôt.' : 'Erreur lors de la création du compte', 'err');
+    return;
+  }
+  saveClientSession({ id: data.client_id, name: data.name, email: data.email });
+  const ov = document.getElementById('client-register-overlay'); if (ov) ov.remove();
+  toast(`Compte créé, bienvenue ${data.name || ''} ! 🎉`);
+  updateMarketplaceClientNav();
 }
 
 async function submitClientLogin() {
@@ -6061,10 +6111,11 @@ async function submitOrder() {
   const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
   const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
-  if (!sectorId) { toast('Sélectionnez votre secteur de livraison','err'); return; }
-  const sectorOpt = sectorSel.options[sectorSel.selectedIndex];
+  // Le secteur de livraison est facultatif : le client peut commander sans le
+  // choisir, le marchand/gérant le contactera de toute façon pour finaliser.
+  const sectorOpt = sectorId && sectorSel ? sectorSel.options[sectorSel.selectedIndex] : null;
   const sectorName = sectorOpt ? sectorOpt.textContent.split(' — ')[0] : '';
-  const deliveryFee = sectorOpt && sectorOpt.dataset.free === '1' ? 0 : (parseInt(sectorOpt && sectorOpt.dataset.price) || 0);
+  const deliveryFee = sectorOpt ? (sectorOpt.dataset.free === '1' ? 0 : (parseInt(sectorOpt.dataset.price) || 0)) : 0;
   const p=S.curProd;
   const offerPercent = S.selectedOffer ? S.selectedOffer.percent : 0;
   const unitPrice = p.newP * (1 - offerPercent/100);
