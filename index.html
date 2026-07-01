@@ -1540,6 +1540,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni"><i data-lucide="star"></i></span>Avis</div>
       <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni"><i data-lucide="bar-chart-3"></i></span>Statistiques</div>
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
+      <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands</div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1703,6 +1704,10 @@ Merci pour votre confiance 🙏
         <div class="page-head"><h1>Préoccupations</h1><p>Les demandes d'aide de vos utilisateurs</p></div>
         <div id="adm-thread-list"></div>
         <div id="adm-thread-view" style="display:none"></div>
+      </div>
+      <div class="dash-page" id="adm-reports">
+        <div class="page-head"><h1>🚩 Signalements marchands</h1><p>Plaintes des clients concernant des marchands</p></div>
+        <div id="adm-reports-list"></div>
       </div>
     </div>
   </main>
@@ -2263,6 +2268,7 @@ function admPg(pageId, el) {
   if (pageId === 'adm-stats') { initAdminStats(); startStatsRealtimeListener(); }
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
+  if (pageId === 'adm-reports') loadAdminReports();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -2292,6 +2298,73 @@ async function deleteReview(id) {
   if (error) { toast('Erreur : ' + error.message, 'err'); return; }
   toast('Avis supprimé');
   renderAdminReviews();
+}
+
+// ═══════════════════════════════════════════════
+// SIGNALEMENTS MARCHANDS (ADMIN)
+// ═══════════════════════════════════════════════
+async function loadAdminReports() {
+  const list = document.getElementById('adm-reports-list');
+  if (!list) return;
+  list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Chargement…</p>`;
+  const { data, error } = await sb.rpc('admin_get_merchant_reports');
+  if (error) { console.error('loadAdminReports error', error); list.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur : ${error.message}</p>`; return; }
+  renderAdminReports(data || []);
+}
+
+function renderAdminReports(reports) {
+  const list = document.getElementById('adm-reports-list');
+  if (!list) return;
+  if (!reports.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">🚩</div><p>Aucun signalement pour le moment.</p></div>`;
+    return;
+  }
+  window._adminReportsData = reports; // référence sûre pour les actions, sans passer de texte libre en attribut
+  const reasonLabels = { arnaque: '⚠️ Arnaque', livraison_lente: '🐢 Livraison trop lente' };
+  list.innerHTML = reports.map((r, idx) => `
+    <div class="review-card" style="text-align:left">
+      <div class="review-card-hdr" style="align-items:flex-start">
+        <div>
+          <span class="review-card-name">${r.shop_name || 'Boutique inconnue'}</span>
+          <div style="font-size:12px;color:var(--gray);margin-top:2px">${r.merchant_email || ''}</div>
+        </div>
+        <span class="badge b-red">${r.total_reports_for_merchant} signalement${r.total_reports_for_merchant>1?'s':''} au total</span>
+      </div>
+      <div style="font-size:13px;margin-top:8px"><strong>Produit concerné :</strong> ${r.product_name || '—'}</div>
+      <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.reason] || r.reason}</div>
+      ${r.message ? `<div class="review-card-comment" style="margin-top:6px">${r.message}</div>` : ''}
+      ${r.proof_image ? `<img src="${r.proof_image}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}
+      <div style="font-size:12px;color:var(--gray);margin-top:8px;line-height:1.6">
+        Signalé par : <strong>${r.reporter_name}</strong> · ${r.reporter_email}${r.reporter_phone?' · '+r.reporter_phone:''}<br>
+        ${new Date(r.created_at).toLocaleDateString('fr-FR')} · Statut : ${r.status === 'traite' ? '✅ Traité' : '🆕 Nouveau'}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="viewMerchantFromReport(${idx})">👁 Voir le marchand</button>
+        ${r.merchant_email?`<a class="btn btn-sm" style="background:var(--gray-l);color:var(--ink2);text-decoration:none" href="mailto:${r.merchant_email}">✉️ Contacter</a>`:''}
+        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="adminReportAction(${idx},'avertissement')">⚠️ Avertir</button>
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="adminReportAction(${idx},'suspension_temp')">⏸ Suspendre</button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="adminReportAction(${idx},'blocage_definitif')">🚫 Bloquer définitivement</button>
+      </div>
+    </div>`).join('');
+}
+
+function viewMerchantFromReport(idx) {
+  const r = window._adminReportsData && window._adminReportsData[idx];
+  if (!r) return;
+  // Réutilise l'espace admin existant de gestion des boutiques/abonnements
+  admPg('adm-abos', document.querySelector('[onclick*="adm-abos"]'));
+  toast(`Recherchez "${r.shop_name}" dans la liste des boutiques`, 'ok');
+}
+
+async function adminReportAction(idx, action) {
+  const r = window._adminReportsData && window._adminReportsData[idx];
+  if (!r) return;
+  const labels = { avertissement: 'envoyer un avertissement à', suspension_temp: 'suspendre temporairement', blocage_definitif: 'bloquer définitivement' };
+  if (!confirm(`Confirmer : ${labels[action]} "${r.shop_name}" ?`)) return;
+  const { data, error } = await sb.rpc('admin_report_action', { p_report_id: r.report_id, p_action: action });
+  if (error || !data || !data.success) { toast('Erreur lors de l\'action', 'err'); console.error('adminReportAction error', error, data); return; }
+  toast('Action enregistrée ✓');
+  loadAdminReports();
 }
 
 // ═══════════════════════════════════════════════
@@ -4518,6 +4591,9 @@ function previewShop(prodId, isPublic) {
         <div class="fgrp"><label>Votre commentaire (facultatif)</label><textarea id="pr-comment" rows="3" placeholder="Votre avis sur ce produit…"></textarea></div>
         <button class="btn btn-blue btn-sm" onclick="submitProductReview()">Envoyer mon avis</button>
       </div>
+    </div>
+    <div style="text-align:center;padding:18px 0 6px">
+      <a onclick="showReportMerchantPopup()" style="font-size:12.5px;color:var(--gray);text-decoration:underline;cursor:pointer">🚩 Signaler ce marchand</a>
     </div>`;
   S.orderQty = 1;
   go('s-boutique');
@@ -5304,8 +5380,9 @@ function renderClientOrders(rows) {
     list.innerHTML = `<div class="mkt-empty"><div class="mkt-empty-ico">📦</div><p>Vous n'avez pas encore de commande.</p></div>`;
     return;
   }
+  window._clientOrdersForReport = rows; // référence sûre pour le lien "Signaler", sans passer de texte libre dans un attribut HTML
   const statusLabels = { attente: '⏳ En attente', livree: '✅ Livrée', annulee: '❌ Annulée' };
-  list.innerHTML = rows.map(r => {
+  list.innerHTML = rows.map((r, idx) => {
     const o = r.data || {};
     const waLink = r.shop_wa ? `https://wa.me/${String(r.shop_wa).replace(/[^0-9]/g,'')}` : null;
     return `<div class="mkt-order-card">
@@ -5313,6 +5390,7 @@ function renderClientOrders(rows) {
         <div class="mkt-order-name">${o.prodName || 'Produit'} · <span class="mkt-order-shop">${r.shop_name || ''}</span></div>
         <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString()} FCFA</strong></div>
         ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="mkt-order-contact">📲 Contacter ${r.shop_name || 'le marchand'}</a>` : ''}
+        <div><a onclick="openReportFromOrder(${idx})" style="font-size:11.5px;color:#8B95AD;text-decoration:underline;cursor:pointer;display:inline-block;margin-top:6px">🚩 Signaler ce marchand</a></div>
       </div>
       <span class="mkt-badge ${o.status||'attente'}">${statusLabels[o.status]||o.status||'En attente'}</span>
     </div>`;
@@ -5375,6 +5453,97 @@ function renderClientFavorites(rows) {
   }
   // Les lignes viennent de client_get_favorites : "product_row_id" plutôt que "id"
   grid.innerHTML = rows.map(r => marketplaceCardHtml({ id: r.product_row_id, data: r.data, shop_name: r.shop_name, shop_slug: r.shop_slug })).join('');
+}
+
+// ═══════════════════════════════════════════════
+// SIGNALER UN MARCHAND
+// ═══════════════════════════════════════════════
+function openReportFromOrder(idx) {
+  const r = window._clientOrdersForReport && window._clientOrdersForReport[idx];
+  if (!r) return;
+  showReportMerchantPopup({ ownerId: r.owner_id, productName: (r.data && r.data.prodName) || '', orderId: r.order_id });
+}
+
+function showReportMerchantPopup(ctx) {
+  // Depuis la page produit, aucun contexte n'est fourni : on le déduit de
+  // ce qui est actuellement affiché à l'écran.
+  const ownerIdVal = (ctx && ctx.ownerId) || ownerId();
+  const productName = (ctx && ctx.productName) || (S.curProd && S.curProd.name) || '';
+  const orderId = (ctx && ctx.orderId) || null;
+  if (!ownerIdVal) { toast('Impossible de déterminer la boutique concernée.', 'err'); return; }
+  window._pendingReport = { ownerIdVal, productName, orderId, photoBase64: null };
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'report-merchant-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="popup" style="max-width:420px;max-height:88vh;overflow-y:auto">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">🚩 Signaler ce marchand</h3>
+    <p style="font-size:13px;color:var(--gray);text-align:center;margin-bottom:14px">Nous prenons chaque signalement au sérieux. Donnez-nous le maximum de détails.</p>
+    <div class="fgrp"><label>Votre nom (utilisé pour la commande)</label><input id="rpt-name" placeholder="Votre nom"></div>
+    <div class="fgrp"><label>Votre email</label><input id="rpt-email" type="email" placeholder="votre@email.com"></div>
+    <div class="fgrp"><label>Votre numéro</label>
+      <div class="phone-grp">
+        <select id="rpt-phone-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+        <input id="rpt-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+      </div>
+    </div>
+    <div class="fgrp"><label>Raison</label>
+      <select id="rpt-reason">
+        <option value="arnaque">Arnaque</option>
+        <option value="livraison_lente">Livraison trop lente</option>
+      </select>
+    </div>
+    <div class="fgrp"><label>Décrivez le problème</label><textarea id="rpt-message" rows="3" placeholder="Expliquez ce qui s'est passé…"></textarea></div>
+    <div class="fgrp"><label>Photo de preuve (facultatif)</label><input id="rpt-photo" type="file" accept="image/*" onchange="handleReportPhotoChange(event)"></div>
+    <div id="rpt-photo-preview" style="display:none;margin-bottom:10px"><img style="max-width:100%;border-radius:8px" id="rpt-photo-img"></div>
+    <button class="btn btn-blue btn-w" onclick="submitReportMerchant()">Envoyer le signalement</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('report-merchant-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  if (S.client) {
+    const nameEl = document.getElementById('rpt-name'); if (nameEl) nameEl.value = S.client.name || '';
+    const emailEl = document.getElementById('rpt-email'); if (emailEl) emailEl.value = S.client.email || '';
+  }
+}
+
+async function handleReportPhotoChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const base64 = await compressImage(file, 700, 0.55);
+    if (window._pendingReport) window._pendingReport.photoBase64 = base64;
+    const img = document.getElementById('rpt-photo-img');
+    const wrap = document.getElementById('rpt-photo-preview');
+    if (img && wrap) { img.src = base64; wrap.style.display = ''; }
+  } catch (e) { console.error('handleReportPhotoChange error', e); toast('Impossible de charger cette photo', 'err'); }
+}
+
+async function submitReportMerchant() {
+  const pending = window._pendingReport;
+  if (!pending) return;
+  const name = document.getElementById('rpt-name').value.trim();
+  const email = document.getElementById('rpt-email').value.trim();
+  const cc = document.getElementById('rpt-phone-cc').value;
+  const num = document.getElementById('rpt-phone-num').value.replace(/\D/g,'');
+  const reason = document.getElementById('rpt-reason').value;
+  const message = document.getElementById('rpt-message').value.trim();
+  if (!name || !email) { toast('Remplissez au moins votre nom et email', 'err'); return; }
+  const { error } = await sb.from('merchant_reports').insert({
+    owner_id: pending.ownerIdVal,
+    product_name: pending.productName,
+    order_id: pending.orderId,
+    reporter_name: name,
+    reporter_email: email,
+    reporter_phone: num ? (cc + num) : null,
+    reason,
+    message,
+    proof_image: pending.photoBase64
+  });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  const ov = document.getElementById('report-merchant-overlay'); if (ov) ov.remove();
+  window._pendingReport = null;
+  toast('Signalement envoyé. Merci, notre équipe va l\'étudier. 🙏');
 }
 
 function goToProductFromGrid(prodId) {
