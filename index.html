@@ -86,6 +86,9 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 .fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
 .fgrp textarea{resize:vertical;}
+.phone-grp{display:flex;gap:8px;}
+.phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
+.phone-grp input{flex:1;min-width:0;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:560px){.form-row{grid-template-columns:1fr;}}
 
@@ -787,7 +790,12 @@ canvas{display:block;}
       <h2>Créez votre boutique</h2>
       <p class="sub">Lancez-vous en quelques minutes</p>
       <div class="fgrp"><label>Nom complet *</label><input id="rg-name" placeholder="Jean Kouassi"></div>
-      <div class="fgrp"><label>WhatsApp *</label><input id="rg-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+      <div class="fgrp"><label>WhatsApp *</label>
+        <div class="phone-grp">
+          <select id="rg-wa-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <input id="rg-wa-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+        </div>
+      </div>
       <div class="fgrp"><label>Nom de la boutique *</label><input id="rg-shop" placeholder="Mode Abidjan"></div>
       <div class="fgrp"><label>Email *</label><input id="rg-email" type="email" placeholder="votre@email.com"></div>
       <div class="fgrp"><label>Mot de passe *</label><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"></div>
@@ -932,7 +940,12 @@ canvas{display:block;}
           <div class="card-title">🏪 Informations boutique</div>
           <div class="fgrp"><label>Nom de la boutique</label><input id="sh-name" placeholder="Mode Abidjan"></div>
           <div class="fgrp"><label>Description courte</label><textarea id="sh-desc" rows="2" placeholder="Vêtements et accessoires…"></textarea></div>
-          <div class="fgrp"><label>WhatsApp (reçus clients)</label><input id="sh-wa" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fgrp"><label>WhatsApp (reçus clients)</label>
+            <div class="phone-grp">
+              <select id="sh-wa-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+              <input id="sh-wa-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+            </div>
+          </div>
           <div class="fgrp" style="display:none"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
           <button class="btn btn-blue btn-sm" onclick="saveShop()">Enregistrer</button>
         </div>
@@ -1363,7 +1376,12 @@ canvas{display:block;}
     <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
     <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
     <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
-    <div class="fgrp"><label>Téléphone *</label><input id="or-tel" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+    <div class="fgrp"><label>Téléphone *</label>
+        <div class="phone-grp">
+          <select id="or-tel-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+        </div>
+      </div>
     <button class="btn btn-red btn-w" onclick="submitOrder()">COMMANDER — <span id="pp-btn-total">0 FCFA</span> à la livraison</button>
   </div>
 </div>
@@ -2959,7 +2977,7 @@ async function loginAs(user) {
 
   // Pré-remplir boutique
   document.getElementById('sh-name').value = S.shop.name;
-  document.getElementById('sh-wa').value = S.shop.wa;
+  setPhoneValue('sh-wa', S.shop.wa);
   document.getElementById('sh-domain').value = S.shop.domain||'';
   document.getElementById('sh-public-link').value = getShopLink();
   document.getElementById('sh-slug-input').value = S.shop.slug || '';
@@ -3098,6 +3116,74 @@ function getProductLink(p) {
   return `${window.location.origin}/b/${S.shop.slug}/p/${p.slug}`;
 }
 
+// ═══════════════════════════════════════════════
+// SÉLECTEUR D'INDICATIF PAYS (Afrique de l'Ouest)
+// Composant réutilisable pour tous les champs numéro de téléphone.
+// ═══════════════════════════════════════════════
+const WEST_AFRICA_COUNTRIES = [
+  { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire" },
+  { code:'+229', flag:'🇧🇯', name:'Bénin' },
+  { code:'+226', flag:'🇧🇫', name:'Burkina Faso' },
+  { code:'+238', flag:'🇨🇻', name:'Cap-Vert' },
+  { code:'+220', flag:'🇬🇲', name:'Gambie' },
+  { code:'+233', flag:'🇬🇭', name:'Ghana' },
+  { code:'+224', flag:'🇬🇳', name:'Guinée' },
+  { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau' },
+  { code:'+231', flag:'🇱🇷', name:'Liberia' },
+  { code:'+223', flag:'🇲🇱', name:'Mali' },
+  { code:'+227', flag:'🇳🇪', name:'Niger' },
+  { code:'+234', flag:'🇳🇬', name:'Nigeria' },
+  { code:'+221', flag:'🇸🇳', name:'Sénégal' },
+  { code:'+232', flag:'🇸🇱', name:'Sierra Leone' },
+  { code:'+228', flag:'🇹🇬', name:'Togo' },
+];
+
+// Génère le HTML complet d'un champ téléphone (sélecteur + numéro), à
+// insérer directement dans le HTML statique ou un template JS.
+function phoneFieldHTML(baseId, placeholder) {
+  const opts = WEST_AFRICA_COUNTRIES.map(c =>
+    `<option value="${c.code}"${c.code==='+225'?' selected':''}>${c.flag} ${c.code}</option>`
+  ).join('');
+  return `<div class="phone-grp">
+    <select id="${baseId}-cc">${opts}</select>
+    <input id="${baseId}-num" type="tel" inputmode="numeric" placeholder="${placeholder||'07 XX XX XX XX'}">
+  </div>`;
+}
+
+// Récupère la valeur complète au format international (ex: "+2250700000000"),
+// à partir des deux champs (sélecteur + numéro).
+function getPhoneValue(baseId) {
+  const ccEl = document.getElementById(baseId + '-cc');
+  const numEl = document.getElementById(baseId + '-num');
+  if (!ccEl || !numEl) return '';
+  const digits = (numEl.value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return ccEl.value + digits;
+}
+
+// Remplit les deux champs à partir d'une valeur existante (qui peut être
+// dans différents formats hérités : "+225 07 XX XX XX XX", "+22507000000",
+// ou juste "0700000000" sans indicatif). Ne casse jamais sur une valeur
+// inattendue : au pire, met tout dans le champ numéro avec CI par défaut.
+function setPhoneValue(baseId, fullValue) {
+  const ccEl = document.getElementById(baseId + '-cc');
+  const numEl = document.getElementById(baseId + '-num');
+  if (!ccEl || !numEl) return;
+  const cleaned = (fullValue || '').replace(/[\s.-]/g, '');
+  if (!cleaned) { ccEl.value = '+225'; numEl.value = ''; return; }
+  // Cherche le plus long indicatif correspondant en début de chaîne
+  const match = WEST_AFRICA_COUNTRIES
+    .filter(c => cleaned.startsWith(c.code))
+    .sort((a,b) => b.code.length - a.code.length)[0];
+  if (match) {
+    ccEl.value = match.code;
+    numEl.value = cleaned.slice(match.code.length);
+  } else {
+    ccEl.value = '+225';
+    numEl.value = cleaned.replace(/^\+/, '');
+  }
+}
+
 function slugify(text) {
   return text.toString().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève les accents
@@ -3120,7 +3206,7 @@ async function generateUniqueSlug(shopName) {
 
 async function doRegister() {
   const name = document.getElementById('rg-name').value.trim();
-  const wa = document.getElementById('rg-wa').value.trim();
+  const wa = getPhoneValue('rg-wa');
   const shopName = document.getElementById('rg-shop').value.trim();
   const email = document.getElementById('rg-email').value.trim();
   const pass = document.getElementById('rg-pass').value;
@@ -3546,7 +3632,7 @@ async function loadPaymentsHistory() {
 
 async function saveShop() {
   S.shop.name = document.getElementById('sh-name').value || S.shop.name;
-  S.shop.wa = document.getElementById('sh-wa').value;
+  S.shop.wa = getPhoneValue('sh-wa');
   S.shop.domain = document.getElementById('sh-domain').value;
   await Store.set('shop_'+ownerId(), S.shop);
   updateLink();
@@ -4236,7 +4322,12 @@ function previewShop(prodId, isPublic) {
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
-          <div class="fgrp"><label>Téléphone *</label><input id="or-tel" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fgrp"><label>Téléphone *</label>
+        <div class="phone-grp">
+          <select id="or-tel-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+        </div>
+      </div>
           <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} FCFA</span> à la livraison</button>
         </div>
       </div>
@@ -5120,7 +5211,7 @@ async function submitOrder() {
   const prenom=document.getElementById('or-prenom').value.trim();
   const ville=document.getElementById('or-ville').value.trim();
   const qrt=document.getElementById('or-qrt').value.trim();
-  const tel=document.getElementById('or-tel').value.trim();
+  const tel=getPhoneValue('or-tel');
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
   const p=S.curProd;
   const offerPercent = S.selectedOffer ? S.selectedOffer.percent : 0;
@@ -5133,7 +5224,8 @@ async function submitOrder() {
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
-  ['or-prenom','or-ville','or-qrt','or-tel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['or-prenom','or-ville','or-qrt','or-tel-num'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const ccReset = document.getElementById('or-tel-cc'); if (ccReset) ccReset.value = '+225';
   S.orderQty = 1;
   const qtyEl = document.getElementById('pp-qty'); if (qtyEl) qtyEl.textContent = 1;
   updTotal();
