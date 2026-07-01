@@ -86,6 +86,8 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 .fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
 .fgrp textarea{resize:vertical;}
+.mk-tab{white-space:nowrap;border-radius:100px;background:var(--gray-l);color:var(--ink2);border:none;font-weight:600;flex-shrink:0;}
+.mk-tab.on{background:var(--blue);color:#fff;}
 .phone-grp{display:flex;gap:8px;}
 .phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
 .phone-grp input{flex:1;min-width:0;}
@@ -608,6 +610,7 @@ canvas{display:block;}
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <div class="nl-nav-btns">
         <button class="nl-nav-ghost" onclick="go('s-about')">À propos</button>
+        <button class="nl-nav-ghost" onclick="goToMarketplace()">🛒 Marketplace</button>
         <button class="nl-nav-ghost" id="land-myspace-btn" style="display:none" onclick="goToMySpace()">📂 Mon espace</button>
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
@@ -1368,6 +1371,31 @@ canvas{display:block;}
   </div>
 </div>
 
+<!-- MARKETPLACE — catalogue global de toutes les boutiques, publique -->
+<div id="s-marketplace" class="screen">
+  <div class="bshop-hdr">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="go('s-land')" style="font-size:18px">←</button>
+      <div class="bshop-name">🛒 Marketplace</div>
+    </div>
+  </div>
+  <div class="bshop-body">
+    <div class="fgrp" style="margin-bottom:14px">
+      <input id="mk-search" placeholder="Rechercher un produit…" oninput="debouncedMarketplaceSearch()">
+    </div>
+    <div id="mk-tabs" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
+      <button class="btn btn-sm mk-tab on" data-sort="new" onclick="switchMarketplaceSort('new',this)">🆕 Nouveautés</button>
+      <button class="btn btn-sm mk-tab" data-sort="trending" onclick="switchMarketplaceSort('trending',this)">🔥 Tendance</button>
+      <button class="btn btn-sm mk-tab" data-sort="cheap" onclick="switchMarketplaceSort('cheap',this)">💸 Petits prix</button>
+      <button class="btn btn-sm mk-tab" data-sort="expensive" onclick="switchMarketplaceSort('expensive',this)">💎 Prix élevés</button>
+    </div>
+    <div id="mk-grid" class="shh-prods-grid"></div>
+    <div style="text-align:center;padding:18px;display:none" id="mk-loadmore-wrap">
+      <button class="btn btn-ghost" id="mk-loadmore-btn" onclick="loadMoreMarketplace()">Charger plus</button>
+    </div>
+  </div>
+</div>
+
 <!-- POPUP COMMANDE -->
 <div class="overlay" id="prod-reviews-overlay" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="popup">
@@ -1913,6 +1941,7 @@ function parseRoute() {
   if (parts[0] === 'login') return { type: 'login' };
   if (parts[0] === 'register') return { type: 'register' };
   if (parts[0] === 'admin') return { type: 'admin' };
+  if (parts[0] === 'marketplace') return { type: 'marketplace' };
   return { type: 'home' };
 }
 
@@ -1984,6 +2013,7 @@ async function init() {
   if (route.type === 'login') go('s-login');
   else if (route.type === 'register') go('s-register');
   else if (route.type === 'admin') go('s-admin-login');
+  else if (route.type === 'marketplace') { go('s-marketplace'); loadMarketplace('new'); }
   else go('s-land');
 }
 
@@ -4316,6 +4346,7 @@ function previewShop(prodId, isPublic) {
   const p = prodId ? S.products.find(x=>x.id===prodId) : S.products[0];
   if (!p) { go('s-boutique'); return; }
   S.curProd = p; S.selVariant = null; // aucune variante sélectionnée au chargement, comme demandé
+  if (isPublic && p._rowId) sb.rpc('increment_product_view', { p_product_id: p._rowId }).catch(()=>{}); // discret, jamais bloquant
   if (isPublic && p.slug) navTo(`/b/${S.shop.slug}/p/${p.slug}`);
   else if (!isPublic) navTo(`/b/${S.shop.slug}`);
   const mainImg = p.imgs&&p.imgs[0] ? `<img id="main-img" src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:68px">📦</span>`;
@@ -5005,6 +5036,90 @@ function productCardHtml(p) {
         ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString()}</span>` : ''}
       </div>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// MARKETPLACE — catalogue global de toutes les boutiques
+// ═══════════════════════════════════════════════
+function goToMarketplace() {
+  navTo('/marketplace');
+  go('s-marketplace');
+  loadMarketplace('new');
+}
+
+function marketplaceCardHtml(row) {
+  const p = row.data || {};
+  const img = (p.imgs && p.imgs[0]) ? p.imgs[0] : '';
+  return `
+    <div class="shh-prod-card" onclick="goToMarketplaceProduct('${row.shop_slug}','${p.slug || ''}')">
+      <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0" loading="lazy" decoding="async">`:'🛍️'}</div>
+      <div class="shh-prod-name">${p.name || ''}</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:2px">${row.shop_name || ''}</div>
+      <div class="shh-prod-prices">
+        <span class="shh-prod-new">${(+p.newP||0).toLocaleString()} FCFA</span>
+        ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString()}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function goToMarketplaceProduct(shopSlug, prodSlug) {
+  if (!shopSlug || !prodSlug) return;
+  navTo(`/b/${shopSlug}/p/${prodSlug}`);
+  init();
+}
+
+async function loadMarketplace(sort) {
+  S.marketplaceSort = sort;
+  S.marketplaceOffset = 0;
+  const grid = document.getElementById('mk-grid');
+  if (grid) grid.innerHTML = `<div class="empty card" style="grid-column:1/-1"><p>Chargement…</p></div>`;
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: sort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: 0 });
+  if (error) { console.error('loadMarketplace error', error); if (grid) grid.innerHTML = `<div class="empty card" style="grid-column:1/-1"><p>Erreur de chargement.</p></div>`; return; }
+  S.marketplaceItems = data || [];
+  S.marketplaceHasMore = (data || []).length === 24;
+  renderMarketplaceGrid();
+}
+
+async function loadMoreMarketplace() {
+  const btn = document.getElementById('mk-loadmore-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
+  S.marketplaceOffset += 24;
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: S.marketplaceSort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: S.marketplaceOffset });
+  if (error) { console.error('loadMoreMarketplace error', error); if (btn) { btn.disabled = false; btn.textContent = 'Réessayer'; } return; }
+  S.marketplaceItems = (S.marketplaceItems || []).concat(data || []);
+  S.marketplaceHasMore = (data || []).length === 24;
+  renderMarketplaceGrid();
+}
+
+function renderMarketplaceGrid() {
+  const grid = document.getElementById('mk-grid');
+  const loadMoreWrap = document.getElementById('mk-loadmore-wrap');
+  const loadMoreBtn = document.getElementById('mk-loadmore-btn');
+  if (!grid) return;
+  const items = S.marketplaceItems || [];
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty card" style="grid-column:1/-1"><div class="empty-ico">🛒</div><p>Aucun produit trouvé.</p></div>`;
+    if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+    return;
+  }
+  grid.innerHTML = items.map(marketplaceCardHtml).join('');
+  if (loadMoreWrap) loadMoreWrap.style.display = S.marketplaceHasMore ? '' : 'none';
+  if (loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.textContent = 'Charger plus'; }
+}
+
+function switchMarketplaceSort(sort, btnEl) {
+  document.querySelectorAll('.mk-tab').forEach(b => b.classList.remove('on'));
+  if (btnEl) btnEl.classList.add('on');
+  loadMarketplace(sort);
+}
+
+let _mkSearchTimer = null;
+function debouncedMarketplaceSearch() {
+  clearTimeout(_mkSearchTimer);
+  _mkSearchTimer = setTimeout(() => {
+    S.marketplaceSearch = document.getElementById('mk-search').value.trim();
+    loadMarketplace(S.marketplaceSort || 'new');
+  }, 400);
 }
 
 function goToProductFromGrid(prodId) {
