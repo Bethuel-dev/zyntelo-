@@ -131,6 +131,10 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 .mkt-badge.attente{background:rgba(245,201,123,0.15);color:#F5C97B;}
 .mkt-badge.livree{background:rgba(74,222,128,0.15);color:#4ADE80;}
 .mkt-badge.annulee{background:rgba(248,113,113,0.15);color:#F87171;}
+.mkt-card{position:relative;}
+.mkt-heart{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(10,14,26,0.55);backdrop-filter:blur(4px);border:none;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;z-index:2;transition:.15s;}
+.mkt-heart:hover{background:rgba(10,14,26,0.8);transform:scale(1.08);}
+.mkt-heart.on{color:#F87171;}
 .phone-grp{display:flex;gap:8px;}
 .phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
 .phone-grp input{flex:1;min-width:0;}
@@ -1421,7 +1425,9 @@ canvas{display:block;}
       <button class="mkt-back" onclick="go('s-land')">←</button>
       <div class="mkt-nav-title">🛒 Marketplace</div>
     </div>
-    <button class="mkt-client-btn" id="mk-client-btn" onclick="showClientLoginPopup()">Se connecter</button>
+    <div id="mk-client-zone" style="display:flex;gap:8px;align-items:center">
+      <button class="mkt-client-btn" id="mk-client-btn" onclick="showClientLoginPopup()">Se connecter</button>
+    </div>
   </nav>
   <div class="mkt-hero">
     <h1 class="mkt-hero-title">Trouvez tout ce qu'il vous faut</h1>
@@ -1456,6 +1462,19 @@ canvas{display:block;}
   </nav>
   <div class="mkt-body" style="padding-top:20px">
     <div id="client-orders-list"></div>
+  </div>
+</div>
+
+<!-- MES FAVORIS — espace client -->
+<div id="s-client-favorites" class="screen mkt-screen">
+  <nav class="mkt-nav">
+    <div class="mkt-nav-left">
+      <button class="mkt-back" onclick="goToMarketplace()">←</button>
+      <div class="mkt-nav-title">❤️ Mes favoris</div>
+    </div>
+  </nav>
+  <div class="mkt-body" style="padding-top:20px">
+    <div id="client-favorites-grid" class="mkt-grid"></div>
   </div>
 </div>
 
@@ -1956,7 +1975,7 @@ const Store = {
 let S = {
   user: null, shop: null, products: [], orders: [], gerants: [], categories: [], promoOffers: [],
   curProd: null, orderQty: 1, selVariant: null, selectedOffer: null, imgData: [], imgFiles: [], editImgs: null,
-  isGerant: false, cameFromCatalogue: null, client: null
+  isGerant: false, cameFromCatalogue: null, cameFromMarketplace: null, client: null
 };
 
 // ═══════════════════════════════════════════════
@@ -2006,6 +2025,7 @@ function parseRoute() {
   if (parts[0] === 'admin') return { type: 'admin' };
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
   if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
+  if (parts[0] === 'mes-favoris') return { type: 'client-favorites' };
   return { type: 'home' };
 }
 
@@ -2081,6 +2101,11 @@ async function init() {
   else if (route.type === 'client-orders') {
     await restoreClientSession(); // s'assure que la session est bien restaurée avant de décider
     if (S.client) { go('s-client-orders'); loadClientOrders(); }
+    else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
+  }
+  else if (route.type === 'client-favorites') {
+    await restoreClientSession();
+    if (S.client) { go('s-client-favorites'); loadClientFavorites(); }
     else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
   }
   else go('s-land');
@@ -5123,8 +5148,10 @@ function marketplaceCardHtml(row) {
   // Même logique de secours que sur les pages boutique : certains anciens
   // produits n'ont pas de slug enregistré en base, on le recalcule pareil.
   const prodSlug = p.slug || (slugify(p.name || 'produit') + '-' + String(p.id || '').slice(-4));
+  const isFav = S.clientFavoriteIds && S.clientFavoriteIds.has(row.id);
   return `
     <div class="mkt-card" onclick="goToMarketplaceProduct('${row.shop_slug}','${prodSlug}')">
+      <button class="mkt-heart ${isFav?'on':''}" onclick="toggleFavorite(event,'${row.id}')">${isFav?'❤️':'🤍'}</button>
       ${img ? `<img src="${img}" class="mkt-card-img" loading="lazy" decoding="async">` : `<div class="mkt-card-img-ph">🛍️</div>`}
       <div class="mkt-card-body">
         <div class="mkt-card-name">${p.name || ''}</div>
@@ -5139,6 +5166,7 @@ function marketplaceCardHtml(row) {
 
 function goToMarketplaceProduct(shopSlug, prodSlug) {
   if (!shopSlug || !prodSlug) return;
+  S.cameFromMarketplace = true;
   navTo(`/b/${shopSlug}/p/${prodSlug}`);
   init();
 }
@@ -5238,16 +5266,17 @@ function clientLogout() {
   toast('Déconnecté');
 }
 
-// Adapte le bouton dans l'en-tête de la Marketplace selon l'état de connexion
+// Adapte la zone client dans l'en-tête de la Marketplace selon l'état de connexion
 function updateMarketplaceClientNav() {
-  const btn = document.getElementById('mk-client-btn');
-  if (!btn) return;
+  const zone = document.getElementById('mk-client-zone');
+  if (!zone) return;
   if (S.client) {
-    btn.textContent = '👤 ' + (S.client.name || 'Mon compte');
-    btn.onclick = () => goToClientOrders();
+    zone.innerHTML = `
+      <button class="mkt-client-btn" onclick="goToClientFavorites()">❤️ Favoris</button>
+      <button class="mkt-client-btn" onclick="goToClientOrders()">👤 ${S.client.name || 'Mon compte'}</button>`;
+    loadClientFavoriteIds();
   } else {
-    btn.textContent = 'Se connecter';
-    btn.onclick = () => showClientLoginPopup();
+    zone.innerHTML = `<button class="mkt-client-btn" id="mk-client-btn" onclick="showClientLoginPopup()">Se connecter</button>`;
   }
 }
 
@@ -5290,9 +5319,68 @@ function renderClientOrders(rows) {
   }).join('');
 }
 
+// ═══════════════════════════════════════════════
+// FAVORIS CLIENT
+// ═══════════════════════════════════════════════
+
+// Charge silencieusement les identifiants favoris du client, pour savoir
+// quels cœurs afficher "remplis" dans la grille sans requête par produit.
+async function loadClientFavoriteIds() {
+  if (!S.client) { S.clientFavoriteIds = new Set(); return; }
+  const { data, error } = await sb.rpc('client_get_favorite_ids', { p_client_id: S.client.id, p_email: S.client.email });
+  if (error) { console.error('loadClientFavoriteIds error', error); return; }
+  S.clientFavoriteIds = new Set(data || []);
+  // Rafraîchit les cœurs déjà affichés à l'écran, sans tout recharger
+  if (S.marketplaceItems && S.marketplaceItems.length) renderMarketplaceGrid();
+}
+
+async function toggleFavorite(event, productRowId) {
+  event.stopPropagation(); // ne pas déclencher l'ouverture du produit en cliquant le cœur
+  if (!S.client) { showClientLoginPopup(); return; }
+  const heartBtn = event.currentTarget;
+  const { data, error } = await Promise.resolve(sb.rpc('client_toggle_favorite', { p_client_id: S.client.id, p_email: S.client.email, p_product_row_id: productRowId })).catch(e => ({ error: e }));
+  if (error || !data || !data.success) { toast('Erreur, réessayez.', 'err'); return; }
+  if (!S.clientFavoriteIds) S.clientFavoriteIds = new Set();
+  if (data.favorited) { S.clientFavoriteIds.add(productRowId); heartBtn.textContent = '❤️'; heartBtn.classList.add('on'); }
+  else { S.clientFavoriteIds.delete(productRowId); heartBtn.textContent = '🤍'; heartBtn.classList.remove('on');
+    // Si on est sur la page "Mes favoris", le produit retiré doit disparaître immédiatement
+    if (document.getElementById('s-client-favorites').classList.contains('on')) loadClientFavorites();
+  }
+}
+
+function goToClientFavorites() {
+  if (!S.client) { showClientLoginPopup(); return; }
+  navTo('/mes-favoris');
+  go('s-client-favorites');
+  loadClientFavorites();
+}
+
+async function loadClientFavorites() {
+  const grid = document.getElementById('client-favorites-grid');
+  if (!grid) return;
+  if (!S.client) { grid.innerHTML = `<div class="mkt-empty"><p>Connectez-vous pour voir vos favoris.</p></div>`; return; }
+  grid.innerHTML = `<div class="mkt-empty"><p>Chargement…</p></div>`;
+  const { data, error } = await sb.rpc('client_get_favorites', { p_client_id: S.client.id, p_email: S.client.email });
+  if (error) { console.error('loadClientFavorites error', error); grid.innerHTML = `<div class="mkt-empty"><p>Erreur de chargement.</p></div>`; return; }
+  S.clientFavoriteIds = new Set((data || []).map(r => r.id || r.product_row_id));
+  renderClientFavorites(data || []);
+}
+
+function renderClientFavorites(rows) {
+  const grid = document.getElementById('client-favorites-grid');
+  if (!grid) return;
+  if (!rows.length) {
+    grid.innerHTML = `<div class="mkt-empty"><div class="mkt-empty-ico">❤️</div><p>Aucun favori pour le moment.<br>Explorez la Marketplace et ajoutez-en !</p></div>`;
+    return;
+  }
+  // Les lignes viennent de client_get_favorites : "product_row_id" plutôt que "id"
+  grid.innerHTML = rows.map(r => marketplaceCardHtml({ id: r.product_row_id, data: r.data, shop_name: r.shop_name, shop_slug: r.shop_slug })).join('');
+}
+
 function goToProductFromGrid(prodId) {
   const p = S.products.find(x => x.id === prodId);
   if (!p) return;
+  S.cameFromMarketplace = null; // navigation normale dans la boutique : le retour redevient normal
   navTo(`/b/${S.shop.slug}/p/${p.slug}`);
   previewShop(prodId, true);
 }
@@ -5300,6 +5388,7 @@ function goToProductFromGrid(prodId) {
 function renderShopHome(isPublic) {
   closeShopMenu();
   S.cameFromCatalogue = null;
+  S.cameFromMarketplace = null;
   startAnnRotationInto('sh-ann-bar', S.shop.anns || (S.shop.ann ? [S.shop.ann] : []));
   document.getElementById('shh-name').textContent = S.shop.name || 'Ma Boutique';
   const logoEl = document.getElementById('shh-logo');
@@ -5372,6 +5461,7 @@ function renderPublicCategory(catSlug) {
 
 // Bouton retour intelligent depuis la fiche produit (selon d'où on vient)
 function goBackInShop() {
+  if (S.cameFromMarketplace) { S.cameFromMarketplace = null; goToMarketplace(); return; }
   if (S.cameFromCatalogue) { goToCategory(S.cameFromCatalogue); return; }
   if (S.user) { go('s-dash'); return; }
   goBackToShopHome();
