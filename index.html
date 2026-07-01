@@ -689,6 +689,7 @@ canvas{display:block;}
     <div class="nl-wrap">
       <div class="nl-logo"><span class="nl-logo-mark">Z</span>Zyntelo</div>
       <p>Pour faire grandir le commerce digital africain.</p>
+      <p style="margin-top:14px"><a onclick="go('s-privacy')" style="color:#8B95AD;text-decoration:underline;cursor:pointer;font-size:13px">Politique de confidentialité</a></p>
       <p style="margin-top:10px;opacity:0.6;">© 2026 Zyntelo · Tous droits réservés</p>
     </div>
   </footer>
@@ -719,6 +720,40 @@ canvas{display:block;}
         <span id="reviews-avg-text" style="font-size:13px;color:var(--gray)"></span>
       </div>
       <div id="reviews-list"></div>
+    </div>
+  </div>
+</div>
+<div id="s-privacy" class="screen">
+  <nav class="land-nav">
+    <div class="zlogo"><svg class="zlogo-svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span class="zlogo-name">Zyntelo</span></div>
+    <div class="land-nav-btns">
+      <button class="btn btn-ghost" onclick="go('s-land')">← Accueil</button>
+    </div>
+  </nav>
+  <div class="about-wrap">
+    <div class="about-card" style="text-align:left">
+      <h2 style="font-family:'Sora',sans-serif;font-weight:800;margin-bottom:6px">Politique de confidentialité</h2>
+      <p style="color:var(--gray);font-size:13px;margin-bottom:24px">Dernière mise à jour : 2026</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Protection de vos informations personnelles</h3>
+      <p style="color:var(--ink2);line-height:1.7">Les informations personnelles que vous partagez sur Zyntelo (nom, numéro, adresse) sont protégées et ne sont utilisées que pour le bon déroulement de vos commandes et de votre expérience sur la plateforme.</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Paiements sécurisés</h3>
+      <p style="color:var(--ink2);line-height:1.7">Tous les paiements effectués sur Zyntelo sont traités par des prestataires de paiement sécurisés. Nous ne stockons jamais vos informations bancaires ou de carte directement.</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Vos données ne sont pas revendues</h3>
+      <p style="color:var(--ink2);line-height:1.7">Zyntelo ne vend ni ne partage vos données personnelles avec des tiers à des fins commerciales.</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Responsabilité des marchands</h3>
+      <p style="color:var(--ink2);line-height:1.7">Les marchands sont responsables des informations et produits qu'ils publient sur leur boutique. Ils sont surveillés par Zyntelo afin de protéger les clients contre les comportements abusifs.</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Signalements et sécurité</h3>
+      <p style="color:var(--ink2);line-height:1.7">Toute fraude, arnaque ou comportement abusif signalé peut entraîner un avertissement, une suspension temporaire ou la suppression définitive de la boutique concernée. Chaque signalement est étudié attentivement par notre équipe d'administration.</p>
+
+      <h3 style="font-size:16px;margin:20px 0 8px">Notre engagement</h3>
+      <p style="color:var(--ink2);line-height:1.7">Zyntelo s'engage à offrir un environnement fiable, transparent et sécurisé, aussi bien pour les acheteurs que pour les vendeurs.</p>
+
+      <p style="color:var(--gray);font-size:13px;margin-top:28px">Pour toute question concernant cette politique, contactez-nous via le Centre d'aide de la plateforme.</p>
     </div>
   </div>
 </div>
@@ -1996,6 +2031,7 @@ function go(screenId) {
   });
   document.getElementById(screenId).classList.add('on');
   if (screenId === 's-about') loadAboutPage();
+  if (screenId === 's-privacy') navTo('/confidentialite');
   if (screenId === 's-land') { navTo('/'); triggerLandingReveal(); }
   if (screenId === 's-login') navTo('/login');
   if (screenId === 's-register') navTo('/register');
