@@ -86,59 +86,64 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 .fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
 .fgrp textarea{resize:vertical;}
-/* ═══ MARKETPLACE PREMIUM (sombre, cohérent avec l'accueil) ═══ */
-.mkt-screen{background:#0A0E1A;color:#EDF1F8;min-height:100vh;}
-.mkt-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;position:sticky;top:0;z-index:50;background:rgba(10,14,26,0.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.07);}
+/* ═══ MARKETPLACE PREMIUM (blanc, cohérent avec le reste de l'app) ═══ */
+.mkt-screen{background:var(--white);color:var(--black);min-height:100vh;}
+.mkt-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);}
 .mkt-nav-left{display:flex;align-items:center;gap:10px;}
-.mkt-back{background:rgba(255,255,255,0.08);border:none;color:#EDF1F8;width:36px;height:36px;border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0;}
-.mkt-nav-title{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;}
-.mkt-client-btn{background:rgba(255,255,255,0.08);color:#EDF1F8;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
-.mkt-hero{padding:30px 20px 22px;text-align:center;position:relative;overflow:hidden;}
-.mkt-hero::before{content:'';position:absolute;top:-130px;left:50%;transform:translateX(-50%);width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(46,107,255,0.2),transparent 65%);pointer-events:none;}
-.mkt-hero-title{font-family:'Sora',sans-serif;font-weight:800;font-size:24px;letter-spacing:-0.5px;margin-bottom:6px;position:relative;z-index:2;}
-.mkt-hero-sub{color:#8B95AD;font-size:13.5px;margin-bottom:18px;position:relative;z-index:2;}
+.mkt-back{background:var(--gray-l);border:none;color:var(--black);width:36px;height:36px;border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0;}
+.mkt-nav-title{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:var(--black);}
+.mkt-client-btn{background:var(--gray-l);color:var(--black);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.mkt-hero{padding:30px 20px 22px;text-align:center;position:relative;overflow:hidden;background:var(--gray-l);}
+.mkt-hero::before{content:'';position:absolute;top:-130px;left:50%;transform:translateX(-50%);width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(26,86,232,0.08),transparent 65%);pointer-events:none;}
+.mkt-hero-title{font-family:'Sora',sans-serif;font-weight:800;font-size:24px;letter-spacing:-0.5px;margin-bottom:6px;position:relative;z-index:2;color:var(--black);}
+.mkt-hero-sub{color:var(--gray);font-size:13.5px;margin-bottom:18px;position:relative;z-index:2;}
 .mkt-search-wrap{position:relative;max-width:480px;margin:0 auto;z-index:2;}
 .mkt-search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:0.5;font-size:14px;}
-.mkt-search{width:100%;padding:13px 16px 13px 42px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:#141B2E;color:#EDF1F8;font-size:14px;outline:none;transition:.2s;font-family:'Inter',sans-serif;}
-.mkt-search::placeholder{color:#8B95AD;}
-.mkt-search:focus{border-color:#2E6BFF;box-shadow:0 0 0 3px rgba(46,107,255,0.15);}
+.mkt-search{width:100%;padding:13px 16px 13px 42px;border-radius:14px;border:1px solid var(--border);background:var(--white);color:var(--black);font-size:14px;outline:none;transition:.2s;font-family:'Inter',sans-serif;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
+.mkt-search::placeholder{color:var(--gray);}
+.mkt-search:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
 .mkt-body{padding:6px 18px 26px;max-width:1100px;margin:0 auto;}
 .mkt-tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;padding-bottom:4px;}
-.mkt-tab{white-space:nowrap;border-radius:100px;background:#141B2E;color:#8B95AD;border:1px solid rgba(255,255,255,0.08);font-weight:600;font-size:12.5px;padding:9px 16px;flex-shrink:0;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;}
-.mkt-tab.on{background:linear-gradient(135deg,#2E6BFF,#4A7FFF);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(46,107,255,0.35);}
+.mkt-tab{white-space:nowrap;border-radius:100px;background:var(--gray-l);color:var(--gray);border:1px solid var(--border);font-weight:600;font-size:12.5px;padding:9px 16px;flex-shrink:0;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;}
+.mkt-tab.on{background:linear-gradient(135deg,#1A56E8,#3B74FF);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(26,86,232,0.3);}
 .mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:13px;}
-.mkt-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;cursor:pointer;transition:.2s;}
-.mkt-card:hover{transform:translateY(-3px);border-color:rgba(46,107,255,0.4);box-shadow:0 10px 26px rgba(0,0,0,0.35);}
-.mkt-card-img{width:100%;aspect-ratio:1;object-fit:cover;background:#1B2338;display:block;}
-.mkt-card-img-ph{width:100%;aspect-ratio:1;background:#1B2338;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.mkt-card{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:.2s;}
+.mkt-card:hover{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 10px 24px rgba(0,0,0,0.08);}
+.mkt-card-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--gray-l);display:block;}
+.mkt-card-img-ph{width:100%;aspect-ratio:1;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:28px;}
 .mkt-card-body{padding:10px 11px 12px;}
-.mkt-card-name{font-size:12.5px;font-weight:600;line-height:1.3;color:#EDF1F8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.mkt-card-shop{font-size:10.5px;color:#8B95AD;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mkt-card-name{font-size:12.5px;font-weight:600;line-height:1.3;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mkt-card-shop{font-size:10.5px;color:var(--gray);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mkt-card-prices{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;}
-.mkt-card-new{font-size:13.5px;font-weight:800;color:#4A7FFF;}
-.mkt-card-old{font-size:10.5px;color:#8B95AD;text-decoration:line-through;}
+.mkt-card-new{font-size:13.5px;font-weight:800;color:var(--blue);}
+.mkt-card-old{font-size:10.5px;color:var(--gray);text-decoration:line-through;}
 .mkt-loadmore-wrap{text-align:center;padding:22px 0 6px;}
-.mkt-loadmore{background:#141B2E;border:1px solid rgba(255,255,255,0.1);color:#EDF1F8;padding:11px 26px;border-radius:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;}
-.mkt-empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#8B95AD;}
+.mkt-loadmore{background:var(--white);border:1px solid var(--border);color:var(--black);padding:11px 26px;border-radius:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;}
+.mkt-empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--gray);}
 .mkt-empty .mkt-empty-ico{font-size:38px;margin-bottom:10px;}
-/* Historique des commandes client — même thème premium, pour une continuité visuelle */
-.mkt-order-card{background:#141B2E;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
-.mkt-order-name{font-size:14px;font-weight:600;color:#EDF1F8;}
-.mkt-order-shop{color:#8B95AD;font-weight:400;}
-.mkt-order-detail{font-size:12.5px;color:#8B95AD;margin-top:5px;}
-.mkt-order-contact{font-size:12px;color:#4A7FFF;display:inline-block;margin-top:7px;text-decoration:none;}
+/* Historique des commandes client — même thème premium blanc, pour une continuité visuelle */
+.mkt-order-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,0.03);}
+.mkt-order-name{font-size:14px;font-weight:600;color:var(--black);}
+.mkt-order-shop{color:var(--gray);font-weight:400;}
+.mkt-order-detail{font-size:12.5px;color:var(--gray);margin-top:5px;}
+.mkt-order-contact{font-size:12px;color:var(--blue);display:inline-block;margin-top:7px;text-decoration:none;}
 .mkt-badge{padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:700;white-space:nowrap;}
-.mkt-badge.attente{background:rgba(245,201,123,0.15);color:#F5C97B;}
-.mkt-badge.livree{background:rgba(74,222,128,0.15);color:#4ADE80;}
-.mkt-badge.annulee{background:rgba(248,113,113,0.15);color:#F87171;}
+.mkt-badge.attente{background:var(--yellow-l);color:var(--yellow);}
+.mkt-badge.livree{background:var(--green-l);color:var(--green);}
+.mkt-badge.annulee{background:var(--red-l);color:var(--red);}
 .mkt-card{position:relative;}
-.mkt-heart{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(10,14,26,0.55);backdrop-filter:blur(4px);border:none;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;z-index:2;transition:.15s;}
-.mkt-heart:hover{background:rgba(10,14,26,0.8);transform:scale(1.08);}
-.mkt-heart.on{color:#F87171;}
+.mkt-heart{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.85);backdrop-filter:blur(4px);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;z-index:2;transition:.15s;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.mkt-heart:hover{background:var(--white);transform:scale(1.08);}
+.mkt-heart.on{color:var(--red);}
 .phone-grp{display:flex;gap:8px;}
 .phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
 .phone-grp input{flex:1;min-width:0;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mkt-banner-wrap{overflow:hidden;background:var(--gray-l);padding:10px 0;border-bottom:1px solid var(--border);}
+.mkt-banner-track{display:flex;gap:12px;width:max-content;animation:mkt-banner-scroll 32s linear infinite;}
+.mkt-banner-wrap:hover .mkt-banner-track{animation-play-state:paused;}
+.mkt-banner-track img{height:64px;width:auto;border-radius:10px;object-fit:cover;flex-shrink:0;display:block;}
+@keyframes mkt-banner-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 @media(max-width:560px){.form-row{grid-template-columns:1fr;}}
 
 /* CARD */
@@ -1429,6 +1434,9 @@ canvas{display:block;}
       <button class="mkt-client-btn" id="mk-client-btn" onclick="showClientLoginPopup()">Se connecter</button>
     </div>
   </nav>
+  <div class="mkt-banner-wrap" id="mkt-banner-wrap" style="display:none">
+    <div class="mkt-banner-track" id="mkt-banner-track"></div>
+  </div>
   <div class="mkt-hero">
     <h1 class="mkt-hero-title">Trouvez tout ce qu'il vous faut</h1>
     <p class="mkt-hero-sub">Les produits de tous les commerçants Zyntelo, au même endroit</p>
@@ -1609,6 +1617,7 @@ Merci pour votre confiance 🙏
       <!-- ABONNEMENTS -->
       <div class="dash-page" id="adm-abos">
         <div class="page-head"><h1>Abonnements</h1><p>Gérez les accès boutiques</p></div>
+        <div class="fgrp" style="margin-bottom:14px"><input id="adm-abos-search" placeholder="🔍 Rechercher une boutique, un nom, un email…" oninput="filterAdminAbos()"></div>
         <div id="adm-abos-list"></div>
 
         <div class="page-head" style="margin-top:24px"><h1>📜 Historique des paiements</h1><p>Tous les paiements automatiques, tous prestataires confondus</p></div>
@@ -1622,6 +1631,12 @@ Merci pour votre confiance 🙏
           <div class="card-title">🛠️ Maintenance technique</div>
           <p style="font-size:12px;color:var(--gray);margin-bottom:10px">Migre les anciennes images encore stockées en base64 vers Supabase Storage, pour accélérer l'application. Sans danger pour les données — les images déjà optimisées sont automatiquement ignorées.</p>
           <button class="btn btn-ghost btn-sm" onclick="migrateProductImagesToStorage()">Lancer la migration des images</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🖼️ Bandeau défilant Marketplace</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:10px">Les images ajoutées ici défilent en continu tout en haut de la Marketplace, visible par tous les clients. Purement décoratif, aucune limite de nombre.</p>
+          <input type="file" id="banner-upload-input" accept="image/*" onchange="uploadMarketplaceBanner(event)" style="margin-bottom:12px">
+          <div id="banner-admin-list" style="display:flex;flex-wrap:wrap;gap:10px"></div>
         </div>
         <div class="card">
           <div class="card-title">📸 Photo</div>
@@ -2102,7 +2117,7 @@ async function init() {
   if (route.type === 'login') go('s-login');
   else if (route.type === 'register') go('s-register');
   else if (route.type === 'admin') go('s-admin-login');
-  else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); loadMarketplace('new'); }
+  else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); loadMarketplace('new'); loadMarketplaceBannerStrip(); }
   else if (route.type === 'client-orders') {
     await restoreClientSession(); // s'assure que la session est bien restaurée avant de décider
     if (S.client) { go('s-client-orders'); loadClientOrders(); }
@@ -2269,6 +2284,7 @@ function admPg(pageId, el) {
   else { stopStatsRealtimeListener(); } // jamais d'écoute active hors de cette page précise
   if (pageId === 'adm-support') openAdminSupport(); else stopAdminSupportPolling();
   if (pageId === 'adm-reports') loadAdminReports();
+  if (pageId === 'adm-profil') loadAdminBanners();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -4060,6 +4076,69 @@ async function compressAndUploadImage(file, maxWidth = 1000, quality = 0.7) {
   }
 }
 
+// ═══════════════════════════════════════════════
+// BANDEAU DÉFILANT MARKETPLACE (admin)
+// ═══════════════════════════════════════════════
+async function uploadMarketplaceBanner(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  toast('Envoi de l\'image…', 'ok');
+  try {
+    const compressed = await compressImage(file, 900, 0.75);
+    const blob = dataURLToBlob(compressed);
+    const fileName = `banner_${Date.now()}_${Math.floor(Math.random()*100000)}.jpg`;
+    const { error: upErr } = await sb.storage.from('marketplace-banners').upload(fileName, blob, { contentType: 'image/jpeg' });
+    if (upErr) { toast('Erreur d\'envoi : ' + upErr.message, 'err'); return; }
+    const { data: urlData } = sb.storage.from('marketplace-banners').getPublicUrl(fileName);
+    const { error: insErr } = await sb.from('marketplace_banners').insert({ image_url: urlData.publicUrl });
+    if (insErr) { toast('Erreur : ' + insErr.message, 'err'); return; }
+    toast('Image ajoutée au bandeau ✓');
+    e.target.value = '';
+    loadAdminBanners();
+  } catch (err) {
+    console.error('uploadMarketplaceBanner error', err);
+    toast('Erreur lors de l\'envoi', 'err');
+  }
+}
+
+async function loadAdminBanners() {
+  const list = document.getElementById('banner-admin-list');
+  if (!list) return;
+  const { data, error } = await sb.from('marketplace_banners').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('loadAdminBanners error', error); return; }
+  window._adminBannersData = data || [];
+  if (!data || !data.length) { list.innerHTML = `<p style="font-size:12px;color:var(--gray)">Aucune image pour le moment.</p>`; return; }
+  list.innerHTML = data.map((b, idx) => `
+    <div style="position:relative">
+      <img src="${b.image_url}" style="width:90px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+      <button onclick="deleteMarketplaceBanner(${idx})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:12px;cursor:pointer;line-height:1">✕</button>
+    </div>`).join('');
+}
+
+async function deleteMarketplaceBanner(idx) {
+  const b = window._adminBannersData && window._adminBannersData[idx];
+  if (!b) return;
+  if (!confirm('Retirer cette image du bandeau ?')) return;
+  const { error } = await sb.from('marketplace_banners').delete().eq('id', b.id);
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  toast('Image retirée');
+  loadAdminBanners();
+}
+
+// ═══════════════════════════════════════════════
+// BANDEAU DÉFILANT MARKETPLACE (affichage public)
+// ═══════════════════════════════════════════════
+async function loadMarketplaceBannerStrip() {
+  const wrap = document.getElementById('mkt-banner-wrap');
+  if (!wrap) return;
+  const { data, error } = await sb.from('marketplace_banners').select('image_url').order('created_at', { ascending: false });
+  if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  // Dupliqué une fois pour créer une boucle infinie visuellement continue
+  const imgs = data.concat(data).map(b => `<img src="${b.image_url}" loading="lazy">`).join('');
+  document.getElementById('mkt-banner-track').innerHTML = imgs;
+}
+
 function handleImgs(input) {
   S.imgData = [];
   S.imgFiles = [];
@@ -5228,6 +5307,7 @@ function goToMarketplace() {
   go('s-marketplace');
   updateMarketplaceClientNav();
   loadMarketplace('new');
+  loadMarketplaceBannerStrip();
 }
 
 function marketplaceCardHtml(row) {
@@ -6804,8 +6884,15 @@ async function renderAdminClients() {
 async function renderAdminAbos() {
   const users=await Store.get('users')||[];
   const clients=users.filter(u=>!u.isAdmin&&!u.isGerant);
+  S._adminAbosClients = clients; // gardé en mémoire pour filtrer instantanément sans recharger
+  const searchEl = document.getElementById('adm-abos-search');
+  if (searchEl) searchEl.value = ''; // on repart d'une recherche vide à chaque rechargement complet
+  renderAdminAbosList(clients);
+}
+
+function renderAdminAbosList(clients) {
   const list=document.getElementById('adm-abos-list');
-  if(!clients.length){ list.innerHTML=`<div class="empty card"><div class="empty-ico">💳</div><p>Aucun client.</p></div>`; return; }
+  if(!clients.length){ list.innerHTML=`<div class="empty card"><div class="empty-ico">💳</div><p>Aucune boutique trouvée.</p></div>`; return; }
   list.innerHTML=clients.map(u=>`
     <div class="cmd-card">
       <div class="cmd-info">
@@ -6822,6 +6909,19 @@ async function renderAdminAbos() {
         <button class="bw" onclick="sendDebloqueWA('${u.id}')">📲 WA déblocage</button>
       </div>
     </div>`).join('');
+}
+
+// Filtre instantané, sans requête réseau, sur le nom, la boutique ou l'email
+function filterAdminAbos() {
+  const q = (document.getElementById('adm-abos-search').value || '').trim().toLowerCase();
+  const all = S._adminAbosClients || [];
+  if (!q) { renderAdminAbosList(all); return; }
+  const filtered = all.filter(u =>
+    (u.name||'').toLowerCase().includes(q) ||
+    (u.shopName||'').toLowerCase().includes(q) ||
+    (u.email||'').toLowerCase().includes(q)
+  );
+  renderAdminAbosList(filtered);
 }
 
 async function toggleBlock(uid, block) {
