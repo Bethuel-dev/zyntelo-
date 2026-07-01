@@ -4415,7 +4415,7 @@ function previewShop(prodId, isPublic) {
   const p = prodId ? S.products.find(x=>x.id===prodId) : S.products[0];
   if (!p) { go('s-boutique'); return; }
   S.curProd = p; S.selVariant = null; // aucune variante sélectionnée au chargement, comme demandé
-  if (isPublic && p._rowId) sb.rpc('increment_product_view', { p_product_id: p._rowId }).catch(()=>{}); // discret, jamais bloquant
+  if (isPublic && p._rowId) Promise.resolve(sb.rpc('increment_product_view', { p_product_id: p._rowId })).catch(()=>{}); // discret, jamais bloquant
   if (isPublic && p.slug) navTo(`/b/${S.shop.slug}/p/${p.slug}`);
   else if (!isPublic) navTo(`/b/${S.shop.slug}`);
   const mainImg = p.imgs&&p.imgs[0] ? `<img id="main-img" src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:68px">📦</span>`;
@@ -5730,7 +5730,7 @@ async function submitOrder() {
   if (S.client && S.client.id) {
     // Client déjà connu (session existante) : on rattache silencieusement,
     // sans jamais lui redemander de créer un compte.
-    sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_client_id: orderData.id, p_owner_id: ownerId() }).catch(()=>{});
+    Promise.resolve(sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_client_id: orderData.id, p_owner_id: ownerId() })).catch(()=>{});
   } else {
     setTimeout(() => showPostOrderSignup(orderData.id, ownerId(), prenom, tel), 1200);
   }
@@ -5803,7 +5803,7 @@ async function submitPostOrderSignup() {
   const client = { id: data.client_id, name: data.name, email: data.email };
   saveClientSession(client);
   // Rattache la commande qu'il vient de passer à son nouveau compte
-  await sb.rpc('client_link_order', { p_client_id: client.id, p_order_client_id: orderId, p_owner_id: ownerIdVal }).catch(()=>{});
+  await Promise.resolve(sb.rpc('client_link_order', { p_client_id: client.id, p_order_client_id: orderId, p_owner_id: ownerIdVal })).catch(()=>{});
   const ov = document.getElementById('post-order-signup-overlay'); if (ov) ov.remove();
   window._pendingPostOrderSignup = null;
   toast(`Compte créé, bienvenue ${client.name} ! 🎉`);
