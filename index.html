@@ -1540,7 +1540,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-reviews',this)"><span class="ni"><i data-lucide="star"></i></span>Avis</div>
       <div class="nav-item" onclick="admPg('adm-stats',this)"><span class="ni"><i data-lucide="bar-chart-3"></i></span>Statistiques</div>
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
-      <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands</div>
+      <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands <span id="adm-reports-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -2310,6 +2310,17 @@ async function loadAdminReports() {
   const { data, error } = await sb.rpc('admin_get_merchant_reports');
   if (error) { console.error('loadAdminReports error', error); list.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur : ${error.message}</p>`; return; }
   renderAdminReports(data || []);
+  updateAdminReportsBadge(data || []);
+}
+
+// Affiche discrètement le nombre de signalements "nouveaux" (non traités)
+// sur le lien du menu, sans avoir besoin d'ouvrir la page pour le savoir.
+function updateAdminReportsBadge(reports) {
+  const badge = document.getElementById('adm-reports-badge');
+  if (!badge) return;
+  const nb = (reports || []).filter(r => r.status !== 'traite').length;
+  if (nb > 0) { badge.textContent = nb; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
 }
 
 function renderAdminReports(reports) {
@@ -3492,6 +3503,7 @@ async function doAdminLogin() {
 async function openAdmin() {
   await renderAdminClients();
   await loadProfileForm();
+  loadAdminReports(); // pour que le badge de compteur soit visible immédiatement, sans avoir à ouvrir la page
   go('s-admin');
   toast('Espace admin ouvert ✓');
 }
