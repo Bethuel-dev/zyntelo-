@@ -4397,7 +4397,7 @@ function previewShop(prodId, isPublic) {
   go('s-boutique');
   loadProductReviews(p.id);
   renderProductOffers(p);
-  populateDeliverySectorSelects();
+  loadAndPopulateDeliverySectors();
 }
 
 let prodReviewStars = 0;
@@ -4982,6 +4982,7 @@ async function previewMyShopHome() {
   const { data: cats } = await sb.from('categories').select('*').eq('owner_id', ownerId());
   S.categories = cats || [];
   renderShopHome(false);
+  loadAndPopulateDeliverySectors();
 }
 
 function toggleShopMenu() {
@@ -5302,6 +5303,17 @@ function populateDeliverySectorSelects() {
     `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString()+' FCFA'}</option>`
   ).join('');
   document.querySelectorAll('[id="or-sector"]').forEach(sel => { sel.innerHTML = optsHtml; });
+}
+
+// Recharge toujours fraîchement les zones de livraison pour le bon
+// propriétaire (fonctionne aussi bien pour un client public que pour le
+// marchand qui prévisualise son propre produit depuis son tableau de bord).
+async function loadAndPopulateDeliverySectors() {
+  const oid = ownerId();
+  if (!oid) return;
+  const { data } = await sb.from('delivery_zones').select('*').eq('owner_id', oid).order('created_at', { ascending: true });
+  S.deliveryZonesPublic = data || [];
+  populateDeliverySectorSelects();
 }
 
 // Retourne le tarif du secteur actuellement sélectionné (0 si gratuite),
