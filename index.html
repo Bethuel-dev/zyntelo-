@@ -851,6 +851,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni"><i data-lucide="palette"></i></span>Apparence</div>
       <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
       <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
+      <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison et expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
@@ -1126,6 +1127,29 @@ canvas{display:block;}
         <div id="cmds-list"></div>
       </div>
 
+      <!-- LIVRAISON ET EXPÉDITIONS -->
+      <div class="dash-page" id="p-livraison">
+        <div class="page-head"><h1>🚚 Livraison et expéditions</h1><p>Définissez vos tarifs de livraison par secteur, ville ou quartier</p></div>
+        <button class="btn btn-blue btn-sm" id="dz-create-btn" onclick="showDeliveryZoneForm()">+ Ajouter un secteur</button>
+
+        <div id="dz-form" style="display:none;margin-top:16px" class="card">
+          <div class="card-title" id="dz-form-title">Nouveau secteur</div>
+          <input type="hidden" id="dz-form-id">
+          <div class="fgrp"><label>Secteur (ville, commune ou quartier)</label><input id="dz-sector" placeholder="Ex : Cocody, Abidjan"></div>
+          <div class="fgrp" style="display:flex;align-items:center;gap:8px;flex-direction:row">
+            <input type="checkbox" id="dz-free" onchange="toggleDzFreeInput()" style="width:auto">
+            <label style="margin:0">Livraison gratuite pour ce secteur</label>
+          </div>
+          <div class="fgrp" id="dz-price-wrap"><label>Tarif de livraison (FCFA)</label><input type="number" id="dz-price" placeholder="1000"></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-blue" onclick="saveDeliveryZone()">Enregistrer</button>
+            <button class="btn btn-ghost" onclick="hideDeliveryZoneForm()">Annuler</button>
+          </div>
+        </div>
+
+        <div id="dz-list" style="margin-top:16px"></div>
+      </div>
+
       <!-- CLIENTS (de la boutique) -->
       <div class="dash-page" id="p-clients-shop">
         <div class="page-head"><h1>Clients</h1><p>Les clients qui ont commandé chez vous</p></div>
@@ -1373,6 +1397,12 @@ canvas{display:block;}
     <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">0 FCFA</span></div>
     <hr class="divider">
     <div class="sec-lbl">📍 Informations de livraison</div>
+    <div class="fgrp"><label>Secteur de livraison *</label>
+      <select id="or-sector" onchange="updTotal()"><option value="">Sélectionnez votre secteur…</option></select>
+    </div>
+    <div id="or-delivery-summary" style="display:none;font-size:12.5px;color:var(--gray);margin:-6px 0 10px;line-height:1.6">
+      Produit : <strong id="or-product-price">—</strong> · Livraison : <strong id="or-delivery-fee">—</strong>
+    </div>
     <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
     <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
     <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
@@ -2087,6 +2117,7 @@ function pg(pageId, el) {
   if (pageId === 'p-gerant') renderGerants();
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
+  if (pageId === 'p-livraison') { loadDeliveryZones(); startDeliveryZonesRealtimeListener(ownerId()); }
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-abo') loadPaymentsHistory();
@@ -2642,6 +2673,7 @@ async function logout() {
   await sb.auth.signOut();
   localStorage.removeItem('zyntelo_gerant_session');
   stopOrdersRealtimeListener();
+  stopDeliveryZonesRealtimeListener();
   stopStatsRealtimeListener();
   stopHelpPolling();
   stopAdminSupportPolling();
@@ -2870,7 +2902,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-aide', 'p-gerant-notifs'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-livraison', 'p-aide', 'p-gerant-notifs'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -4186,11 +4218,14 @@ async function openPublicShopBySlug(route) {
   applyShopAppearance(S.shop.appearance);
 
   const today = new Date().toISOString().split('T')[0];
-  const [prodsRes, catsRes, promosRes] = await Promise.all([
+  const [prodsRes, catsRes, promosRes, dzRes] = await Promise.all([
     sb.from('products').select('*').eq('owner_id', shop.id),
     sb.from('categories').select('*').eq('owner_id', shop.id),
-    sb.from('promo_offers').select('*').eq('owner_id', shop.id).eq('active', true)
+    sb.from('promo_offers').select('*').eq('owner_id', shop.id).eq('active', true),
+    sb.from('delivery_zones').select('*').eq('owner_id', shop.id).order('created_at', { ascending: true })
   ]);
+  S.deliveryZonesPublic = dzRes.data || [];
+  populateDeliverySectorSelects();
   S.products = (prodsRes.data||[]).map(row => ({ ...row.data, _rowId: row.id }));
   // Correctif de secours : génère un slug de secours en mémoire pour les anciens
   // produits qui n'en ont jamais eu, afin que leur lien fonctionne même si le
@@ -4319,6 +4354,12 @@ function previewShop(prodId, isPublic) {
           <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
           <div id="prod-offers-box"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
+          <div class="fgrp"><label>Secteur de livraison *</label>
+            <select id="or-sector" onchange="updTotal()"><option value="">Sélectionnez votre secteur…</option></select>
+          </div>
+          <div id="or-delivery-summary" style="display:none;font-size:12.5px;color:var(--gray);margin:-6px 0 10px;line-height:1.6">
+            Produit : <strong id="or-product-price">—</strong> · Livraison : <strong id="or-delivery-fee">—</strong>
+          </div>
           <div class="fgrp"><label>Prénom *</label><input id="or-prenom" placeholder="Votre prénom"></div>
           <div class="fgrp"><label>Ville *</label><input id="or-ville" placeholder="Abidjan, Bouaké…"></div>
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
@@ -4356,6 +4397,7 @@ function previewShop(prodId, isPublic) {
   go('s-boutique');
   loadProductReviews(p.id);
   renderProductOffers(p);
+  populateDeliverySectorSelects();
 }
 
 let prodReviewStars = 0;
@@ -4819,6 +4861,123 @@ async function deletePromoOffer(id) {
   await loadPromoOffers();
 }
 
+// ═══════════════════════════════════════════════
+// LIVRAISON ET EXPÉDITIONS
+// ═══════════════════════════════════════════════
+async function loadDeliveryZones() {
+  const { data } = await sb.from('delivery_zones').select('*').eq('owner_id', ownerId()).order('created_at', { ascending: true });
+  S.deliveryZones = data || [];
+  renderDeliveryZones();
+}
+
+function renderDeliveryZones() {
+  const list = document.getElementById('dz-list');
+  if (!list) return;
+  if (!S.deliveryZones || !S.deliveryZones.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">🚚</div><p>Aucun secteur de livraison pour le moment. Ajoutez votre premier secteur !</p></div>`;
+    return;
+  }
+  list.innerHTML = S.deliveryZones.map(z => `
+    <div class="promo-card">
+      <div class="promo-card-hdr">
+        <div class="promo-card-name">${z.sector}</div>
+        <div style="font-weight:700;color:${z.is_free ? 'var(--green)' : 'var(--ink)'}">${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString() + ' FCFA'}</div>
+      </div>
+      <div class="promo-card-actions">
+        <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="editDeliveryZone('${z.id}')">✏️ Modifier</button>
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDeliveryZone('${z.id}')">🗑️ Supprimer</button>
+      </div>
+    </div>`).join('');
+}
+
+function showDeliveryZoneForm() {
+  document.getElementById('dz-form-id').value = '';
+  document.getElementById('dz-sector').value = '';
+  document.getElementById('dz-price').value = '';
+  document.getElementById('dz-free').checked = false;
+  document.getElementById('dz-form-title').textContent = 'Nouveau secteur';
+  toggleDzFreeInput();
+  document.getElementById('dz-form').style.display = 'block';
+  document.getElementById('dz-create-btn').style.display = 'none';
+}
+
+function editDeliveryZone(id) {
+  const z = (S.deliveryZones || []).find(x => x.id === id);
+  if (!z) return;
+  document.getElementById('dz-form-id').value = z.id;
+  document.getElementById('dz-sector').value = z.sector;
+  document.getElementById('dz-price').value = z.price || '';
+  document.getElementById('dz-free').checked = !!z.is_free;
+  document.getElementById('dz-form-title').textContent = 'Modifier le secteur';
+  toggleDzFreeInput();
+  document.getElementById('dz-form').style.display = 'block';
+  document.getElementById('dz-create-btn').style.display = 'none';
+}
+
+function hideDeliveryZoneForm() {
+  document.getElementById('dz-form').style.display = 'none';
+  document.getElementById('dz-create-btn').style.display = '';
+}
+
+function toggleDzFreeInput() {
+  const free = document.getElementById('dz-free').checked;
+  document.getElementById('dz-price-wrap').style.display = free ? 'none' : '';
+}
+
+async function saveDeliveryZone() {
+  const id = document.getElementById('dz-form-id').value || null;
+  const sector = document.getElementById('dz-sector').value.trim();
+  const isFree = document.getElementById('dz-free').checked;
+  const price = isFree ? 0 : (parseInt(document.getElementById('dz-price').value) || 0);
+  if (!sector) { toast('Indiquez le nom du secteur', 'err'); return; }
+  if (!isFree && price <= 0) { toast('Indiquez un tarif, ou cochez "Livraison gratuite"', 'err'); return; }
+  if (S.isGerant) {
+    const { data, error } = await sb.rpc('gerant_save_delivery_zone', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_zone_id: id, p_sector: sector, p_price: price, p_is_free: isFree });
+    if (error || !data || !data.success) { toast('Erreur : impossible d\'enregistrer.', 'err'); console.error('gerant_save_delivery_zone error', error, data); return; }
+  } else {
+    if (id) {
+      const { error } = await sb.from('delivery_zones').update({ sector, price, is_free: isFree }).eq('id', id);
+      if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    } else {
+      const { error } = await sb.from('delivery_zones').insert({ owner_id: ownerId(), sector, price, is_free: isFree });
+      if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    }
+  }
+  toast('Secteur enregistré');
+  hideDeliveryZoneForm();
+  await loadDeliveryZones();
+}
+
+async function deleteDeliveryZone(id) {
+  if (!confirm('Supprimer ce secteur de livraison ?')) return;
+  if (S.isGerant) {
+    const { data, error } = await sb.rpc('gerant_delete_delivery_zone', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_zone_id: id });
+    if (error || !data || !data.success) { toast('Erreur : suppression impossible.', 'err'); console.error('gerant_delete_delivery_zone error', error, data); return; }
+  } else {
+    const { error } = await sb.from('delivery_zones').delete().eq('id', id);
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  }
+  toast('Secteur supprimé');
+  await loadDeliveryZones();
+}
+
+// Temps réel : la boutique (propriétaire + tous les gérants) voit
+// instantanément toute modification faite par n'importe qui d'autre,
+// sans avoir besoin de recharger la page.
+let deliveryZonesRealtimeChannel = null;
+function startDeliveryZonesRealtimeListener(targetOwnerId) {
+  if (deliveryZonesRealtimeChannel) { sb.removeChannel(deliveryZonesRealtimeChannel); deliveryZonesRealtimeChannel = null; }
+  deliveryZonesRealtimeChannel = sb
+    .channel('delivery-zones-listen-' + targetOwnerId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'delivery_zones', filter: `owner_id=eq.${targetOwnerId}` }, () => {
+      if (document.getElementById('p-livraison') && document.getElementById('p-livraison').classList.contains('on')) loadDeliveryZones();
+    })
+    .subscribe();
+}
+function stopDeliveryZonesRealtimeListener() {
+  if (deliveryZonesRealtimeChannel) { sb.removeChannel(deliveryZonesRealtimeChannel); deliveryZonesRealtimeChannel = null; }
+}
+
 async function previewMyShopHome() {
   const { data: cats } = await sb.from('categories').select('*').eq('owner_id', ownerId());
   S.categories = cats || [];
@@ -5118,9 +5277,41 @@ function updTotal() {
   const p=S.curProd; if(!p) return;
   const percent = S.selectedOffer ? S.selectedOffer.percent : 0;
   const unitPrice = p.newP * (1 - percent/100);
-  const t = Math.round(unitPrice*S.orderQty);
-  document.getElementById('pp-total').textContent = t.toLocaleString()+' FCFA';
-  document.getElementById('pp-btn-total').textContent = t.toLocaleString()+' FCFA';
+  const productTotal = Math.round(unitPrice*S.orderQty);
+  const deliveryFee = getSelectedDeliveryFee(); // null si aucun secteur choisi, sinon un nombre (0 = gratuite)
+  const grandTotal = productTotal + (deliveryFee || 0);
+  document.getElementById('pp-total').textContent = grandTotal.toLocaleString()+' FCFA';
+  document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString()+' FCFA';
+
+  // Détail Produit / Livraison, affiché seulement une fois un secteur choisi
+  document.querySelectorAll('[id="or-delivery-summary"]').forEach(box => {
+    if (deliveryFee === null) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    const priceEl = box.querySelector('#or-product-price');
+    const feeEl = box.querySelector('#or-delivery-fee');
+    if (priceEl) priceEl.textContent = productTotal.toLocaleString()+' FCFA';
+    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'Gratuite' : deliveryFee.toLocaleString()+' FCFA';
+  });
+}
+
+// Remplit tous les sélecteurs de secteur présents dans la page avec les
+// zones de livraison publiques de la boutique actuellement affichée.
+function populateDeliverySectorSelects() {
+  const zones = S.deliveryZonesPublic || [];
+  const optsHtml = '<option value="">Sélectionnez votre secteur…</option>' + zones.map(z =>
+    `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString()+' FCFA'}</option>`
+  ).join('');
+  document.querySelectorAll('[id="or-sector"]').forEach(sel => { sel.innerHTML = optsHtml; });
+}
+
+// Retourne le tarif du secteur actuellement sélectionné (0 si gratuite),
+// ou null si aucun secteur n'est encore choisi.
+function getSelectedDeliveryFee() {
+  const sel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
+  if (!sel || !sel.value) return null;
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt) return null;
+  return opt.dataset.free === '1' ? 0 : (parseInt(opt.dataset.price) || 0);
 }
 
 async function notifyOwnerNewOrder(orderData) {
@@ -5212,13 +5403,20 @@ async function submitOrder() {
   const ville=document.getElementById('or-ville').value.trim();
   const qrt=document.getElementById('or-qrt').value.trim();
   const tel=getPhoneValue('or-tel');
+  const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
+  const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
+  if (!sectorId) { toast('Sélectionnez votre secteur de livraison','err'); return; }
+  const sectorOpt = sectorSel.options[sectorSel.selectedIndex];
+  const sectorName = sectorOpt ? sectorOpt.textContent.split(' — ')[0] : '';
+  const deliveryFee = sectorOpt && sectorOpt.dataset.free === '1' ? 0 : (parseInt(sectorOpt && sectorOpt.dataset.price) || 0);
   const p=S.curProd;
   const offerPercent = S.selectedOffer ? S.selectedOffer.percent : 0;
   const unitPrice = p.newP * (1 - offerPercent/100);
-  const total = Math.round(unitPrice*S.orderQty);
+  const productTotal = Math.round(unitPrice*S.orderQty);
+  const total = productTotal + deliveryFee;
   const varL=S.selVariant?` — ${S.selVariant}`:'';
-  const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, qty:S.orderQty, unitP:p.newP, total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
+  const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, secteur:sectorName, deliveryFee, qty:S.orderQty, unitP:p.newP, total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
   // Insertion directe et ciblée : ne touche jamais aux autres commandes déjà enregistrées
   const { error } = await sb.from('orders').insert({ owner_id: ownerId(), data: orderData });
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
@@ -5226,6 +5424,7 @@ async function submitOrder() {
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
   ['or-prenom','or-ville','or-qrt','or-tel-num'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const ccReset = document.getElementById('or-tel-cc'); if (ccReset) ccReset.value = '+225';
+  if (sectorSel) sectorSel.value = '';
   S.orderQty = 1;
   const qtyEl = document.getElementById('pp-qty'); if (qtyEl) qtyEl.textContent = 1;
   updTotal();
@@ -5249,7 +5448,7 @@ function renderCmds() {
     const actions=o.status==='attente'
       ?`<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
       :o.status==='livree'?`<button class="bw" onclick="sendReceipt('${o.id}')">📲 Reçu WhatsApp</button>`:'';
-    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${o.prenom} · ${o.prodName}</div><div class="cmd-detail">${o.ville}, ${o.qrt} · ${o.tel}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} FCFA</strong> · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${o.validatedBy}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
+    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${o.prenom} · ${o.prodName}</div><div class="cmd-detail">${o.ville}, ${o.qrt}${o.secteur?` · 📍 ${o.secteur}`:''} · ${o.tel}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} FCFA</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} FCFA livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${o.validatedBy}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
   }).join('');
   list.innerHTML=html;
   if(ov) ov.innerHTML=html;
