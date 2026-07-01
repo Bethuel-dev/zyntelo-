@@ -1378,6 +1378,7 @@ canvas{display:block;}
       <button class="btn-icon" onclick="go('s-land')" style="font-size:18px">←</button>
       <div class="bshop-name">🛒 Marketplace</div>
     </div>
+    <button class="btn btn-ghost btn-sm" id="mk-client-btn" onclick="showClientLoginPopup()">Se connecter</button>
   </div>
   <div class="bshop-body">
     <div class="fgrp" style="margin-bottom:14px">
@@ -1393,6 +1394,20 @@ canvas{display:block;}
     <div style="text-align:center;padding:18px;display:none" id="mk-loadmore-wrap">
       <button class="btn btn-ghost" id="mk-loadmore-btn" onclick="loadMoreMarketplace()">Charger plus</button>
     </div>
+  </div>
+</div>
+
+<!-- MES COMMANDES — espace client, toutes boutiques confondues -->
+<div id="s-client-orders" class="screen">
+  <div class="bshop-hdr">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="goToMarketplace()" style="font-size:18px">←</button>
+      <div class="bshop-name">📦 Mes commandes</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="clientLogout()">Déconnexion</button>
+  </div>
+  <div class="bshop-body">
+    <div id="client-orders-list"></div>
   </div>
 </div>
 
@@ -1942,6 +1957,7 @@ function parseRoute() {
   if (parts[0] === 'register') return { type: 'register' };
   if (parts[0] === 'admin') return { type: 'admin' };
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
+  if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
   return { type: 'home' };
 }
 
@@ -2013,7 +2029,12 @@ async function init() {
   if (route.type === 'login') go('s-login');
   else if (route.type === 'register') go('s-register');
   else if (route.type === 'admin') go('s-admin-login');
-  else if (route.type === 'marketplace') { go('s-marketplace'); loadMarketplace('new'); }
+  else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); loadMarketplace('new'); }
+  else if (route.type === 'client-orders') {
+    await restoreClientSession(); // s'assure que la session est bien restaurée avant de décider
+    if (S.client) { go('s-client-orders'); loadClientOrders(); }
+    else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
+  }
   else go('s-land');
 }
 
@@ -5044,6 +5065,7 @@ function productCardHtml(p) {
 function goToMarketplace() {
   navTo('/marketplace');
   go('s-marketplace');
+  updateMarketplaceClientNav();
   loadMarketplace('new');
 }
 
@@ -5120,6 +5142,100 @@ function debouncedMarketplaceSearch() {
     S.marketplaceSearch = document.getElementById('mk-search').value.trim();
     loadMarketplace(S.marketplaceSort || 'new');
   }, 400);
+}
+
+// ═══════════════════════════════════════════════
+// CONNEXION CLIENT + HISTORIQUE DES COMMANDES
+// ═══════════════════════════════════════════════
+function showClientLoginPopup() {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'client-login-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="popup" style="max-width:380px">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">Connexion</h3>
+    <p style="font-size:13px;color:var(--gray);text-align:center;margin-bottom:16px">Connectez-vous pour retrouver vos commandes, sur toutes les boutiques.</p>
+    <div class="fgrp"><label>Email</label><input id="cl-email" type="email" placeholder="votre@email.com"></div>
+    <div class="fgrp"><label>Mot de passe</label><input id="cl-password" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitClientLogin()"></div>
+    <button class="btn btn-blue btn-w" onclick="submitClientLogin()">Se connecter</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('client-login-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitClientLogin() {
+  const email = document.getElementById('cl-email').value.trim();
+  const password = document.getElementById('cl-password').value;
+  if (!email || !password) { toast('Remplissez tous les champs', 'err'); return; }
+  const { data, error } = await sb.rpc('client_login', { p_email: email, p_password: password });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (!data.success) { toast('Email ou mot de passe incorrect', 'err'); return; }
+  saveClientSession({ id: data.client_id, name: data.name, email: data.email });
+  const ov = document.getElementById('client-login-overlay'); if (ov) ov.remove();
+  toast(`Bienvenue ${data.name || ''} ! 👋`);
+  updateMarketplaceClientNav();
+}
+
+function clientLogout() {
+  S.client = null;
+  localStorage.removeItem('zyntelo_client_session');
+  updateMarketplaceClientNav();
+  goToMarketplace();
+  toast('Déconnecté');
+}
+
+// Adapte le bouton dans l'en-tête de la Marketplace selon l'état de connexion
+function updateMarketplaceClientNav() {
+  const btn = document.getElementById('mk-client-btn');
+  if (!btn) return;
+  if (S.client) {
+    btn.textContent = '👤 ' + (S.client.name || 'Mon compte');
+    btn.onclick = () => goToClientOrders();
+  } else {
+    btn.textContent = 'Se connecter';
+    btn.onclick = () => showClientLoginPopup();
+  }
+}
+
+function goToClientOrders() {
+  if (!S.client) { showClientLoginPopup(); return; }
+  navTo('/mes-commandes');
+  go('s-client-orders');
+  loadClientOrders();
+}
+
+async function loadClientOrders() {
+  const list = document.getElementById('client-orders-list');
+  if (!list) return;
+  if (!S.client) { list.innerHTML = `<div class="empty card"><p>Connectez-vous pour voir vos commandes.</p></div>`; return; }
+  list.innerHTML = `<div class="empty card"><p>Chargement…</p></div>`;
+  const { data, error } = await sb.rpc('client_get_orders', { p_client_id: S.client.id, p_email: S.client.email });
+  if (error) { console.error('loadClientOrders error', error); list.innerHTML = `<div class="empty card"><p>Erreur de chargement.</p></div>`; return; }
+  renderClientOrders(data || []);
+}
+
+function renderClientOrders(rows) {
+  const list = document.getElementById('client-orders-list');
+  if (!list) return;
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">📦</div><p>Vous n'avez pas encore de commande.</p></div>`;
+    return;
+  }
+  const statusLabels = { attente: '⏳ En attente', livree: '✅ Livrée', annulee: '❌ Annulée' };
+  const statusClass = { attente: 'b-yellow', livree: 'b-green', annulee: 'b-red' };
+  list.innerHTML = rows.map(r => {
+    const o = r.data || {};
+    const waLink = r.shop_wa ? `https://wa.me/${String(r.shop_wa).replace(/[^0-9]/g,'')}` : null;
+    return `<div class="cmd-card">
+      <div class="cmd-info">
+        <div class="cmd-name">${o.prodName || 'Produit'} · <span style="color:var(--gray);font-weight:400">${r.shop_name || ''}</span></div>
+        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong>${(o.total||0).toLocaleString()} FCFA</strong></div>
+        ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--blue);display:inline-block;margin-top:4px">📲 Contacter ${r.shop_name || 'le marchand'}</a>` : ''}
+      </div>
+      <span class="badge ${statusClass[o.status]||'b-yellow'}">${statusLabels[o.status]||o.status||'En attente'}</span>
+    </div>`;
+  }).join('');
 }
 
 function goToProductFromGrid(prodId) {
