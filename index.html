@@ -1865,7 +1865,7 @@ const Store = {
 let S = {
   user: null, shop: null, products: [], orders: [], gerants: [], categories: [], promoOffers: [],
   curProd: null, orderQty: 1, selVariant: null, selectedOffer: null, imgData: [], imgFiles: [], editImgs: null,
-  isGerant: false, cameFromCatalogue: null
+  isGerant: false, cameFromCatalogue: null, client: null
 };
 
 // ═══════════════════════════════════════════════
@@ -1918,6 +1918,7 @@ function parseRoute() {
 
 async function init() {
   const route = parseRoute();
+  restoreClientSession(); // silencieux, ne bloque jamais le démarrage — prépare S.client pour les futures fonctionnalités (historique, favoris)
 
   // Boutique publique : totalement indépendant de la session, accessible à tous
   if (route.type === 'shop') {
@@ -2678,7 +2679,7 @@ async function logout() {
   stopHelpPolling();
   stopAdminSupportPolling();
   Store.invalidateAll(); // vide complètement le cache, sécurité essentielle entre utilisateurs
-  S = { user:null, shop:null, products:[], orders:[], gerants:[], curProd:null, orderQty:1, selVariant:null, imgData:[], editImgs:null, isGerant:false };
+  S = { user:null, shop:null, products:[], orders:[], gerants:[], curProd:null, orderQty:1, selVariant:null, imgData:[], editImgs:null, isGerant:false, client: S.client };
   // Réafficher tous les onglets (au cas où on était en mode gérant restreint)
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => { item.style.display = ''; });
   go('s-land');
@@ -5430,7 +5431,7 @@ async function submitOrder() {
   const varL=S.selVariant?` — ${S.selVariant}`:'';
   const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, secteur:sectorName, deliveryFee, qty:S.orderQty, unitP:p.newP, total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
   // Insertion directe et ciblée : ne touche jamais aux autres commandes déjà enregistrées
-  const { error } = await sb.from('orders').insert({ owner_id: ownerId(), data: orderData });
+  const { data: insertedRow, error } = await sb.from('orders').insert({ owner_id: ownerId(), data: orderData }).select().single();
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
@@ -5441,6 +5442,86 @@ async function submitOrder() {
   const qtyEl = document.getElementById('pp-qty'); if (qtyEl) qtyEl.textContent = 1;
   updTotal();
   toast('Commande envoyée ! Vous serez contacté pour la livraison. ✓');
+  if (S.client && S.client.id) {
+    // Client déjà connu (session existante) : on rattache silencieusement,
+    // sans jamais lui redemander de créer un compte.
+    sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_id: insertedRow.id, p_owner_id: ownerId() }).catch(()=>{});
+  } else {
+    setTimeout(() => showPostOrderSignup(insertedRow.id, ownerId(), prenom, tel), 1200);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// COMPTES CLIENTS (fondation)
+// ═══════════════════════════════════════════════
+
+// Restaure silencieusement la session client si elle existe sur cet
+// appareil — jamais bloquant, jamais d'erreur visible en cas d'échec.
+async function restoreClientSession() {
+  try {
+    const raw = localStorage.getItem('zyntelo_client_session');
+    if (!raw) return;
+    const { clientId, email } = JSON.parse(raw);
+    const { data } = await sb.rpc('client_resume_session', { p_client_id: clientId, p_email: email });
+    if (data && data.success) {
+      S.client = { id: data.client_id, name: data.name, email: data.email };
+    } else {
+      localStorage.removeItem('zyntelo_client_session');
+    }
+  } catch (e) { console.error('restoreClientSession error', e); }
+}
+
+function saveClientSession(client) {
+  S.client = client;
+  localStorage.setItem('zyntelo_client_session', JSON.stringify({ clientId: client.id, email: client.email }));
+}
+
+// Popup affichée juste après une commande "invité" : propose de créer un
+// compte pour suivre cette commande, sans jamais obliger le client — il
+// peut toujours fermer et continuer normalement.
+function showPostOrderSignup(orderId, ownerIdVal, prenom, tel) {
+  // Stocké temporairement hors du HTML pour éviter tout problème avec des
+  // prénoms contenant une apostrophe (ex: "N'Guessan") qui casserait un
+  // attribut onclick en ligne.
+  window._pendingPostOrderSignup = { orderId, ownerIdVal, prenom, tel };
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'post-order-signup-overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `<div class="popup" style="max-width:400px">
+    <div class="popup-handle"></div>
+    <div style="font-size:40px;text-align:center;margin-bottom:6px">📦</div>
+    <h3 style="text-align:center">Suivez votre commande</h3>
+    <p style="font-size:14px;color:var(--gray);text-align:center;margin-bottom:18px">Créez un compte pour suivre cette commande, retrouver votre historique d'achats et gagner du temps la prochaine fois.</p>
+    <div class="fgrp"><label>Votre email</label><input id="pos-email" type="email" placeholder="votre@email.com"></div>
+    <div class="fgrp"><label>Mot de passe (6 caractères minimum)</label><input id="pos-password" type="password" placeholder="••••••"></div>
+    <button class="btn btn-blue btn-w" onclick="submitPostOrderSignup()">Créer mon compte</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('post-order-signup-overlay').remove()">Non merci, continuer sans compte</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitPostOrderSignup() {
+  const pending = window._pendingPostOrderSignup;
+  if (!pending) return;
+  const { orderId, ownerIdVal, prenom, tel } = pending;
+  const email = document.getElementById('pos-email').value.trim();
+  const password = document.getElementById('pos-password').value;
+  if (!email || !email.includes('@')) { toast('Entrez un email valide', 'err'); return; }
+  if (!password || password.length < 6) { toast('Le mot de passe doit faire au moins 6 caractères', 'err'); return; }
+  const { data, error } = await sb.rpc('client_register', { p_email: email, p_phone: tel, p_password: password, p_name: prenom });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  if (!data.success) {
+    toast(data.error === 'email_exists' ? 'Un compte existe déjà avec cet email — connectez-vous plutôt.' : 'Erreur lors de la création du compte', 'err');
+    return;
+  }
+  const client = { id: data.client_id, name: data.name, email: data.email };
+  saveClientSession(client);
+  // Rattache la commande qu'il vient de passer à son nouveau compte
+  await sb.rpc('client_link_order', { p_client_id: client.id, p_order_id: orderId, p_owner_id: ownerIdVal }).catch(()=>{});
+  const ov = document.getElementById('post-order-signup-overlay'); if (ov) ov.remove();
+  window._pendingPostOrderSignup = null;
+  toast(`Compte créé, bienvenue ${client.name} ! 🎉`);
 }
 
 // ═══════════════════════════════════════════════
