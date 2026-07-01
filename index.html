@@ -6634,6 +6634,21 @@ async function sendMsgAll() {
 }
 
 // ═══════════════════════════════════════════════
+// DIAGNOSTIC TEMPORAIRE : révèle toute erreur cachée sous forme de message
+// visible, pour identifier précisément un blocage silencieux (utile sur
+// mobile où la console développeur n'est pas accessible).
+// ═══════════════════════════════════════════════
+window.addEventListener('error', (e) => {
+  console.error('Erreur JS non interceptée', e.error || e.message);
+  toast('⚠️ Erreur technique : ' + (e.message || 'inconnue'), 'err');
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Promesse rejetée non interceptée', e.reason);
+  const msg = (e.reason && (e.reason.message || e.reason.toString)) ? (e.reason.message || e.reason.toString()) : 'inconnue';
+  toast('⚠️ Erreur technique : ' + msg, 'err');
+});
+
+// ═══════════════════════════════════════════════
 // LANCER
 // ═══════════════════════════════════════════════
 init();
