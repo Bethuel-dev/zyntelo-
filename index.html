@@ -5430,8 +5430,10 @@ async function submitOrder() {
   const total = productTotal + deliveryFee;
   const varL=S.selVariant?` — ${S.selVariant}`:'';
   const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, secteur:sectorName, deliveryFee, qty:S.orderQty, unitP:p.newP, total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
-  // Insertion directe et ciblée : ne touche jamais aux autres commandes déjà enregistrées
-  const { data: insertedRow, error } = await sb.from('orders').insert({ owner_id: ownerId(), data: orderData }).select().single();
+  // Insertion directe et ciblée : ne touche jamais aux autres commandes déjà enregistrées.
+  // Pas de relecture après insertion (.select()) : un client anonyme n'a pas le droit
+  // de relire les commandes (règle de sécurité réservée au propriétaire de la boutique).
+  const { error } = await sb.from('orders').insert({ owner_id: ownerId(), data: orderData });
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
@@ -5445,9 +5447,9 @@ async function submitOrder() {
   if (S.client && S.client.id) {
     // Client déjà connu (session existante) : on rattache silencieusement,
     // sans jamais lui redemander de créer un compte.
-    sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_id: insertedRow.id, p_owner_id: ownerId() }).catch(()=>{});
+    sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_client_id: orderData.id, p_owner_id: ownerId() }).catch(()=>{});
   } else {
-    setTimeout(() => showPostOrderSignup(insertedRow.id, ownerId(), prenom, tel), 1200);
+    setTimeout(() => showPostOrderSignup(orderData.id, ownerId(), prenom, tel), 1200);
   }
 }
 
@@ -5518,7 +5520,7 @@ async function submitPostOrderSignup() {
   const client = { id: data.client_id, name: data.name, email: data.email };
   saveClientSession(client);
   // Rattache la commande qu'il vient de passer à son nouveau compte
-  await sb.rpc('client_link_order', { p_client_id: client.id, p_order_id: orderId, p_owner_id: ownerIdVal }).catch(()=>{});
+  await sb.rpc('client_link_order', { p_client_id: client.id, p_order_client_id: orderId, p_owner_id: ownerIdVal }).catch(()=>{});
   const ov = document.getElementById('post-order-signup-overlay'); if (ov) ov.remove();
   window._pendingPostOrderSignup = null;
   toast(`Compte créé, bienvenue ${client.name} ! 🎉`);
