@@ -145,6 +145,17 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 .phone-grp{display:flex;gap:8px;}
 .phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
 .phone-grp input{flex:1;min-width:0;}
+.ctry-sel{position:relative;flex:0 0 108px;}
+.ctry-sel-btn{width:100%;padding:10px 8px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:4px;color:var(--black);}
+.ctry-sel-btn:hover{border-color:var(--blue);}
+.ctry-sel-arrow{font-size:10px;color:var(--gray);flex-shrink:0;}
+.ctry-sel-dropdown{position:absolute;top:calc(100% + 4px);left:0;width:280px;max-width:80vw;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.15);z-index:200;overflow:hidden;}
+.ctry-sel-search{width:100%;padding:11px 14px;border:none;border-bottom:1px solid var(--border);font-size:13px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;}
+.ctry-sel-list{max-height:220px;overflow-y:auto;}
+.ctry-sel-item{padding:10px 14px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ctry-sel-item:hover{background:var(--gray-l);}
+.ctry-sel-code{color:var(--gray);font-size:12px;flex-shrink:0;}
+.ctry-sel-empty{padding:16px;text-align:center;font-size:12.5px;color:var(--gray);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .mkt-banner-wrap{overflow:hidden;background:var(--gray-l);padding:10px 0;border-bottom:1px solid var(--border);}
 .mkt-banner-track{display:flex;gap:12px;width:max-content;animation:mkt-banner-scroll 32s linear infinite;}
@@ -870,7 +881,7 @@ canvas{display:block;}
       <div class="fgrp"><label>Nom complet *</label><input id="rg-name" placeholder="Jean Kouassi"></div>
       <div class="fgrp"><label>WhatsApp *</label>
         <div class="phone-grp">
-          <select id="rg-wa-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <div class="ctry-sel" id="rg-wa-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('rg-wa-cc')"><span id="rg-wa-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="rg-wa-cc" value="+225"><div class="ctry-sel-dropdown" id="rg-wa-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('rg-wa-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="rg-wa-cc-list"></div></div></div>
           <input id="rg-wa-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
         </div>
       </div>
@@ -1021,7 +1032,7 @@ canvas{display:block;}
           <div class="fgrp"><label>Description courte</label><textarea id="sh-desc" rows="2" placeholder="Vêtements et accessoires…"></textarea></div>
           <div class="fgrp"><label>WhatsApp (reçus clients)</label>
             <div class="phone-grp">
-              <select id="sh-wa-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+              <div class="ctry-sel" id="sh-wa-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('sh-wa-cc')"><span id="sh-wa-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="sh-wa-cc" value="+225"><div class="ctry-sel-dropdown" id="sh-wa-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('sh-wa-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="sh-wa-cc-list"></div></div></div>
               <input id="sh-wa-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
             </div>
           </div>
@@ -1549,7 +1560,7 @@ canvas{display:block;}
     <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
     <div class="fgrp"><label>Téléphone *</label>
         <div class="phone-grp">
-          <select id="or-tel-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <div class="ctry-sel" id="or-tel-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('or-tel-cc')"><span id="or-tel-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="or-tel-cc" value="+225"><div class="ctry-sel-dropdown" id="or-tel-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('or-tel-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="or-tel-cc-list"></div></div></div>
           <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
         </div>
       </div>
@@ -3488,38 +3499,151 @@ function getProductLink(p) {
 }
 
 // ═══════════════════════════════════════════════
-// SÉLECTEUR D'INDICATIF PAYS (Afrique de l'Ouest)
-// Composant réutilisable pour tous les champs numéro de téléphone.
+// SÉLECTEUR D'INDICATIF PAYS (tous les pays d'Afrique)
+// Composant réutilisable pour tous les champs numéro de téléphone,
+// avec recherche intégrée pour ne pas avoir à faire défiler 54 pays.
 // ═══════════════════════════════════════════════
-const WEST_AFRICA_COUNTRIES = [
-  { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire" },
-  { code:'+229', flag:'🇧🇯', name:'Bénin' },
-  { code:'+226', flag:'🇧🇫', name:'Burkina Faso' },
-  { code:'+238', flag:'🇨🇻', name:'Cap-Vert' },
-  { code:'+220', flag:'🇬🇲', name:'Gambie' },
-  { code:'+233', flag:'🇬🇭', name:'Ghana' },
-  { code:'+224', flag:'🇬🇳', name:'Guinée' },
-  { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau' },
-  { code:'+231', flag:'🇱🇷', name:'Liberia' },
-  { code:'+223', flag:'🇲🇱', name:'Mali' },
-  { code:'+227', flag:'🇳🇪', name:'Niger' },
-  { code:'+234', flag:'🇳🇬', name:'Nigeria' },
-  { code:'+221', flag:'🇸🇳', name:'Sénégal' },
-  { code:'+232', flag:'🇸🇱', name:'Sierra Leone' },
-  { code:'+228', flag:'🇹🇬', name:'Togo' },
+const AFRICA_COUNTRIES = [
+  { code:'+213', flag:'🇩🇿', name:'Algérie', tz:'Africa/Algiers' },
+  { code:'+244', flag:'🇦🇴', name:'Angola', tz:'Africa/Luanda' },
+  { code:'+229', flag:'🇧🇯', name:'Bénin', tz:'Africa/Porto-Novo' },
+  { code:'+267', flag:'🇧🇼', name:'Botswana', tz:'Africa/Gaborone' },
+  { code:'+226', flag:'🇧🇫', name:'Burkina Faso', tz:'Africa/Ouagadougou' },
+  { code:'+257', flag:'🇧🇮', name:'Burundi', tz:'Africa/Bujumbura' },
+  { code:'+237', flag:'🇨🇲', name:'Cameroun', tz:'Africa/Douala' },
+  { code:'+238', flag:'🇨🇻', name:'Cap-Vert', tz:'Atlantic/Cape_Verde' },
+  { code:'+236', flag:'🇨🇫', name:'République centrafricaine', tz:'Africa/Bangui' },
+  { code:'+269', flag:'🇰🇲', name:'Comores', tz:'Indian/Comoro' },
+  { code:'+242', flag:'🇨🇬', name:'Congo-Brazzaville', tz:'Africa/Brazzaville' },
+  { code:'+243', flag:'🇨🇩', name:'RD Congo', tz:'Africa/Kinshasa' },
+  { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire", tz:'Africa/Abidjan' },
+  { code:'+253', flag:'🇩🇯', name:'Djibouti', tz:'Africa/Djibouti' },
+  { code:'+20',  flag:'🇪🇬', name:'Égypte', tz:'Africa/Cairo' },
+  { code:'+291', flag:'🇪🇷', name:'Érythrée', tz:'Africa/Asmara' },
+  { code:'+268', flag:'🇸🇿', name:'Eswatini', tz:'Africa/Mbabane' },
+  { code:'+251', flag:'🇪🇹', name:'Éthiopie', tz:'Africa/Addis_Ababa' },
+  { code:'+241', flag:'🇬🇦', name:'Gabon', tz:'Africa/Libreville' },
+  { code:'+220', flag:'🇬🇲', name:'Gambie', tz:'Africa/Banjul' },
+  { code:'+233', flag:'🇬🇭', name:'Ghana', tz:'Africa/Accra' },
+  { code:'+224', flag:'🇬🇳', name:'Guinée', tz:'Africa/Conakry' },
+  { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau', tz:'Africa/Bissau' },
+  { code:'+240', flag:'🇬🇶', name:'Guinée équatoriale', tz:'Africa/Malabo' },
+  { code:'+254', flag:'🇰🇪', name:'Kenya', tz:'Africa/Nairobi' },
+  { code:'+266', flag:'🇱🇸', name:'Lesotho', tz:'Africa/Maseru' },
+  { code:'+231', flag:'🇱🇷', name:'Liberia', tz:'Africa/Monrovia' },
+  { code:'+218', flag:'🇱🇾', name:'Libye', tz:'Africa/Tripoli' },
+  { code:'+261', flag:'🇲🇬', name:'Madagascar', tz:'Indian/Antananarivo' },
+  { code:'+265', flag:'🇲🇼', name:'Malawi', tz:'Africa/Blantyre' },
+  { code:'+223', flag:'🇲🇱', name:'Mali', tz:'Africa/Bamako' },
+  { code:'+212', flag:'🇲🇦', name:'Maroc', tz:'Africa/Casablanca' },
+  { code:'+230', flag:'🇲🇺', name:'Maurice', tz:'Indian/Mauritius' },
+  { code:'+222', flag:'🇲🇷', name:'Mauritanie', tz:'Africa/Nouakchott' },
+  { code:'+258', flag:'🇲🇿', name:'Mozambique', tz:'Africa/Maputo' },
+  { code:'+264', flag:'🇳🇦', name:'Namibie', tz:'Africa/Windhoek' },
+  { code:'+227', flag:'🇳🇪', name:'Niger', tz:'Africa/Niamey' },
+  { code:'+234', flag:'🇳🇬', name:'Nigeria', tz:'Africa/Lagos' },
+  { code:'+256', flag:'🇺🇬', name:'Ouganda', tz:'Africa/Kampala' },
+  { code:'+250', flag:'🇷🇼', name:'Rwanda', tz:'Africa/Kigali' },
+  { code:'+239', flag:'🇸🇹', name:'Sao Tomé-et-Principe', tz:'Africa/Sao_Tome' },
+  { code:'+221', flag:'🇸🇳', name:'Sénégal', tz:'Africa/Dakar' },
+  { code:'+248', flag:'🇸🇨', name:'Seychelles', tz:'Indian/Mahe' },
+  { code:'+232', flag:'🇸🇱', name:'Sierra Leone', tz:'Africa/Freetown' },
+  { code:'+252', flag:'🇸🇴', name:'Somalie', tz:'Africa/Mogadishu' },
+  { code:'+249', flag:'🇸🇩', name:'Soudan', tz:'Africa/Khartoum' },
+  { code:'+211', flag:'🇸🇸', name:'Soudan du Sud', tz:'Africa/Juba' },
+  { code:'+255', flag:'🇹🇿', name:'Tanzanie', tz:'Africa/Dar_es_Salaam' },
+  { code:'+235', flag:'🇹🇩', name:'Tchad', tz:'Africa/Ndjamena' },
+  { code:'+228', flag:'🇹🇬', name:'Togo', tz:'Africa/Lome' },
+  { code:'+216', flag:'🇹🇳', name:'Tunisie', tz:'Africa/Tunis' },
+  { code:'+260', flag:'🇿🇲', name:'Zambie', tz:'Africa/Lusaka' },
+  { code:'+263', flag:'🇿🇼', name:'Zimbabwe', tz:'Africa/Harare' },
+  { code:'+27',  flag:'🇿🇦', name:'Afrique du Sud', tz:'Africa/Johannesburg' },
 ];
 
-// Génère le HTML complet d'un champ téléphone (sélecteur + numéro), à
-// insérer directement dans le HTML statique ou un template JS.
+// Devine le pays du visiteur à partir du fuseau horaire de son téléphone —
+// aucune permission demandée, contrairement à la géolocalisation. Utilisé
+// pour mettre en avant les produits du même pays sur la Marketplace.
+function guessClientCountryCode() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const match = AFRICA_COUNTRIES.find(c => c.tz === tz);
+    return match ? match.code : null;
+  } catch { return null; }
+}
+
+// Génère le HTML complet d'un champ téléphone (sélecteur avec recherche + numéro).
 function phoneFieldHTML(baseId, placeholder) {
-  const opts = WEST_AFRICA_COUNTRIES.map(c =>
-    `<option value="${c.code}"${c.code==='+225'?' selected':''}>${c.flag} ${c.code}</option>`
-  ).join('');
   return `<div class="phone-grp">
-    <select id="${baseId}-cc">${opts}</select>
+    ${countrySelectorHTML(baseId + '-cc')}
     <input id="${baseId}-num" type="tel" inputmode="numeric" placeholder="${placeholder||'07 XX XX XX XX'}">
   </div>`;
 }
+
+// Composant sélecteur de pays avec recherche, utilisé partout où un
+// indicatif est demandé. Remplace l'ancien <select> simple (devenu peu
+// pratique à faire défiler avec 54 pays).
+function countrySelectorHTML(id) {
+  return `<div class="ctry-sel" id="${id}-wrap">
+    <button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('${id}')">
+      <span id="${id}-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span>
+    </button>
+    <input type="hidden" id="${id}" value="+225">
+    <div class="ctry-sel-dropdown" id="${id}-dropdown" style="display:none">
+      <input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('${id}', this.value)" onclick="event.stopPropagation()">
+      <div class="ctry-sel-list" id="${id}-list"></div>
+    </div>
+  </div>`;
+}
+
+function renderCountryList(id, filter) {
+  const listEl = document.getElementById(id + '-list');
+  if (!listEl) return;
+  const normalize = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const q = normalize(filter);
+  const items = q
+    ? AFRICA_COUNTRIES.filter(c => normalize(c.name).includes(q) || c.code.includes(q))
+    : AFRICA_COUNTRIES;
+  if (!items.length) { listEl.innerHTML = `<div class="ctry-sel-empty">Aucun pays trouvé</div>`; return; }
+  listEl.innerHTML = items.map(c =>
+    `<div class="ctry-sel-item" onclick="selectCountry('${id}','${c.code}')">${c.flag} ${c.name} <span class="ctry-sel-code">${c.code}</span></div>`
+  ).join('');
+}
+
+function toggleCountryDropdown(id) {
+  const dd = document.getElementById(id + '-dropdown');
+  if (!dd) return;
+  const isOpen = dd.style.display !== 'none';
+  // Ferme tous les autres sélecteurs de pays ouverts sur la page
+  document.querySelectorAll('.ctry-sel-dropdown').forEach(el => { el.style.display = 'none'; });
+  if (!isOpen) {
+    dd.style.display = '';
+    renderCountryList(id, '');
+    const search = dd.querySelector('.ctry-sel-search');
+    if (search) { search.value = ''; setTimeout(() => search.focus(), 50); }
+  }
+}
+
+function filterCountryDropdown(id, value) {
+  renderCountryList(id, value);
+}
+
+function selectCountry(id, code) {
+  const country = AFRICA_COUNTRIES.find(c => c.code === code);
+  if (!country) return;
+  const hidden = document.getElementById(id);
+  const label = document.getElementById(id + '-label');
+  if (hidden) hidden.value = country.code;
+  if (label) label.textContent = `${country.flag} ${country.code}`;
+  const dd = document.getElementById(id + '-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+// Ferme les listes déroulantes ouvertes quand on clique ailleurs sur la page
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.ctry-sel')) {
+    document.querySelectorAll('.ctry-sel-dropdown').forEach(el => { el.style.display = 'none'; });
+  }
+});
 
 // Récupère la valeur complète au format international (ex: "+2250700000000"),
 // à partir des deux champs (sélecteur + numéro).
@@ -3537,20 +3661,21 @@ function getPhoneValue(baseId) {
 // ou juste "0700000000" sans indicatif). Ne casse jamais sur une valeur
 // inattendue : au pire, met tout dans le champ numéro avec CI par défaut.
 function setPhoneValue(baseId, fullValue) {
-  const ccEl = document.getElementById(baseId + '-cc');
+  const ccId = baseId + '-cc';
+  const ccEl = document.getElementById(ccId);
   const numEl = document.getElementById(baseId + '-num');
   if (!ccEl || !numEl) return;
   const cleaned = (fullValue || '').replace(/[\s.-]/g, '');
-  if (!cleaned) { ccEl.value = '+225'; numEl.value = ''; return; }
+  if (!cleaned) { selectCountry(ccId, '+225'); numEl.value = ''; return; }
   // Cherche le plus long indicatif correspondant en début de chaîne
-  const match = WEST_AFRICA_COUNTRIES
+  const match = AFRICA_COUNTRIES
     .filter(c => cleaned.startsWith(c.code))
     .sort((a,b) => b.code.length - a.code.length)[0];
   if (match) {
-    ccEl.value = match.code;
+    selectCountry(ccId, match.code);
     numEl.value = cleaned.slice(match.code.length);
   } else {
-    ccEl.value = '+225';
+    selectCountry(ccId, '+225');
     numEl.value = cleaned.replace(/^\+/, '');
   }
 }
@@ -4863,7 +4988,7 @@ function previewShop(prodId, isPublic) {
           <div class="fgrp"><label>Quartier / Commune *</label><input id="or-qrt" placeholder="Cocody, Yopougon…"></div>
           <div class="fgrp"><label>Téléphone *</label>
         <div class="phone-grp">
-          <select id="or-tel-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+          <div class="ctry-sel" id="or-tel-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('or-tel-cc')"><span id="or-tel-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="or-tel-cc" value="+225"><div class="ctry-sel-dropdown" id="or-tel-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('or-tel-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="or-tel-cc-list"></div></div></div>
           <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
         </div>
       </div>
@@ -5552,7 +5677,8 @@ async function loadMarketplace(sort) {
   S.marketplaceOffset = 0;
   const grid = document.getElementById('mk-grid');
   if (grid) grid.innerHTML = `<div class="mkt-empty"><p>Chargement…</p></div>`;
-  const { data, error } = await sb.rpc('marketplace_products', { p_sort: sort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: 0 });
+  const clientCountry = guessClientCountryCode(); // met en avant les boutiques du même pays, sans jamais cacher les autres
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: sort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: 0, p_client_country_code: clientCountry });
   if (error) { console.error('loadMarketplace error', error); if (grid) grid.innerHTML = `<div class="mkt-empty"><p>Erreur de chargement.</p></div>`; return; }
   S.marketplaceItems = data || [];
   S.marketplaceHasMore = (data || []).length === 24;
@@ -5563,7 +5689,8 @@ async function loadMoreMarketplace() {
   const btn = document.getElementById('mk-loadmore-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
   S.marketplaceOffset += 24;
-  const { data, error } = await sb.rpc('marketplace_products', { p_sort: S.marketplaceSort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: S.marketplaceOffset });
+  const clientCountry = guessClientCountryCode();
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: S.marketplaceSort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: S.marketplaceOffset, p_client_country_code: clientCountry });
   if (error) { console.error('loadMoreMarketplace error', error); if (btn) { btn.disabled = false; btn.textContent = 'Réessayer'; } return; }
   S.marketplaceItems = (S.marketplaceItems || []).concat(data || []);
   S.marketplaceHasMore = (data || []).length === 24;
@@ -5637,7 +5764,7 @@ function showClientRegisterPopup() {
     <div class="fgrp"><label>Email</label><input id="cr-email" type="email" placeholder="votre@email.com"></div>
     <div class="fgrp"><label>Numéro (facultatif)</label>
       <div class="phone-grp">
-        <select id="cr-phone-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+        <div class="ctry-sel" id="cr-phone-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('cr-phone-cc')"><span id="cr-phone-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="cr-phone-cc" value="+225"><div class="ctry-sel-dropdown" id="cr-phone-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('cr-phone-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="cr-phone-cc-list"></div></div></div>
         <input id="cr-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
       </div>
     </div>
@@ -5834,7 +5961,7 @@ function showReportMerchantPopup(ctx) {
     <div class="fgrp"><label>Votre email</label><input id="rpt-email" type="email" placeholder="votre@email.com"></div>
     <div class="fgrp"><label>Votre numéro</label>
       <div class="phone-grp">
-        <select id="rpt-phone-cc"><option value="+225" selected>🇨🇮 +225</option><option value="+229">🇧🇯 +229</option><option value="+226">🇧🇫 +226</option><option value="+238">🇨🇻 +238</option><option value="+220">🇬🇲 +220</option><option value="+233">🇬🇭 +233</option><option value="+224">🇬🇳 +224</option><option value="+245">🇬🇼 +245</option><option value="+231">🇱🇷 +231</option><option value="+223">🇲🇱 +223</option><option value="+227">🇳🇪 +227</option><option value="+234">🇳🇬 +234</option><option value="+221">🇸🇳 +221</option><option value="+232">🇸🇱 +232</option><option value="+228">🇹🇬 +228</option></select>
+        <div class="ctry-sel" id="rpt-phone-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('rpt-phone-cc')"><span id="rpt-phone-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="rpt-phone-cc" value="+225"><div class="ctry-sel-dropdown" id="rpt-phone-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('rpt-phone-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="rpt-phone-cc-list"></div></div></div>
         <input id="rpt-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
       </div>
     </div>
@@ -7284,6 +7411,14 @@ window.addEventListener('unhandledrejection', (e) => {
 init();
 refreshLucideIcons();
 setTimeout(() => { if (isIOSDevice()) maybeShowInstallBanner(); }, 3000); // délai pour ne pas surgir immédiatement
+
+// Écoute le bouton retour natif du téléphone/navigateur : sans ça, l'app
+// changeait bien l'adresse affichée à chaque navigation, mais ignorait
+// complètement un retour déclenché par l'utilisateur lui-même (bouton
+// physique Android, geste retour iPhone, ou flèche du navigateur).
+window.addEventListener('popstate', () => {
+  init();
+});
 
 // Filet de sécurité global : si du nouveau contenu contenant des icônes
 // Lucide est injecté dynamiquement ailleurs dans l'app (rendu de listes,
