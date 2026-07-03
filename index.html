@@ -1036,6 +1036,14 @@ canvas{display:block;}
               <input id="sh-wa-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
             </div>
           </div>
+          <div class="fgrp"><label>Devise des prix</label>
+            <select id="sh-currency">
+              <option value="FCFA">FCFA — Franc CFA (Afrique de l'Ouest &amp; Centrale)</option>
+              <option value="GNF">GNF — Franc guinéen (Guinée)</option>
+              <option value="FC">FC — Franc congolais (RD Congo)</option>
+              <option value="EUR">EUR — Euro (France)</option>
+            </select>
+          </div>
           <div class="fgrp" style="display:none"><label>Nom de domaine (optionnel)</label><input id="sh-domain" placeholder="monsite.com — vide = zyntelo.com/boutique/…"></div>
           <button class="btn btn-blue btn-sm" onclick="saveShop()">Enregistrer</button>
         </div>
@@ -1123,10 +1131,10 @@ canvas{display:block;}
             <div class="img-grid" id="pf-prev"></div>
           </div>
           <div class="form-row">
-            <div class="fgrp"><label>Ancien prix FCFA</label><input id="pf-old" type="number" placeholder="15000"></div>
-            <div class="fgrp"><label>Nouveau prix FCFA *</label><input id="pf-new" type="number" placeholder="12000"></div>
+            <div class="fgrp"><label>Ancien prix <span class="curlbl">FCFA</span></label><input id="pf-old" type="number" placeholder="15000"></div>
+            <div class="fgrp"><label>Nouveau prix <span class="curlbl">FCFA</span> *</label><input id="pf-new" type="number" placeholder="12000"></div>
           </div>
-          <div class="fgrp"><label>Prix d'achat FCFA (confidentiel)</label><input id="pf-buy" type="number" placeholder="8000"></div>
+          <div class="fgrp"><label>Prix d'achat <span class="curlbl">FCFA</span> (confidentiel)</label><input id="pf-buy" type="number" placeholder="8000"></div>
           <div class="fgrp"><label>Quantité en stock *</label><input id="pf-qty" type="number" placeholder="50"></div>
           <div class="fgrp">
             <label>Variantes (couleurs, tailles…)</label>
@@ -1229,7 +1237,7 @@ canvas{display:block;}
             <input type="checkbox" id="dz-free" onchange="toggleDzFreeInput()" style="width:auto">
             <label style="margin:0">Livraison gratuite pour ce secteur</label>
           </div>
-          <div class="fgrp" id="dz-price-wrap"><label>Tarif de livraison (FCFA)</label><input type="number" id="dz-price" placeholder="1000"></div>
+          <div class="fgrp" id="dz-price-wrap"><label>Tarif de livraison (<span class="curlbl">FCFA</span>)</label><input type="number" id="dz-price" placeholder="1000"></div>
           <div style="display:flex;gap:8px;margin-top:6px">
             <button class="btn btn-blue" onclick="saveDeliveryZone()">Enregistrer</button>
             <button class="btn btn-ghost" onclick="hideDeliveryZoneForm()">Annuler</button>
@@ -1800,6 +1808,14 @@ function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&
 function escJs(s){ return (s==null?'':String(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'\\u003c').replace(/>/g,'\\u003e'); }
 
 // ═══════════════════════════════════════════════
+// DEVISE PAR BOUTIQUE (additif — v99)
+// Chaque boutique affiche ses prix dans sa devise (FCFA par défaut).
+// L'abonnement Zyntelo, lui, reste en FCFA (GeniusPay).
+// ═══════════════════════════════════════════════
+function CUR(){ return (S.shop && S.shop.currency) || 'FCFA'; }
+function updateCurrencyLabels(){ document.querySelectorAll('.curlbl').forEach(el => el.textContent = CUR()); }
+
+// ═══════════════════════════════════════════════
 // STORAGE PERSISTANT — connecté à Supabase
 // Garde la même interface (get/set/del) que l'ancienne version
 // pour que tout le reste du code fonctionne sans modification.
@@ -1889,7 +1905,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -1946,7 +1962,7 @@ const Store = {
       if (key.startsWith('shop_')) {
         const id = key.replace('shop_','');
         await sb.from('shops').update({
-          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl
+          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, currency: val.currency||'FCFA', domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl
         }).eq('id', id);
         return;
       }
@@ -2556,7 +2572,7 @@ async function loadAdminStats() {
   document.getElementById('sc-inactive-users').textContent = inactiveUsers;
   document.getElementById('sc-active-rate').textContent = activeRate + '%';
   document.getElementById('sc-inactive-rate').textContent = inactiveRate + '%';
-  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' FCFA';
+  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' ' + CUR();
   document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
 
   renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
@@ -3137,7 +3153,7 @@ function showOrderNotif(order) {
   document.getElementById('on-qrt').textContent = fmt(order.qrt);
   document.getElementById('on-tel').textContent = fmt(order.tel);
   document.getElementById('on-prod').textContent = order.prodName ? `${order.prodName}${order.qty > 1 ? ' x'+order.qty : ''}` : '—';
-  const total = order.total != null ? Number(order.total).toLocaleString('fr-FR') + ' FCFA' : '—';
+  const total = order.total != null ? Number(order.total).toLocaleString('fr-FR') + ' ' + (order.currency||'FCFA') : '—';
   document.getElementById('on-total').textContent = total;
   const el = document.getElementById('order-notif');
   el.classList.add('show');
@@ -3243,7 +3259,7 @@ function recomputeStatsFromLiveData() {
   document.getElementById('sc-inactive-users').textContent = inactiveUsers;
   document.getElementById('sc-active-rate').textContent = activeRate + '%';
   document.getElementById('sc-inactive-rate').textContent = inactiveRate + '%';
-  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' FCFA';
+  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' ' + CUR();
   document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
 
   renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
@@ -3370,6 +3386,8 @@ async function loginAs(user) {
 
   // Pré-remplir boutique
   document.getElementById('sh-name').value = S.shop.name;
+  const _curSel = document.getElementById('sh-currency'); if (_curSel) _curSel.value = S.shop.currency || 'FCFA';
+  updateCurrencyLabels();
   setPhoneValue('sh-wa', S.shop.wa);
   document.getElementById('sh-domain').value = S.shop.domain||'';
   document.getElementById('sh-public-link').value = getShopLink();
@@ -3515,60 +3533,19 @@ function getProductLink(p) {
 // avec recherche intégrée pour ne pas avoir à faire défiler 54 pays.
 // ═══════════════════════════════════════════════
 const AFRICA_COUNTRIES = [
-  { code:'+213', flag:'🇩🇿', name:'Algérie', tz:'Africa/Algiers' },
-  { code:'+244', flag:'🇦🇴', name:'Angola', tz:'Africa/Luanda' },
-  { code:'+229', flag:'🇧🇯', name:'Bénin', tz:'Africa/Porto-Novo' },
-  { code:'+267', flag:'🇧🇼', name:'Botswana', tz:'Africa/Gaborone' },
-  { code:'+226', flag:'🇧🇫', name:'Burkina Faso', tz:'Africa/Ouagadougou' },
-  { code:'+257', flag:'🇧🇮', name:'Burundi', tz:'Africa/Bujumbura' },
-  { code:'+237', flag:'🇨🇲', name:'Cameroun', tz:'Africa/Douala' },
-  { code:'+238', flag:'🇨🇻', name:'Cap-Vert', tz:'Atlantic/Cape_Verde' },
-  { code:'+236', flag:'🇨🇫', name:'République centrafricaine', tz:'Africa/Bangui' },
-  { code:'+269', flag:'🇰🇲', name:'Comores', tz:'Indian/Comoro' },
-  { code:'+242', flag:'🇨🇬', name:'Congo-Brazzaville', tz:'Africa/Brazzaville' },
-  { code:'+243', flag:'🇨🇩', name:'RD Congo', tz:'Africa/Kinshasa' },
+  // (v99) Liste limitée aux 12 pays couverts par GeniusPay — Côte d'Ivoire en premier.
   { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire", tz:'Africa/Abidjan' },
-  { code:'+253', flag:'🇩🇯', name:'Djibouti', tz:'Africa/Djibouti' },
-  { code:'+20',  flag:'🇪🇬', name:'Égypte', tz:'Africa/Cairo' },
-  { code:'+291', flag:'🇪🇷', name:'Érythrée', tz:'Africa/Asmara' },
-  { code:'+268', flag:'🇸🇿', name:'Eswatini', tz:'Africa/Mbabane' },
-  { code:'+251', flag:'🇪🇹', name:'Éthiopie', tz:'Africa/Addis_Ababa' },
-  { code:'+241', flag:'🇬🇦', name:'Gabon', tz:'Africa/Libreville' },
-  { code:'+220', flag:'🇬🇲', name:'Gambie', tz:'Africa/Banjul' },
-  { code:'+233', flag:'🇬🇭', name:'Ghana', tz:'Africa/Accra' },
+  { code:'+229', flag:'🇧🇯', name:'Bénin', tz:'Africa/Porto-Novo' },
+  { code:'+226', flag:'🇧🇫', name:'Burkina Faso', tz:'Africa/Ouagadougou' },
+  { code:'+237', flag:'🇨🇲', name:'Cameroun', tz:'Africa/Douala' },
+  { code:'+33',  flag:'🇫🇷', name:'France', tz:'Europe/Paris' },
   { code:'+224', flag:'🇬🇳', name:'Guinée', tz:'Africa/Conakry' },
   { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau', tz:'Africa/Bissau' },
-  { code:'+240', flag:'🇬🇶', name:'Guinée équatoriale', tz:'Africa/Malabo' },
-  { code:'+254', flag:'🇰🇪', name:'Kenya', tz:'Africa/Nairobi' },
-  { code:'+266', flag:'🇱🇸', name:'Lesotho', tz:'Africa/Maseru' },
-  { code:'+231', flag:'🇱🇷', name:'Liberia', tz:'Africa/Monrovia' },
-  { code:'+218', flag:'🇱🇾', name:'Libye', tz:'Africa/Tripoli' },
-  { code:'+261', flag:'🇲🇬', name:'Madagascar', tz:'Indian/Antananarivo' },
-  { code:'+265', flag:'🇲🇼', name:'Malawi', tz:'Africa/Blantyre' },
   { code:'+223', flag:'🇲🇱', name:'Mali', tz:'Africa/Bamako' },
-  { code:'+212', flag:'🇲🇦', name:'Maroc', tz:'Africa/Casablanca' },
-  { code:'+230', flag:'🇲🇺', name:'Maurice', tz:'Indian/Mauritius' },
-  { code:'+222', flag:'🇲🇷', name:'Mauritanie', tz:'Africa/Nouakchott' },
-  { code:'+258', flag:'🇲🇿', name:'Mozambique', tz:'Africa/Maputo' },
-  { code:'+264', flag:'🇳🇦', name:'Namibie', tz:'Africa/Windhoek' },
   { code:'+227', flag:'🇳🇪', name:'Niger', tz:'Africa/Niamey' },
-  { code:'+234', flag:'🇳🇬', name:'Nigeria', tz:'Africa/Lagos' },
-  { code:'+256', flag:'🇺🇬', name:'Ouganda', tz:'Africa/Kampala' },
-  { code:'+250', flag:'🇷🇼', name:'Rwanda', tz:'Africa/Kigali' },
-  { code:'+239', flag:'🇸🇹', name:'Sao Tomé-et-Principe', tz:'Africa/Sao_Tome' },
+  { code:'+243', flag:'🇨🇩', name:'RD Congo', tz:'Africa/Kinshasa' },
   { code:'+221', flag:'🇸🇳', name:'Sénégal', tz:'Africa/Dakar' },
-  { code:'+248', flag:'🇸🇨', name:'Seychelles', tz:'Indian/Mahe' },
-  { code:'+232', flag:'🇸🇱', name:'Sierra Leone', tz:'Africa/Freetown' },
-  { code:'+252', flag:'🇸🇴', name:'Somalie', tz:'Africa/Mogadishu' },
-  { code:'+249', flag:'🇸🇩', name:'Soudan', tz:'Africa/Khartoum' },
-  { code:'+211', flag:'🇸🇸', name:'Soudan du Sud', tz:'Africa/Juba' },
-  { code:'+255', flag:'🇹🇿', name:'Tanzanie', tz:'Africa/Dar_es_Salaam' },
-  { code:'+235', flag:'🇹🇩', name:'Tchad', tz:'Africa/Ndjamena' },
   { code:'+228', flag:'🇹🇬', name:'Togo', tz:'Africa/Lome' },
-  { code:'+216', flag:'🇹🇳', name:'Tunisie', tz:'Africa/Tunis' },
-  { code:'+260', flag:'🇿🇲', name:'Zambie', tz:'Africa/Lusaka' },
-  { code:'+263', flag:'🇿🇼', name:'Zimbabwe', tz:'Africa/Harare' },
-  { code:'+27',  flag:'🇿🇦', name:'Afrique du Sud', tz:'Africa/Johannesburg' },
 ];
 
 // Devine le pays du visiteur à partir du fuseau horaire de son téléphone —
@@ -4141,9 +4118,11 @@ async function loadPaymentsHistory() {
 async function saveShop() {
   S.shop.name = document.getElementById('sh-name').value || S.shop.name;
   S.shop.wa = getPhoneValue('sh-wa');
+  S.shop.currency = (document.getElementById('sh-currency')||{value:null}).value || S.shop.currency || 'FCFA';
   S.shop.domain = document.getElementById('sh-domain').value;
   await Store.set('shop_'+ownerId(), S.shop);
   updateLink();
+  updateCurrencyLabels();
   toast('Boutique mise à jour ✓');
 }
 
@@ -4778,7 +4757,7 @@ function renderProds() {
       <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
       <div class="prod-info">
         <div class="prod-name">${esc(p.name)}</div>
-        <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} FCFA</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></div>
+        <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} ${CUR()}</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} ${CUR()}</strong></div>
         ${p.vars&&p.vars.length?`<div class="prod-vars">Variantes : ${p.vars.map(v=>(typeof v==='string')?v:v.name).join(', ')}</div>`:''}
         <div class="prod-stock">Stock : <strong>${p.qtyAvail}</strong> dispo · ${p.qtySold||0} vendus</div>
       </div>
@@ -4844,7 +4823,7 @@ async function openPublicShopBySlug(route) {
     id: shop.id, name: shop.shop_name, ann: shop.ann, anns: shop.anns||[], wa: shop.wa,
     domain: shop.domain, blocked: shop.blocked, logoUrl: shop.logo_url, slug: shop.slug,
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
-    badge: shop.badge, appearance: shop.appearance || {}
+    badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA'
   };
   S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
@@ -4968,8 +4947,8 @@ function previewShop(prodId, isPublic) {
       <div>
         <div class="p-name-big">${esc(p.name)}</div>
         <div class="p-prices">
-          <span class="p-new">${(+p.newP||0).toLocaleString()} FCFA</span>
-          ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString()} FCFA</span>`:''}
+          <span class="p-new">${(+p.newP||0).toLocaleString()} ${CUR()}</span>
+          ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString()} ${CUR()}</span>`:''}
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
         ${varsHtml}
@@ -4985,7 +4964,7 @@ function previewShop(prodId, isPublic) {
               <button class="qty-btn" onclick="chQty(1)">+</button>
             </div>
           </div>
-          <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} FCFA</span></div>
+          <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span></div>
           <div id="prod-offers-box"></div>
           <div class="sec-lbl">📍 Informations de livraison</div>
           <div class="fgrp"><label>Secteur de livraison (facultatif)</label>
@@ -5003,7 +4982,7 @@ function previewShop(prodId, isPublic) {
           <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
         </div>
       </div>
-          <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} FCFA</span> à la livraison</button>
+          <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span> à la livraison</button>
         </div>
       </div>
     </div>
@@ -5518,7 +5497,7 @@ function renderDeliveryZones() {
     <div class="promo-card">
       <div class="promo-card-hdr">
         <div class="promo-card-name">${z.sector}</div>
-        <div style="font-weight:700;color:${z.is_free ? 'var(--green)' : 'var(--ink)'}">${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString() + ' FCFA'}</div>
+        <div style="font-weight:700;color:${z.is_free ? 'var(--green)' : 'var(--ink)'}">${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString() + ' ' + CUR()}</div>
       </div>
       <div class="promo-card-actions">
         <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="editDeliveryZone('${z.id}')">✏️ Modifier</button>
@@ -5637,7 +5616,7 @@ function productCardHtml(p) {
       <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0" loading="lazy" decoding="async">`:'🛍️'}</div>
       <div class="shh-prod-name">${esc(p.name)}</div>
       <div class="shh-prod-prices">
-        <span class="shh-prod-new">${(+p.newP).toLocaleString()} FCFA</span>
+        <span class="shh-prod-new">${(+p.newP).toLocaleString()} ${CUR()}</span>
         ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString()}</span>` : ''}
       </div>
     </div>`;
@@ -5669,7 +5648,7 @@ function marketplaceCardHtml(row) {
         <div class="mkt-card-name">${esc(p.name) || ''}</div>
         <div class="mkt-card-shop">${esc(row.shop_name) || ''}</div>
         <div class="mkt-card-prices">
-          <span class="mkt-card-new">${(+p.newP||0).toLocaleString()} FCFA</span>
+          <span class="mkt-card-new">${(+p.newP||0).toLocaleString()} ${esc(row.currency)||'FCFA'}</span>
           ${p.oldP && +p.oldP > +p.newP ? `<span class="mkt-card-old">${(+p.oldP).toLocaleString()}</span>` : ''}
         </div>
       </div>
@@ -5876,7 +5855,7 @@ function renderClientOrders(rows) {
     return `<div class="mkt-order-card">
       <div>
         <div class="mkt-order-name">${esc(o.prodName) || 'Produit'} · <span class="mkt-order-shop">${esc(r.shop_name) || ''}</span></div>
-        <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString()} FCFA</strong></div>
+        <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString()} ${esc(o.currency)||'FCFA'}</strong></div>
         ${waLink ? `<a href="${esc(waLink)}" target="_blank" rel="noopener" class="mkt-order-contact">📲 Contacter ${esc(r.shop_name) || 'le marchand'}</a>` : ''}
         <div><a onclick="openReportFromOrder(${idx})" style="font-size:11.5px;color:#8B95AD;text-decoration:underline;cursor:pointer;display:inline-block;margin-top:6px">🚩 Signaler ce marchand</a></div>
       </div>
@@ -6180,7 +6159,7 @@ function openOrder() {
   const p = S.curProd; if (!p) return;
   S.orderQty = 1;
   document.getElementById('pp-qty').textContent = 1;
-  document.getElementById('pp-sum').innerHTML = `<strong>${esc(p.name)}</strong><br>${p.newP.toLocaleString()} FCFA / unité`;
+  document.getElementById('pp-sum').innerHTML = `<strong>${esc(p.name)}</strong><br>${p.newP.toLocaleString()} ${CUR()} / unité`;
   const ppv = document.getElementById('pp-vars');
   if (p.vars&&p.vars.length) {
     ppv.innerHTML = p.vars.map((v,i)=>{ const vName=(typeof v==='string')?v:v.name; return `<button class="vbtn ${i===0?'on':''}" onclick="selPopVar(this,'${escJs(vName)}')">${esc(vName)}</button>`; }).join('');
@@ -6312,8 +6291,8 @@ function updTotal() {
   const productTotal = Math.round(unitPrice*S.orderQty);
   const deliveryFee = getSelectedDeliveryFee(); // null si aucun secteur choisi, sinon un nombre (0 = gratuite)
   const grandTotal = productTotal + (deliveryFee || 0);
-  document.getElementById('pp-total').textContent = grandTotal.toLocaleString()+' FCFA';
-  document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString()+' FCFA';
+  document.getElementById('pp-total').textContent = grandTotal.toLocaleString()+' '+CUR();
+  document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString()+' '+CUR();
 
   // Détail Produit / Livraison, affiché seulement une fois un secteur choisi
   document.querySelectorAll('[id="or-delivery-summary"]').forEach(box => {
@@ -6321,8 +6300,8 @@ function updTotal() {
     box.style.display = '';
     const priceEl = box.querySelector('#or-product-price');
     const feeEl = box.querySelector('#or-delivery-fee');
-    if (priceEl) priceEl.textContent = productTotal.toLocaleString()+' FCFA';
-    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'Gratuite' : deliveryFee.toLocaleString()+' FCFA';
+    if (priceEl) priceEl.textContent = productTotal.toLocaleString()+' '+CUR();
+    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'Gratuite' : deliveryFee.toLocaleString()+' '+CUR();
   });
 }
 
@@ -6331,7 +6310,7 @@ function updTotal() {
 function populateDeliverySectorSelects() {
   const zones = S.deliveryZonesPublic || [];
   const optsHtml = '<option value="">Sélectionnez votre secteur…</option>' + zones.map(z =>
-    `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString()+' FCFA'}</option>`
+    `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString()+' '+CUR()}</option>`
   ).join('');
   document.querySelectorAll('[id="or-sector"]').forEach(sel => { sel.innerHTML = optsHtml; });
 }
@@ -6364,7 +6343,7 @@ async function notifyOwnerNewOrder(orderData) {
   // Le push touche déjà tous les appareils abonnés sur cet owner_id, gérants
   // inclus (chacun a son propre abonnement, même owner_id, endpoint différent).
   sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
-    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} FCFA`);
+    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} ${orderData.currency||'FCFA'}`);
 
   const basePayload = {
     shopName: null, // rempli plus bas une fois connu
@@ -6460,7 +6439,7 @@ async function submitOrder() {
   const productTotal = Math.round(unitPrice*S.orderQty);
   const total = productTotal + deliveryFee;
   const varL=S.selVariant?` — ${S.selVariant}`:'';
-  const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, secteur:sectorName, deliveryFee, qty:S.orderQty, unitP:p.newP, total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
+  const orderData={ id:'o_'+Date.now()+'_'+Math.floor(Math.random()*10000), prodId:p.id, prodName:p.name+varL, prenom, ville, qrt, tel, secteur:sectorName, deliveryFee, qty:S.orderQty, unitP:p.newP, currency: CUR(), total, offerApplied: offerPercent>0?`${S.orderQty} acheté(s) — ${offerPercent}% de réduction`:null, date:new Date().toLocaleDateString('fr-FR'), createdAt:new Date().toISOString(), status:'attente' };
   // Insertion directe et ciblée : ne touche jamais aux autres commandes déjà enregistrées.
   // Pas de relecture après insertion (.select()) : un client anonyme n'a pas le droit
   // de relire les commandes (règle de sécurité réservée au propriétaire de la boutique).
@@ -6574,7 +6553,7 @@ function renderCmds() {
     const actions=o.status==='attente'
       ?`<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
       :o.status==='livree'?`<button class="bw" onclick="sendReceipt('${o.id}')">📲 Reçu WhatsApp</button>`:'';
-    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} FCFA</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} FCFA livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
+    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} ${esc(o.currency)||'FCFA'} livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
   }).join('');
   list.innerHTML=html;
   if(ov) ov.innerHTML=html;
@@ -6663,7 +6642,7 @@ function sendReceipt(id) {
     `Votre commande a été livrée avec succès !\n\n`+
     `📦 Produit : ${o.prodName}\n`+
     `🔢 Quantité : ${o.qty}\n`+
-    `💰 Montant payé : ${o.total.toLocaleString()} FCFA\n`+
+    `💰 Montant payé : ${o.total.toLocaleString()} ${o.currency||'FCFA'}\n`+
     `📅 Date : ${o.date}\n\n`+
     `Merci pour votre confiance ! 🙏\n— ${shopName}`
   );
@@ -6706,7 +6685,7 @@ function renderStock() {
     const m=p.newP-(p.buyP||0); const ben=m*(p.qtySold||0);
     const sc=p.qtyAvail===0?'b-red':p.qtyAvail<5?'b-yellow':'b-green';
     const st=p.qtyAvail===0?'Épuisé':p.qtyAvail<5?'Stock bas':'En stock';
-    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString()+' FCFA':'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString()+' FCFA':'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString()+' FCFA':'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
+    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString()+' '+CUR():'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString()} ${CUR()}</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString()+' '+CUR():'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString()+' '+CUR():'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
   }).join('');
 }
 
@@ -6718,8 +6697,8 @@ function updateStats() {
   const ca=done.reduce((s,o)=>s+o.total,0);
   const ben=done.reduce((s,o)=>{ const p=S.products.find(x=>x.id===o.prodId); return s+(p&&p.buyP?(p.newP-p.buyP)*o.qty:0); },0);
   document.getElementById('st-cmds').textContent=S.orders.length;
-  document.getElementById('st-ca').textContent=ca.toLocaleString()+' FCFA';
-  document.getElementById('st-ben').textContent=ben.toLocaleString()+' FCFA';
+  document.getElementById('st-ca').textContent=ca.toLocaleString()+' '+CUR();
+  document.getElementById('st-ben').textContent=ben.toLocaleString()+' '+CUR();
   document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length + '+');
 }
 
@@ -7147,12 +7126,12 @@ function renderShopClients() {
       <div class="cat-card-hdr">
         <div>
           <div class="cat-card-name">${c.prenom} · ${c.tel}</div>
-          <div class="cat-card-count">${c.ville}, ${c.qrt} · ${c.orders.length} commande(s) · ${total.toLocaleString()} FCFA · Dernière commande : ${formatOrderDateTime(lastOrder)}</div>
+          <div class="cat-card-count">${c.ville}, ${c.qrt} · ${c.orders.length} commande(s) · ${total.toLocaleString()} ${CUR()} · Dernière commande : ${formatOrderDateTime(lastOrder)}</div>
         </div>
       </div>
       <div class="tbl-wrap" style="margin-top:10px">
         <table><thead><tr><th>Produit</th><th>Qté</th><th>Total</th><th>Date et heure</th><th>Statut</th></tr></thead><tbody>
-        ${c.orders.map(o => `<tr><td>${esc(o.prodName)}</td><td>${o.qty}</td><td>${o.total.toLocaleString()} FCFA</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
+        ${c.orders.map(o => `<tr><td>${esc(o.prodName)}</td><td>${o.qty}</td><td>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
         </tbody></table>
       </div>
     </div>`;
