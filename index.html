@@ -1789,6 +1789,17 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ADMIN_UID = '51f865a0-0231-4bf9-8828-3d793e0ad06a';
 
 // ═══════════════════════════════════════════════
+// PROTECTION XSS (additif — v98)
+// Neutralise tout code malveillant qu'un utilisateur tenterait de glisser
+// dans un nom de produit, une description, un avis, etc. Les textes normaux
+// s'affichent à l'identique ; seuls les caractères HTML dangereux sont convertis.
+// ═══════════════════════════════════════════════
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Variante pour les chaînes insérées dans un attribut onclick="fn('...')" :
+// échappe les caractères qui casseraient la chaîne JavaScript ou l'attribut HTML.
+function escJs(s){ return (s==null?'':String(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'\\u003c').replace(/>/g,'\\u003e'); }
+
+// ═══════════════════════════════════════════════
 // STORAGE PERSISTANT — connecté à Supabase
 // Garde la même interface (get/set/del) que l'ancienne version
 // pour que tout le reste du code fonctionne sans modification.
@@ -2347,10 +2358,10 @@ async function renderAdminReviews() {
   list.innerHTML = reviews.map(r => `
     <div class="review-card">
       <div class="review-card-hdr">
-        <span class="review-card-name">${r.shop_name}</span>
+        <span class="review-card-name">${esc(r.shop_name)}</span>
         <span class="review-card-stars">${starsHtml(r.rating)}</span>
       </div>
-      ${r.comment ? `<div class="review-card-comment">${r.comment}</div>` : ''}
+      ${r.comment ? `<div class="review-card-comment">${esc(r.comment)}</div>` : ''}
       <div class="review-card-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
       <button class="btn btn-sm" style="background:var(--red-l);color:var(--red);margin-top:8px" onclick="deleteReview('${r.id}')">🗑️ Supprimer</button>
     </div>`).join('');
@@ -2400,22 +2411,22 @@ function renderAdminReports(reports) {
     <div class="review-card" style="text-align:left">
       <div class="review-card-hdr" style="align-items:flex-start">
         <div>
-          <span class="review-card-name">${r.shop_name || 'Boutique inconnue'}</span>
-          <div style="font-size:12px;color:var(--gray);margin-top:2px">${r.merchant_email || ''}</div>
+          <span class="review-card-name">${esc(r.shop_name) || 'Boutique inconnue'}</span>
+          <div style="font-size:12px;color:var(--gray);margin-top:2px">${esc(r.merchant_email) || ''}</div>
         </div>
         <span class="badge b-red">${r.total_reports_for_merchant} signalement${r.total_reports_for_merchant>1?'s':''} au total</span>
       </div>
       <div style="font-size:13px;margin-top:8px"><strong>Produit concerné :</strong> ${r.product_name || '—'}</div>
       <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.reason] || r.reason}</div>
-      ${r.message ? `<div class="review-card-comment" style="margin-top:6px">${r.message}</div>` : ''}
+      ${r.message ? `<div class="review-card-comment" style="margin-top:6px">${esc(r.message)}</div>` : ''}
       ${r.proof_image ? `<img src="${r.proof_image}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}
       <div style="font-size:12px;color:var(--gray);margin-top:8px;line-height:1.6">
-        Signalé par : <strong>${r.reporter_name}</strong> · ${r.reporter_email}${r.reporter_phone?' · '+r.reporter_phone:''}<br>
+        Signalé par : <strong>${esc(r.reporter_name)}</strong> · ${esc(r.reporter_email)}${r.reporter_phone?' · '+esc(r.reporter_phone):''}<br>
         ${new Date(r.created_at).toLocaleDateString('fr-FR')} · Statut : ${r.status === 'traite' ? '✅ Traité' : '🆕 Nouveau'}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
         <button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="viewMerchantFromReport(${idx})">👁 Voir le marchand</button>
-        ${r.merchant_email?`<a class="btn btn-sm" style="background:var(--gray-l);color:var(--ink2);text-decoration:none" href="mailto:${r.merchant_email}">✉️ Contacter</a>`:''}
+        ${r.merchant_email?`<a class="btn btn-sm" style="background:var(--gray-l);color:var(--ink2);text-decoration:none" href="mailto:${esc(r.merchant_email)}">✉️ Contacter</a>`:''}
         <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="adminReportAction(${idx},'avertissement')">⚠️ Avertir</button>
         <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="adminReportAction(${idx},'suspension_temp')">⏸ Suspendre</button>
         <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="adminReportAction(${idx},'blocage_definitif')">🚫 Bloquer définitivement</button>
@@ -3864,10 +3875,10 @@ async function loadReviews() {
   list.innerHTML = reviews.map(r => `
     <div class="review-card">
       <div class="review-card-hdr">
-        <span class="review-card-name">${r.shop_name}</span>
+        <span class="review-card-name">${esc(r.shop_name)}</span>
         <span class="review-card-stars">${starsHtml(r.rating)}</span>
       </div>
-      ${r.comment ? `<div class="review-card-comment">${r.comment}</div>` : ''}
+      ${r.comment ? `<div class="review-card-comment">${esc(r.comment)}</div>` : ''}
       <div class="review-card-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
     </div>`).join('');
 }
@@ -4107,7 +4118,7 @@ async function loadAdminPaymentsHistory() {
     data.map(p => {
       const d = new Date(p.created_at);
       const shopName = shopNameById[p.owner_id] || '—';
-      return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${shopName}</td><td>${p.provider}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
+      return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(shopName)}</td><td>${p.provider}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
 }
@@ -4416,8 +4427,8 @@ async function loadAdminEmpreinte() {
     <div style="text-align:center;position:relative;width:92px">
       <img src="${m.photo_url}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid var(--border)">
       <button onclick="deleteEmpreinte(${idx})" style="position:absolute;top:-4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:11px;cursor:pointer;line-height:1">✕</button>
-      <div style="font-size:11px;font-weight:600;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
-      <div style="font-size:10px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.title}</div>
+      <div style="font-size:11px;font-weight:600;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</div>
+      <div style="font-size:10px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.title)}</div>
     </div>`).join('');
 }
 
@@ -4532,7 +4543,7 @@ function editProduct(id) {
     const uid = 'v_'+Date.now()+Math.floor(Math.random()*10000);
     const d = document.createElement('div');
     d.className = 'var-row';
-    d.innerHTML = `<input value="${vName}">
+    d.innerHTML = `<input value="${esc(vName)}">
       <input type="file" accept="image/*" style="display:none" id="${uid}" onchange="handleVarImg(this,'${uid}')">
       <button type="button" class="btn-del-v" style="background:var(--blue-l);color:var(--blue)" onclick="document.getElementById('${uid}').click()" title="Image de la variante">${vImg?'✅':'🖼️'}</button>
       <button class="btn-del-v" onclick="this.parentElement.remove()">×</button>`;
@@ -4766,7 +4777,7 @@ function renderProds() {
     <div class="prod-card">
       <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
       <div class="prod-info">
-        <div class="prod-name">${p.name}</div>
+        <div class="prod-name">${esc(p.name)}</div>
         <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} FCFA</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></div>
         ${p.vars&&p.vars.length?`<div class="prod-vars">Variantes : ${p.vars.map(v=>(typeof v==='string')?v:v.name).join(', ')}</div>`:''}
         <div class="prod-stock">Stock : <strong>${p.qtyAvail}</strong> dispo · ${p.qtySold||0} vendus</div>
@@ -4946,7 +4957,7 @@ function previewShop(prodId, isPublic) {
   const varsHtml = p.vars&&p.vars.length ? `<div class="vars-sec"><div class="vars-lbl">Variante :</div><div class="vars-row">${p.vars.map((v,i)=>{
     const vName = (typeof v === 'string') ? v : v.name;
     const vImg = (typeof v === 'string') ? '' : (v.image||'');
-    return `<button class="vbtn" onclick="selVar(this,'${vName.replace(/'/g,"\\'")}','${vImg}')">${vName}</button>`;
+    return `<button class="vbtn" onclick="selVar(this,'${escJs(vName)}','${escJs(vImg)}')">${esc(vName)}</button>`;
   }).join('')}</div></div>` : '';
   area.innerHTML = `
     <div class="prod-grid">
@@ -4955,14 +4966,14 @@ function previewShop(prodId, isPublic) {
         <div class="pthumbs">${thumbs}</div>
       </div>
       <div>
-        <div class="p-name-big">${p.name}</div>
+        <div class="p-name-big">${esc(p.name)}</div>
         <div class="p-prices">
           <span class="p-new">${(+p.newP||0).toLocaleString()} FCFA</span>
           ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString()} FCFA</span>`:''}
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
         ${varsHtml}
-        ${p.desc?`<div class="p-desc">${p.desc}</div>`:''}
+        ${p.desc?`<div class="p-desc">${esc(p.desc)}</div>`:''}
         ${renderProductSections(p.sections)}
 
         <div class="quick-order-box">
@@ -5049,10 +5060,10 @@ async function loadProductReviews(productId) {
   listEl.innerHTML = reviews.map(r => `
     <div class="review-card">
       <div class="review-card-hdr">
-        <span class="review-card-name">${r.client_name}</span>
+        <span class="review-card-name">${esc(r.client_name)}</span>
         <span class="review-card-stars">${starsHtml(r.rating)}</span>
       </div>
-      ${r.comment ? `<div class="review-card-comment">${r.comment}</div>` : ''}
+      ${r.comment ? `<div class="review-card-comment">${esc(r.comment)}</div>` : ''}
       <div class="review-card-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
     </div>`).join('');
 }
@@ -5120,7 +5131,7 @@ function showCatForm(catId) {
     picker.innerHTML = S.products.map(p => `
       <label class="cat-prod-item">
         <input type="checkbox" value="${p.id}" ${selected.includes(p.id)?'checked':''}>
-        ${p.name}
+        ${esc(p.name)}
       </label>`).join('');
   }
   document.getElementById('cat-form').scrollIntoView({ behavior:'smooth' });
@@ -5174,7 +5185,7 @@ function renderCategories() {
   list.innerHTML = S.categories.map(c => `
     <div class="cat-card">
       <div class="cat-card-hdr">
-        <div><div class="cat-card-name">${c.name}</div><div class="cat-card-count">${(c.product_ids||[]).length} produit(s)</div></div>
+        <div><div class="cat-card-name">${esc(c.name)}</div><div class="cat-card-count">${(c.product_ids||[]).length} produit(s)</div></div>
         <div class="cat-card-actions">
           <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="showCatForm('${c.id}')">✏️</button>
           <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteCategory('${c.id}')">🗑️</button>
@@ -5211,7 +5222,7 @@ function showPromoForm(offerId) {
     picker.innerHTML = S.products.map(p => `
       <label class="cat-prod-item">
         <input type="checkbox" value="${p.id}" ${selectedProds.includes(p.id)?'checked':''}>
-        ${p.name}
+        ${esc(p.name)}
       </label>`).join('');
   }
 
@@ -5450,7 +5461,7 @@ function renderPromoOffers() {
     return `
     <div class="promo-card">
       <div class="promo-card-hdr">
-        <div class="promo-card-name">${o.name}</div>
+        <div class="promo-card-name">${esc(o.name)}</div>
         <div class="promo-toggle ${o.active?'on':''}" onclick="togglePromoActive('${o.id}',${!o.active})"></div>
       </div>
       <div class="promo-card-dates">📅 ${dates} · ${(o.product_ids||[]).length} produit(s) concerné(s)</div>
@@ -5624,7 +5635,7 @@ function productCardHtml(p) {
   return `
     <div class="shh-prod-card" onclick="goToProductFromGrid('${p.id}')">
       <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0" loading="lazy" decoding="async">`:'🛍️'}</div>
-      <div class="shh-prod-name">${p.name}</div>
+      <div class="shh-prod-name">${esc(p.name)}</div>
       <div class="shh-prod-prices">
         <span class="shh-prod-new">${(+p.newP).toLocaleString()} FCFA</span>
         ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString()}</span>` : ''}
@@ -5651,12 +5662,12 @@ function marketplaceCardHtml(row) {
   const prodSlug = p.slug || (slugify(p.name || 'produit') + '-' + String(p.id || '').slice(-4));
   const isFav = S.clientFavoriteIds && S.clientFavoriteIds.has(row.id);
   return `
-    <div class="mkt-card" onclick="goToMarketplaceProduct('${row.shop_slug}','${prodSlug}')">
-      <button class="mkt-heart ${isFav?'on':''}" onclick="toggleFavorite(event,'${row.id}')">${isFav?'❤️':'🤍'}</button>
-      ${img ? `<img src="${img}" class="mkt-card-img" loading="lazy" decoding="async">` : `<div class="mkt-card-img-ph">🛍️</div>`}
+    <div class="mkt-card" onclick="goToMarketplaceProduct('${escJs(row.shop_slug)}','${escJs(prodSlug)}')">
+      <button class="mkt-heart ${isFav?'on':''}" onclick="toggleFavorite(event,'${escJs(row.id)}')">${isFav?'❤️':'🤍'}</button>
+      ${img ? `<img src="${esc(img)}" class="mkt-card-img" loading="lazy" decoding="async">` : `<div class="mkt-card-img-ph">🛍️</div>`}
       <div class="mkt-card-body">
-        <div class="mkt-card-name">${p.name || ''}</div>
-        <div class="mkt-card-shop">${row.shop_name || ''}</div>
+        <div class="mkt-card-name">${esc(p.name) || ''}</div>
+        <div class="mkt-card-shop">${esc(row.shop_name) || ''}</div>
         <div class="mkt-card-prices">
           <span class="mkt-card-new">${(+p.newP||0).toLocaleString()} FCFA</span>
           ${p.oldP && +p.oldP > +p.newP ? `<span class="mkt-card-old">${(+p.oldP).toLocaleString()}</span>` : ''}
@@ -5864,9 +5875,9 @@ function renderClientOrders(rows) {
     const waLink = r.shop_wa ? `https://wa.me/${String(r.shop_wa).replace(/[^0-9]/g,'')}` : null;
     return `<div class="mkt-order-card">
       <div>
-        <div class="mkt-order-name">${o.prodName || 'Produit'} · <span class="mkt-order-shop">${r.shop_name || ''}</span></div>
+        <div class="mkt-order-name">${esc(o.prodName) || 'Produit'} · <span class="mkt-order-shop">${esc(r.shop_name) || ''}</span></div>
         <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString()} FCFA</strong></div>
-        ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="mkt-order-contact">📲 Contacter ${r.shop_name || 'le marchand'}</a>` : ''}
+        ${waLink ? `<a href="${esc(waLink)}" target="_blank" rel="noopener" class="mkt-order-contact">📲 Contacter ${esc(r.shop_name) || 'le marchand'}</a>` : ''}
         <div><a onclick="openReportFromOrder(${idx})" style="font-size:11.5px;color:#8B95AD;text-decoration:underline;cursor:pointer;display:inline-block;margin-top:6px">🚩 Signaler ce marchand</a></div>
       </div>
       <span class="mkt-badge ${o.status||'attente'}">${statusLabels[o.status]||o.status||'En attente'}</span>
@@ -6078,7 +6089,7 @@ function renderPublicCatalogue() {
     list.innerHTML = S.categories.map(c => {
       const count = (c.product_ids||[]).length;
       return `<div class="shh-cat-card" onclick="goToCategory('${c.slug}')">
-        <div><div class="shh-cat-name">${c.name}</div><div class="shh-cat-count">${count} produit${count>1?'s':''}</div></div>
+        <div><div class="shh-cat-name">${esc(c.name)}</div><div class="shh-cat-count">${count} produit${count>1?'s':''}</div></div>
         <span>→</span>
       </div>`;
     }).join('');
@@ -6169,10 +6180,10 @@ function openOrder() {
   const p = S.curProd; if (!p) return;
   S.orderQty = 1;
   document.getElementById('pp-qty').textContent = 1;
-  document.getElementById('pp-sum').innerHTML = `<strong>${p.name}</strong><br>${p.newP.toLocaleString()} FCFA / unité`;
+  document.getElementById('pp-sum').innerHTML = `<strong>${esc(p.name)}</strong><br>${p.newP.toLocaleString()} FCFA / unité`;
   const ppv = document.getElementById('pp-vars');
   if (p.vars&&p.vars.length) {
-    ppv.innerHTML = p.vars.map((v,i)=>{ const vName=(typeof v==='string')?v:v.name; return `<button class="vbtn ${i===0?'on':''}" onclick="selPopVar(this,'${vName.replace(/'/g,"\\'")}')">${vName}</button>`; }).join('');
+    ppv.innerHTML = p.vars.map((v,i)=>{ const vName=(typeof v==='string')?v:v.name; return `<button class="vbtn ${i===0?'on':''}" onclick="selPopVar(this,'${escJs(vName)}')">${esc(vName)}</button>`; }).join('');
     ppv.parentElement.style.display='block';
   } else { ppv.parentElement.style.display='none'; }
   updTotal();
@@ -6188,10 +6199,10 @@ async function showProdReviewsModal(prodId) {
     list.innerHTML = reviews.map(r => `
       <div class="review-card">
         <div class="review-card-hdr">
-          <span class="review-card-name">${r.client_name}</span>
+          <span class="review-card-name">${esc(r.client_name)}</span>
           <span class="review-card-stars">${starsHtml(r.rating)}</span>
         </div>
-        ${r.comment ? `<div class="review-card-comment">${r.comment}</div>` : ''}
+        ${r.comment ? `<div class="review-card-comment">${esc(r.comment)}</div>` : ''}
         <div class="review-card-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
         <button class="btn btn-sm" style="background:var(--red-l);color:var(--red);margin-top:8px" onclick="deleteProdReview('${r.id}','${prodId}')">🗑️ Supprimer</button>
       </div>`).join('');
@@ -6563,7 +6574,7 @@ function renderCmds() {
     const actions=o.status==='attente'
       ?`<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
       :o.status==='livree'?`<button class="bw" onclick="sendReceipt('${o.id}')">📲 Reçu WhatsApp</button>`:'';
-    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${o.prenom} · ${o.prodName}</div><div class="cmd-detail">${o.ville}, ${o.qrt}${o.secteur?` · 📍 ${o.secteur}`:''} · ${o.tel}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} FCFA</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} FCFA livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${o.validatedBy}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
+    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} FCFA</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} FCFA livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
   }).join('');
   list.innerHTML=html;
   if(ov) ov.innerHTML=html;
@@ -6695,7 +6706,7 @@ function renderStock() {
     const m=p.newP-(p.buyP||0); const ben=m*(p.qtySold||0);
     const sc=p.qtyAvail===0?'b-red':p.qtyAvail<5?'b-yellow':'b-green';
     const st=p.qtyAvail===0?'Épuisé':p.qtyAvail<5?'Stock bas':'En stock';
-    return `<tr><td><strong>${p.name}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString()+' FCFA':'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString()+' FCFA':'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString()+' FCFA':'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
+    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString()+' FCFA':'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString()} FCFA</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString()+' FCFA':'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString()+' FCFA':'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
   }).join('');
 }
 
@@ -6800,30 +6811,8 @@ function drawBarChart(canvasId, data, labels, colors) {
   });
 }
 
-function drawLineChart(canvasId, labels, data, color) {
-  const canvas=document.getElementById(canvasId);
-  if(!canvas) return;
-  const ctx=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth||600; canvas.height=180;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(!data.length) return;
-  const pad=50; const max=Math.max(...data,1);
-  const pts=data.map((v,i)=>({ x:pad+(i/(data.length-1||1))*(canvas.width-pad*2), y:(canvas.height-40)-(v/max)*(canvas.height-60) }));
-  // Ligne
-  ctx.strokeStyle=color; ctx.lineWidth=2.5;
-  ctx.beginPath(); pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
-  // Fill
-  ctx.fillStyle=color+'22';
-  ctx.beginPath(); ctx.moveTo(pts[0].x,canvas.height-40); pts.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.lineTo(pts[pts.length-1].x,canvas.height-40); ctx.closePath(); ctx.fill();
-  // Points & labels
-  pts.forEach((p,i)=>{
-    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#333'; ctx.font='bold 11px Inter,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(data[i].toLocaleString(),p.x,p.y-10);
-    ctx.fillStyle='#888'; ctx.font='10px Inter,sans-serif';
-    ctx.fillText(labels[i],p.x,canvas.height-20);
-  });
-}
+// (v98) L'ancienne version canvas de drawLineChart a été retirée :
+// c'est désormais la version Chart.js (premium) définie plus haut qui s'exécute.
 
 // ═══════════════════════════════════════════════
 // GÉRANT
@@ -7163,7 +7152,7 @@ function renderShopClients() {
       </div>
       <div class="tbl-wrap" style="margin-top:10px">
         <table><thead><tr><th>Produit</th><th>Qté</th><th>Total</th><th>Date et heure</th><th>Statut</th></tr></thead><tbody>
-        ${c.orders.map(o => `<tr><td>${o.prodName}</td><td>${o.qty}</td><td>${o.total.toLocaleString()} FCFA</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
+        ${c.orders.map(o => `<tr><td>${esc(o.prodName)}</td><td>${o.qty}</td><td>${o.total.toLocaleString()} FCFA</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
         </tbody></table>
       </div>
     </div>`;
@@ -7183,10 +7172,10 @@ async function renderGerants() {
     <div class="gerant-card">
       <div class="gerant-ava">${(g.name||g.email)[0].toUpperCase()}</div>
       <div class="gerant-info">
-        <div class="gerant-name">${g.name || g.email}</div>
-        <div class="gerant-role">${g.email} · Code : ${g.access_code} · ${g.status === 'pending' ? '⏳ En attente de confirmation' : '🟢 Actif'}</div>
+        <div class="gerant-name">${esc(g.name || g.email)}</div>
+        <div class="gerant-role">${esc(g.email)} · Code : ${g.access_code} · ${g.status === 'pending' ? '⏳ En attente de confirmation' : '🟢 Actif'}</div>
       </div>
-      <button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="showGerantActivity('${g.id}','${g.name||g.email}')">📋 Activité</button>
+      <button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="showGerantActivity('${g.id}','${escJs(g.name||g.email)}')">📋 Activité</button>
       <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="confirmFireGerant('${g.id}')">Licencier</button>
     </div>`).join('');
 }
@@ -7252,8 +7241,8 @@ async function renderAdminClients() {
     const shop=null; // on affiche infos user
     return `<div class="cmd-card">
       <div class="cmd-info">
-        <div class="cmd-name">${u.name}</div>
-        <div class="cmd-detail">${u.email} · ${u.shopName||'—'} · WA: ${u.wa||'—'} · Expire: ${u.expiry||'—'}</div>
+        <div class="cmd-name">${esc(u.name)}</div>
+        <div class="cmd-detail">${esc(u.email)} · ${esc(u.shopName)||'—'} · WA: ${esc(u.wa)||'—'} · Expire: ${u.expiry||'—'}</div>
       </div>
       <span class="badge ${u.blocked?'b-red':'b-green'}">${u.blocked?'Bloqué':'Actif'}</span>
       <div class="cmd-actions">
@@ -7282,8 +7271,8 @@ function renderAdminAbosList(clients) {
   list.innerHTML=clients.map(u=>`
     <div class="cmd-card">
       <div class="cmd-info">
-        <div class="cmd-name">${u.name} — ${u.shopName||'—'}</div>
-        <div class="cmd-detail">Expire le : <strong>${u.expiry||'Non défini'}</strong> · ${u.email}</div>
+        <div class="cmd-name">${esc(u.name)} — ${esc(u.shopName)||'—'}</div>
+        <div class="cmd-detail">Expire le : <strong>${u.expiry||'Non défini'}</strong> · ${esc(u.email)}</div>
       </div>
       <span class="badge ${u.blocked?'b-red':'b-green'}">${u.blocked?'Bloqué':'Actif'}</span>
       <div class="cmd-actions">
@@ -7341,7 +7330,7 @@ async function renderAdminMessages() {
     const isExpireSoon=expiresInDays(u.expiry)<=7;
     return `<div style="display:flex;align-items:center;justify-content:space-between;background:${isExpireSoon?'var(--yellow-l)':'var(--gray-l)'};border-radius:8px;padding:10px 13px;flex-wrap:wrap;gap:8px">
       <div>
-        <span style="font-weight:700;font-size:13px">${u.name}</span>
+        <span style="font-weight:700;font-size:13px">${esc(u.name)}</span>
         <span style="font-size:11px;color:var(--gray);margin-left:8px">Expire: ${u.expiry||'—'}</span>
         ${isExpireSoon?'<span class="badge b-yellow" style="margin-left:6px">⚠️ Bientôt</span>':''}
       </div>
