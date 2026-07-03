@@ -863,6 +863,7 @@ canvas{display:block;}
       </div>
       <button class="btn btn-red btn-w" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-gerant-login')">👤 Gérant</button>
+      <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-livreur-login')">🛵 Livreur</button>
       <div class="auth-switch">Pas de compte ? <a onclick="go('s-register')">Créer une boutique</a></div>
       <div class="auth-admin-link"><a onclick="go('s-admin-login')">Accès administrateur</a></div>
     </div>
@@ -927,6 +928,42 @@ canvas{display:block;}
 </div>
 
 <!-- ═══════════════════════════════════════
+     ESPACE LIVREUR (v100)
+═══════════════════════════════════════ -->
+<div id="s-livreur-login" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <h2>Espace Livreur</h2>
+      <p class="sub">Connectez-vous avec votre numéro et le code reçu de votre marchand</p>
+      <div class="fgrp"><label>Numéro de téléphone</label>
+        <div class="phone-grp">
+          <div class="ctry-sel" id="lv-phone-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('lv-phone-cc')"><span id="lv-phone-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="lv-phone-cc" value="+225"><div class="ctry-sel-dropdown" id="lv-phone-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('lv-phone-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="lv-phone-cc-list"></div></div></div>
+          <input id="lv-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+        </div>
+      </div>
+      <div class="fgrp"><label>Code d'accès</label><input id="lv-code" type="text" placeholder="Code reçu du marchand" onkeydown="if(event.key==='Enter')doLivreurLogin()"></div>
+      <button class="btn btn-blue btn-w" onclick="doLivreurLogin()">Voir mes livraisons</button>
+      <div class="auth-switch"><a onclick="go('s-login')">← Retour</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="s-livreur" class="screen" style="background:var(--bg)">
+  <div style="max-width:640px;margin:0 auto;padding:16px">
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+      <div id="lv-ava" style="width:46px;height:46px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--blue);overflow:hidden;flex-shrink:0">🛵</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800" id="lv-name">Livreur</div>
+        <div style="font-size:12px;color:var(--gray)" id="lv-shop">Boutique</div>
+      </div>
+      <button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="loadLivreurOrders()">🔄</button>
+      <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="livreurLogout()">Quitter</button>
+    </div>
+    <div id="lv-orders"><div class="empty card"><div class="empty-ico">⏳</div><p>Chargement…</p></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
      DASHBOARD COMMERÇANT
 ═══════════════════════════════════════ -->
 <div id="s-dash" class="flex-screen">
@@ -946,6 +983,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
       <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni"><i data-lucide="trending-up"></i></span>Statistiques</div>
       <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni"><i data-lucide="user-cog"></i></span>Gérant</div>
+      <div class="nav-item" onclick="pg('p-livreurs',this)"><span class="ni"><i data-lucide="bike"></i></span>Livreurs</div>
       <div class="nav-item" onclick="pg('p-abo',this)"><span class="ni"><i data-lucide="credit-card"></i></span>Abonnement</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-gerant-notifs',this)"><span class="ni"><i data-lucide="bell"></i></span>Notifications</div>
       <div class="nav-item" onclick="pg('p-aide',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Centre d'aide</div>
@@ -1312,6 +1350,28 @@ canvas{display:block;}
           <div class="card-title">📋 Activité du gérant</div>
           <div id="gerant-activity-body"></div>
         </div>
+      </div>
+
+      <!-- LIVREURS (v100) -->
+      <div class="dash-page" id="p-livreurs">
+        <div class="page-head"><h1>Livreurs</h1><p>Ajoutez vos livreurs et assignez-leur des commandes</p></div>
+        <div class="card">
+          <div class="card-title">➕ Ajouter un livreur</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Le livreur se connectera sur zyntelo.app → « Livreur » avec son numéro et le code que vous choisissez. Il verra uniquement les commandes que vous lui assignez.</p>
+          <div class="fgrp"><label>Nom du livreur *</label><input id="lvf-name" placeholder="Koffi Yao"></div>
+          <div class="fgrp"><label>Numéro de téléphone *</label>
+            <div class="phone-grp">
+              <div class="ctry-sel" id="lvf-phone-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('lvf-phone-cc')"><span id="lvf-phone-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="lvf-phone-cc" value="+225"><div class="ctry-sel-dropdown" id="lvf-phone-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('lvf-phone-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="lvf-phone-cc-list"></div></div></div>
+              <input id="lvf-phone-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
+            </div>
+          </div>
+          <div class="fgrp"><label>Code d'accès (6 caractères minimum) *</label><input id="lvf-code" type="text" placeholder="Ex : KOFFI2026"></div>
+          <div class="fgrp"><label>Photo du livreur</label><input id="lvf-photo" type="file" accept="image/*"></div>
+          <div class="fgrp"><label>Pièce d'identité — recto</label><input id="lvf-id-front" type="file" accept="image/*"></div>
+          <div class="fgrp"><label>Pièce d'identité — verso</label><input id="lvf-id-back" type="file" accept="image/*"></div>
+          <button class="btn btn-blue btn-sm" id="lvf-submit" onclick="addLivreur()">Ajouter le livreur</button>
+        </div>
+        <div id="livreurs-list"></div>
       </div>
 
       <!-- ABONNEMENT -->
@@ -2120,6 +2180,7 @@ function parseRoute() {
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
   if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
   if (parts[0] === 'mes-favoris') return { type: 'client-favorites' };
+  if (parts[0] === 'livreur') return { type: 'livreur' };
   return { type: 'home' };
 }
 
@@ -2191,6 +2252,7 @@ async function init() {
   if (route.type === 'login') go('s-login');
   else if (route.type === 'register') go('s-register');
   else if (route.type === 'admin') go('s-admin-login');
+  else if (route.type === 'livreur') { await resumeLivreurSession(); }
   else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); loadMarketplace('new'); loadMarketplaceBannerStrip(); }
   else if (route.type === 'client-orders') {
     await restoreClientSession(); // s'assure que la session est bien restaurée avant de décider
@@ -2334,6 +2396,7 @@ function pg(pageId, el) {
   if (pageId === 'p-stock') renderStock();
   if (pageId === 'p-stats') renderStats();
   if (pageId === 'p-gerant') renderGerants();
+  if (pageId === 'p-livreurs') renderLivreurs();
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-livraison') { loadDeliveryZones(); startDeliveryZonesRealtimeListener(ownerId()); }
@@ -6551,9 +6614,9 @@ function renderCmds() {
   const html=S.orders.slice().reverse().map(o=>{
     const badge=o.status==='livree'?`<span class="badge b-green">Livrée ✓</span>`:o.status==='annulee'?`<span class="badge b-red">Annulée</span>`:`<span class="badge b-yellow">En attente</span>`;
     const actions=o.status==='attente'
-      ?`<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
+      ?`${!S.isGerant?`<button class="bw" onclick="openAssignLivreur('${o.id}')">🛵 ${o.livreurName?'Réassigner':'Assigner'}</button>`:''}<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
       :o.status==='livree'?`<button class="bw" onclick="sendReceipt('${o.id}')">📲 Reçu WhatsApp</button>`:'';
-    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} ${esc(o.currency)||'FCFA'} livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
+    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} ${esc(o.currency)||'FCFA'} livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}${o.livreurName?`<br>🛵 <span style="color:var(--blue);font-weight:600">Livreur : ${esc(o.livreurName)}</span>`:''}${o.livreurNote&&o.status==='attente'?`<br>⚠️ <span style="color:#B45309">${esc(o.livreurNote)}</span>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
   }).join('');
   list.innerHTML=html;
   if(ov) ov.innerHTML=html;
@@ -7200,6 +7263,204 @@ async function logGerantActivity(type, description, orderInfo) {
     gerant_id: S.gerantRecordId, owner_id: ownerId(), gerant_name: S.user.name || S.user.email,
     type, description, order_info: orderInfo || null
   });
+}
+
+// ═══════════════════════════════════════════════
+// LIVREURS (v100) — côté marchand
+// ═══════════════════════════════════════════════
+async function _lvUpload(inputId, bucket, path) {
+  const input = document.getElementById(inputId);
+  const file = input && input.files && input.files[0];
+  if (!file) return null;
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const full = path + '.' + ext;
+  const { error } = await sb.storage.from(bucket).upload(full, file, { upsert: true });
+  if (error) { console.error('_lvUpload', error); return null; }
+  if (bucket === 'livreurs-docs') return full; // bucket privé : on garde le chemin, pas d'URL publique
+  const { data } = sb.storage.from(bucket).getPublicUrl(full);
+  return data.publicUrl;
+}
+
+async function addLivreur() {
+  const name = document.getElementById('lvf-name').value.trim();
+  const phone = getPhoneValue('lvf-phone');
+  const code = document.getElementById('lvf-code').value.trim();
+  if (!name || !phone) { toast('Nom et numéro obligatoires', 'err'); return; }
+  if (code.length < 6) { toast('Code : 6 caractères minimum', 'err'); return; }
+  const btn = document.getElementById('lvf-submit');
+  btn.disabled = true; btn.textContent = 'Ajout en cours…';
+  try {
+    const ts = Date.now();
+    const photoUrl = await _lvUpload('lvf-photo', 'logos', `livreurs/${ownerId()}/${ts}-photo`);
+    const idFront = await _lvUpload('lvf-id-front', 'livreurs-docs', `${ownerId()}/${ts}-recto`);
+    const idBack  = await _lvUpload('lvf-id-back',  'livreurs-docs', `${ownerId()}/${ts}-verso`);
+    const { error } = await sb.from('shop_livreurs').insert({
+      owner_id: ownerId(), name, phone, access_code: code,
+      photo_url: photoUrl, id_card_front_url: idFront, id_card_back_url: idBack
+    });
+    if (error) {
+      toast(error.message.includes('duplicate') ? 'Ce numéro utilise déjà ce code.' : 'Erreur : ' + error.message, 'err');
+      return;
+    }
+    ['lvf-name','lvf-code','lvf-phone-num','lvf-photo','lvf-id-front','lvf-id-back'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    toast('Livreur ajouté ✓ Transmettez-lui son code');
+    renderLivreurs();
+  } finally { btn.disabled = false; btn.textContent = 'Ajouter le livreur'; }
+}
+
+async function renderLivreurs() {
+  const list = document.getElementById('livreurs-list');
+  const { data } = await sb.from('shop_livreurs').select('*').eq('owner_id', ownerId()).eq('active', true).order('created_at', { ascending: false });
+  S.livreurs = data || [];
+  if (!S.livreurs.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">🛵</div><p>Aucun livreur pour le moment.</p></div>`;
+    return;
+  }
+  list.innerHTML = S.livreurs.map(l => `
+    <div class="gerant-card">
+      <div class="gerant-ava" style="overflow:hidden">${l.photo_url ? `<img src="${esc(l.photo_url)}" style="width:100%;height:100%;object-fit:cover">` : '🛵'}</div>
+      <div class="gerant-info">
+        <div class="gerant-name">${esc(l.name)}</div>
+        <div class="gerant-role">${esc(l.phone)} · Code : ${esc(l.access_code)}</div>
+      </div>
+      ${l.id_card_front_url ? `<button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="viewLivreurDocs('${l.id}')">🪪 Pièces</button>` : ''}
+      <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="removeLivreur('${l.id}')">Retirer</button>
+    </div>`).join('');
+}
+
+async function viewLivreurDocs(id) {
+  const l = (S.livreurs || []).find(x => x.id === id);
+  if (!l) return;
+  for (const p of [l.id_card_front_url, l.id_card_back_url]) {
+    if (!p) continue;
+    const { data, error } = await sb.storage.from('livreurs-docs').createSignedUrl(p, 120);
+    if (!error && data) window.open(data.signedUrl, '_blank');
+  }
+}
+
+async function removeLivreur(id) {
+  if (!confirm('Retirer ce livreur ? Son accès sera immédiatement coupé. Ses livraisons passées restent tracées.')) return;
+  const { error } = await sb.from('shop_livreurs').update({ active: false }).eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  toast('Livreur retiré — accès révoqué');
+  renderLivreurs();
+}
+
+function openAssignLivreur(orderId) {
+  const done = async (livreur) => {
+    document.getElementById('lv-assign-overlay')?.remove();
+    const o = S.orders.find(x => x.id === orderId);
+    if (!o || !o._rowId) { toast('Erreur : commande introuvable. Rechargez la page.', 'err'); return; }
+    o.livreurName = livreur.name;
+    const { _rowId, ...cleanData } = o;
+    const { error } = await sb.from('orders').update({ livreur_id: livreur.id, data: cleanData }).eq('id', o._rowId);
+    if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+    toast(`Commande assignée à ${livreur.name} ✓`);
+    renderCmds();
+  };
+  const open = (livreurs) => {
+    const ov = document.createElement('div');
+    ov.id = 'lv-assign-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    ov.innerHTML = `<div style="background:#fff;border-radius:16px 16px 0 0;padding:18px;width:100%;max-width:480px;max-height:70vh;overflow:auto">
+      <div style="font-weight:800;margin-bottom:12px">🛵 Assigner à un livreur</div>
+      ${livreurs.map(l => `<button class="btn btn-w" style="background:var(--blue-l);color:var(--blue);margin-bottom:8px;justify-content:flex-start" data-lvid="${l.id}">${esc(l.name)} · ${esc(l.phone)}</button>`).join('')}
+      <button class="btn btn-ghost btn-w" onclick="document.getElementById('lv-assign-overlay').remove()">Annuler</button>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelectorAll('[data-lvid]').forEach(btn => {
+      btn.onclick = () => done(livreurs.find(l => l.id === btn.dataset.lvid));
+    });
+  };
+  if (S.livreurs && S.livreurs.length) { open(S.livreurs); return; }
+  sb.from('shop_livreurs').select('*').eq('owner_id', ownerId()).eq('active', true).then(({ data }) => {
+    S.livreurs = data || [];
+    if (!S.livreurs.length) { toast('Ajoutez d\'abord un livreur dans l\'onglet Livreurs', 'err'); return; }
+    open(S.livreurs);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LIVREURS (v100) — espace livreur
+// ═══════════════════════════════════════════════
+async function doLivreurLogin() {
+  const phone = getPhoneValue('lv-phone');
+  const code = document.getElementById('lv-code').value.trim();
+  if (!phone || !code) { toast('Numéro et code obligatoires', 'err'); return; }
+  const { data, error } = await sb.rpc('livreur_login', { p_phone: phone, p_code: code });
+  if (error || !data || !data.success) { toast('Numéro ou code incorrect', 'err'); return; }
+  S.livreurSession = { livreurId: data.livreur_id, phone, code, name: data.name, photoUrl: data.photo_url, shopName: data.shop_name, currency: data.currency || 'FCFA' };
+  localStorage.setItem('zyntelo_livreur_session', JSON.stringify(S.livreurSession));
+  showLivreurDash();
+}
+
+async function resumeLivreurSession() {
+  const raw = localStorage.getItem('zyntelo_livreur_session');
+  if (!raw) { go('s-livreur-login'); return; }
+  try {
+    const sess = JSON.parse(raw);
+    const { data } = await sb.rpc('livreur_login', { p_phone: sess.phone, p_code: sess.code });
+    if (data && data.success) {
+      S.livreurSession = { livreurId: data.livreur_id, phone: sess.phone, code: sess.code, name: data.name, photoUrl: data.photo_url, shopName: data.shop_name, currency: data.currency || 'FCFA' };
+      showLivreurDash();
+      return;
+    }
+  } catch (e) { console.error('resumeLivreurSession', e); }
+  localStorage.removeItem('zyntelo_livreur_session');
+  go('s-livreur-login');
+}
+
+function showLivreurDash() {
+  const s = S.livreurSession;
+  document.getElementById('lv-name').textContent = s.name;
+  document.getElementById('lv-shop').textContent = 'Boutique : ' + (s.shopName || '');
+  const ava = document.getElementById('lv-ava');
+  ava.innerHTML = s.photoUrl ? `<img src="${esc(s.photoUrl)}" style="width:100%;height:100%;object-fit:cover">` : '🛵';
+  go('s-livreur');
+  loadLivreurOrders();
+}
+
+async function loadLivreurOrders() {
+  const s = S.livreurSession;
+  const box = document.getElementById('lv-orders');
+  const { data, error } = await sb.rpc('livreur_get_orders', { p_livreur_id: s.livreurId, p_phone: s.phone, p_code: s.code });
+  if (error) { box.innerHTML = `<div class="empty card"><div class="empty-ico">⚠️</div><p>Erreur de chargement. Réessayez.</p></div>`; return; }
+  const rows = (data || []).map(r => ({ ...(r.data || {}), _rowId: r.row_id }));
+  const pending = rows.filter(o => o.status === 'attente');
+  const done = rows.filter(o => o.status !== 'attente');
+  const cur = (o) => esc(o.currency) || esc(s.currency) || 'FCFA';
+  const card = (o) => `<div class="card" style="margin-bottom:10px">
+      <div style="font-weight:800">${esc(o.prodName)} · ${o.qty} unité(s)</div>
+      <div style="font-size:13px;color:var(--gray);margin:6px 0">👤 ${esc(o.prenom)} — ${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''}</div>
+      <div style="font-size:15px;margin-bottom:8px">💰 À encaisser : <strong>${(o.total||0).toLocaleString()} ${cur(o)}</strong></div>
+      ${o.livreurNote && o.status==='attente' ? `<div style="font-size:12px;color:#B45309;margin-bottom:8px">⚠️ ${esc(o.livreurNote)}</div>` : ''}
+      ${o.status === 'attente' ? `
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn btn-sm" style="background:var(--blue-l);color:var(--blue);text-decoration:none" href="tel:${esc(o.tel)}">📞 Appeler</a>
+        <button class="btn btn-sm" style="background:var(--green-l,#DCFCE7);color:var(--green,#16A34A)" onclick="livreurMark('${o._rowId}','livree')">✓ Livrée</button>
+        <button class="btn btn-sm" style="background:#FEF3C7;color:#B45309" onclick="livreurMark('${o._rowId}','absent')">Client absent</button>
+      </div>` : `<div style="font-size:13px;color:var(--green,#16A34A);font-weight:700">${o.status==='livree'?'✅ Livrée':'❌ Annulée'}</div>`}
+    </div>`;
+  box.innerHTML =
+    `<div style="font-weight:800;margin:14px 0 8px">📦 À livrer (${pending.length})</div>` +
+    (pending.length ? pending.map(card).join('') : `<div class="empty card"><div class="empty-ico">🎉</div><p>Aucune livraison en attente.</p></div>`) +
+    (done.length ? `<div style="font-weight:800;margin:18px 0 8px">Historique (${done.length})</div>` + done.slice(0, 20).map(card).join('') : '');
+}
+
+async function livreurMark(rowId, result) {
+  if (result === 'livree' && !confirm('Confirmer : le client a payé et reçu son colis ?')) return;
+  const s = S.livreurSession;
+  const { data, error } = await sb.rpc('livreur_mark_order', { p_livreur_id: s.livreurId, p_phone: s.phone, p_code: s.code, p_order_id: rowId, p_result: result });
+  if (error || !data || !data.success) { toast('Erreur — réessayez', 'err'); return; }
+  toast(result === 'livree' ? 'Livraison confirmée ✓' : 'Note enregistrée — le marchand est informé');
+  loadLivreurOrders();
+}
+
+function livreurLogout() {
+  localStorage.removeItem('zyntelo_livreur_session');
+  S.livreurSession = null;
+  go('s-livreur-login');
 }
 
 // ═══════════════════════════════════════════════
