@@ -1314,11 +1314,28 @@ canvas{display:block;}
       <!-- STATISTIQUES -->
       <div class="dash-page" id="p-stats">
         <div class="page-head"><h1>Statistiques</h1><p>Analyse de vos performances</p></div>
+
+        <div class="stats-filter-row">
+          <button class="stats-filter-btn on" data-range="all" onclick="setShopStatsRange('all',this)">Tout</button>
+          <button class="stats-filter-btn" data-range="today" onclick="setShopStatsRange('today',this)">Aujourd'hui</button>
+          <button class="stats-filter-btn" data-range="week" onclick="setShopStatsRange('week',this)">Cette semaine</button>
+          <button class="stats-filter-btn" data-range="month" onclick="setShopStatsRange('month',this)">Ce mois</button>
+          <button class="stats-filter-btn" data-range="year" onclick="setShopStatsRange('year',this)">Cette année</button>
+          <button class="stats-filter-btn" data-range="custom" onclick="setShopStatsRange('custom',this)">Personnalisé</button>
+        </div>
+        <div id="shop-stats-custom-range" style="display:none" class="form-row">
+          <div class="fgrp"><label>Du</label><input type="date" id="shop-stats-date-from"></div>
+          <div class="fgrp"><label>Au</label><input type="date" id="shop-stats-date-to"></div>
+          <button class="btn btn-blue btn-sm" style="align-self:flex-end;margin-bottom:14px" onclick="applyCustomShopStatsRange()">Appliquer</button>
+        </div>
+
         <div class="stats-row">
           <div class="stat-box"><div class="stat-lbl">Taux de conversion</div><div class="stat-val sv-blue" id="st-conv">0%</div></div>
           <div class="stat-box"><div class="stat-lbl">Commandes validées</div><div class="stat-val sv-green" id="st-valid">0</div></div>
           <div class="stat-box"><div class="stat-lbl">En attente</div><div class="stat-val sv-orange" id="st-wait">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Annulées</div><div class="stat-val sv-red" id="st-ann">0</div></div>
+          <div class="stat-box"><div class="stat-lbl">Visites</div><div class="stat-val sv-blue" id="st-visits">0</div></div>
+          <div class="stat-box"><div class="stat-lbl">Chiffre d'affaires</div><div class="stat-val sv-green" id="st-ca-periode">0 FCFA</div></div>
         </div>
         <div class="card">
           <div class="card-title">📈 Commandes par statut</div>
@@ -1664,6 +1681,7 @@ canvas{display:block;}
         <div class="stats-row">
           <div class="stat-box"><div class="stat-lbl">Total clients</div><div class="stat-val sv-blue" id="adm-total">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Actifs</div><div class="stat-val sv-green" id="adm-actifs">0</div></div>
+          <div class="stat-box"><div class="stat-lbl">Inactifs</div><div class="stat-val" id="adm-inactifs">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Bloqués</div><div class="stat-val sv-red" id="adm-bloques">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Revenu mensuel</div><div class="stat-val" id="adm-rev">0 FCFA</div></div>
         </div>
@@ -1797,6 +1815,10 @@ Merci pour votre confiance 🙏
           <div class="stat-card"><div class="stat-card-lbl">Commandes confirmées</div><div class="stat-card-val" id="sc-confirmed-orders">—</div></div>
         </div>
 
+        <div class="card">
+          <div class="card-title">💰 Évolution du chiffre d'affaires</div>
+          <canvas id="chart-adm-ca" height="90"></canvas>
+        </div>
         <div class="card">
           <div class="card-title">📈 Évolution des utilisateurs <span id="sc-growth-rate" class="stats-growth-badge"></span></div>
           <canvas id="chart-new-users" height="90"></canvas>
@@ -2673,6 +2695,11 @@ async function loadAdminStats() {
   const inactivePct = totalUsers ? `${inactiveRate}% du total` : '';
   document.getElementById('sc-inactive-pct').textContent = inactivePct;
 
+  // (v101) Évolution du chiffre d'affaires global (commandes livrées, période sélectionnée)
+  const caPerMonth = months.map(m => allOrders.filter(o => {
+    const d = new Date(o.created_at); return d >= m.start && d <= m.end && o.data && o.data.status === 'livree';
+  }).reduce((s,o) => s + (o.data.total||0), 0));
+  drawLineChart('chart-adm-ca', months.map(m=>m.label), caPerMonth, '#1A56E8');
   drawLineChart('chart-new-users', months.map(m=>m.label), newUsersPerMonth, '#1A56E8');
   drawLineChart('chart-active-users', months.map(m=>m.label), activePerMonth, '#16A34A');
   drawLineChart('chart-inactive-users', months.map(m=>m.label), inactivePerMonth, '#9CA3AF');
@@ -6765,24 +6792,88 @@ function updateStats() {
   document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length + '+');
 }
 
-function renderStats() {
-  const total=S.orders.length;
-  const valide=S.orders.filter(o=>o.status==='livree').length;
-  const attente=S.orders.filter(o=>o.status==='attente').length;
-  const annule=S.orders.filter(o=>o.status==='annulee').length;
-  const conv=total?Math.round((valide/total)*100):0;
-  document.getElementById('st-conv').textContent=conv+'%';
-  document.getElementById('st-valid').textContent=valide;
-  document.getElementById('st-wait').textContent=attente;
-  document.getElementById('st-ann').textContent=annule;
+// (v101) Statistiques marchand avec périodes (Tout / Aujourd'hui / Semaine / Mois / Année / Personnalisé)
+let shopStatsRange = { type: 'all', from: null, to: null };
+
+function setShopStatsRange(type, btn) {
+  document.querySelectorAll('#p-stats .stats-filter-btn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  document.getElementById('shop-stats-custom-range').style.display = type === 'custom' ? 'flex' : 'none';
+  if (type === 'custom') return;
+  if (type === 'all') { shopStatsRange = { type: 'all', from: null, to: null }; }
+  else { const { from, to } = getRangeDates(type); shopStatsRange = { type, from, to }; }
+  renderStats();
+}
+
+function applyCustomShopStatsRange() {
+  const fromVal = document.getElementById('shop-stats-date-from').value;
+  const toVal = document.getElementById('shop-stats-date-to').value;
+  if (!fromVal || !toVal) { toast('Choisissez les deux dates', 'err'); return; }
+  const from = new Date(fromVal); from.setHours(0,0,0,0);
+  const to = new Date(toVal); to.setHours(23,59,59,999);
+  shopStatsRange = { type: 'custom', from, to };
+  renderStats();
+}
+
+// Date d'une commande : createdAt (récentes) ou date "JJ/MM/AAAA" (anciennes)
+function ordDate(o) {
+  if (o.createdAt) return new Date(o.createdAt);
+  if (o.date) { const p = String(o.date).split(/[\/\s:]/); if (p.length >= 3) return new Date(+p[2], +p[1]-1, +p[0]); }
+  return null;
+}
+
+async function renderStats() {
+  const { from, to } = shopStatsRange;
+  const inRange = (d) => !from || (d && d >= from && d <= to);
+  const orders = S.orders.filter(o => inRange(ordDate(o)));
+
+  const total = orders.length;
+  const valide = orders.filter(o => o.status === 'livree').length;
+  const attente = orders.filter(o => o.status === 'attente').length;
+  const annule = orders.filter(o => o.status === 'annulee').length;
+  const caPeriode = orders.filter(o => o.status === 'livree').reduce((s, o) => s + (o.total || 0), 0);
+
+  // Visites de la boutique sur la période (suivies depuis les badges)
+  let visits = null;
+  try {
+    let q = sb.from('shop_activity_events').select('created_at').eq('owner_id', ownerId()).eq('event_type', 'visite');
+    if (from) q = q.gte('created_at', from.toISOString()).lte('created_at', to.toISOString());
+    const { data, error } = await q;
+    if (!error && data) visits = data.length;
+  } catch (e) { console.error('visites', e); }
+
+  // Taux de conversion façon Shopify : commandes ÷ visites. Repli sur validées ÷ commandes si visites indisponibles.
+  const conv = visits ? Math.min(100, Math.round((total / visits) * 100)) : (total ? Math.round((valide / total) * 100) : 0);
+
+  document.getElementById('st-conv').textContent = conv + '%';
+  document.getElementById('st-valid').textContent = valide;
+  document.getElementById('st-wait').textContent = attente;
+  document.getElementById('st-ann').textContent = annule;
+  document.getElementById('st-visits').textContent = visits === null ? '—' : visits;
+  document.getElementById('st-ca-periode').textContent = caPeriode.toLocaleString() + ' ' + CUR();
   drawBarChart('chart-status',[valide,attente,annule],['Validées','En attente','Annulées'],['#16A34A','#D97706','#E8221A']);
-  // CA par mois
-  const caByMonth={};
-  S.orders.filter(o=>o.status==='livree').forEach(o=>{ const k=o.date?o.date.slice(3):'-'; caByMonth[k]=(caByMonth[k]||0)+o.total; });
-  const months=Object.keys(caByMonth).sort();
-  const caVals=months.map(m=>caByMonth[m]);
-  drawLineChart('chart-ca', months.length?months:['Aucune donnée'], months.length?caVals:[0], '#1A56E8');
-  renderMyBadgesProgress(valide);
+
+  // Évolution du CA : granularité adaptée à la période (heures / jours / mois)
+  const livrees = orders.filter(o => o.status === 'livree');
+  const buckets = {};
+  const spanDays = from ? (to - from) / 86400000 : 9999;
+  livrees.forEach(o => {
+    const d = ordDate(o); if (!d) return;
+    let k;
+    if (from && shopStatsRange.type === 'today') k = String(d.getHours()).padStart(2,'0') + 'h';
+    else if (from && spanDays <= 31) k = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+    else k = String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    buckets[k] = (buckets[k] || 0) + (o.total || 0);
+  });
+  const labels = Object.keys(buckets).sort((a,b) => {
+    if (a.includes('/') && a.length > 5) { const [ma,ya]=a.split('/'), [mb,yb]=b.split('/'); return (ya+ma).localeCompare(yb+mb); }
+    return a.localeCompare(b);
+  });
+  const caVals = labels.map(k => buckets[k]);
+  drawLineChart('chart-ca', labels.length ? labels : ['Aucune donnée'], labels.length ? caVals : [0], '#1A56E8');
+
+  // Badges : toujours calculés sur TOUT l'historique, jamais filtrés par période
+  renderMyBadgesProgress(S.orders.filter(o => o.status === 'livree').length);
 }
 
 // Parcours des badges du marchand lui-même — affiché dans SA page Statistiques pour le
@@ -7475,6 +7566,12 @@ async function renderAdminClients() {
   document.getElementById('adm-actifs').textContent=actifs;
   document.getElementById('adm-bloques').textContent=bloques;
   document.getElementById('adm-rev').textContent=(actifs*5000).toLocaleString()+' FCFA';
+  // (v101) Inactifs = boutiques n'ayant jamais reçu de commande confirmée (même définition que la page Statistiques)
+  try {
+    const { data: ords } = await sb.from('orders').select('owner_id, data');
+    const confirmes = new Set((ords||[]).filter(o=>o.data&&o.data.status==='livree').map(o=>o.owner_id));
+    document.getElementById('adm-inactifs').textContent = clients.filter(u=>!confirmes.has(u.id)).length;
+  } catch(e) { console.error('adm-inactifs', e); }
   const list=document.getElementById('adm-clients-list');
   if(!clients.length){ list.innerHTML=`<div class="empty card"><div class="empty-ico">👥</div><p>Aucun client inscrit.</p></div>`; return; }
   list.innerHTML=clients.map(u=>{
