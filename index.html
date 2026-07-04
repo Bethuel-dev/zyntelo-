@@ -977,6 +977,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-appearance',this)"><span class="ni"><i data-lucide="palette"></i></span>Apparence</div>
       <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
       <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
+      <div class="nav-item" onclick="pg('p-messages',this)"><span class="ni"><i data-lucide="message-circle"></i></span>Messages <span id="p-messages-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
       <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison et expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
@@ -1283,6 +1284,12 @@ canvas{display:block;}
         </div>
 
         <div id="dz-list" style="margin-top:16px"></div>
+      </div>
+
+      <!-- MESSAGES (conversations avec les clients) -->
+      <div class="dash-page" id="p-messages">
+        <div class="page-head"><h1>💬 Messages</h1><p>Vos discussions avec les clients</p></div>
+        <div id="shop-messages-list"></div>
       </div>
 
       <!-- CLIENTS (de la boutique) -->
@@ -1605,6 +1612,38 @@ canvas{display:block;}
   </div>
 </div>
 
+<!-- MES MESSAGES — espace client -->
+<div id="s-client-messages" class="screen mkt-screen">
+  <nav class="mkt-nav">
+    <div class="mkt-nav-left">
+      <button class="mkt-back" onclick="goToMarketplace()">←</button>
+      <div class="mkt-nav-title">💬 Mes messages</div>
+    </div>
+  </nav>
+  <div class="mkt-body" style="padding-top:20px">
+    <div id="client-messages-list"></div>
+  </div>
+</div>
+
+<!-- CHAT — réutilisable pour client et marchand/gérant -->
+<div class="overlay" id="chat-overlay" onclick="closeOverlay(event)">
+  <div class="popup" style="max-width:420px;height:78vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div id="chat-header-title" style="font-weight:700;font-size:15px">Discussion</div>
+      <button onclick="closeChatOverlay()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray)">✕</button>
+    </div>
+    <div style="background:var(--blue-l);padding:10px 16px;font-size:12px;color:var(--blue);flex-shrink:0">
+      🛡️ <strong>Discussion protégée par Zyntelo</strong><br>
+      <span style="color:var(--gray)">Les paiements effectués en dehors de Zyntelo ne sont pas protégés.</span>
+    </div>
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="chat-input" placeholder="Votre message…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
+      <button onclick="sendChatMessage()" style="background:var(--blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0">➤</button>
+    </div>
+  </div>
+</div>
+
 <!-- POPUP COMMANDE -->
 <div class="overlay" id="prod-reviews-overlay" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="popup">
@@ -1650,6 +1689,7 @@ canvas{display:block;}
         </div>
       </div>
     <button class="btn btn-red btn-w" onclick="submitOrder()">COMMANDER — <span id="pp-btn-total">0 FCFA</span> à la livraison</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
   </div>
 </div>
 
@@ -2202,6 +2242,7 @@ function parseRoute() {
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
   if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
   if (parts[0] === 'mes-favoris') return { type: 'client-favorites' };
+  if (parts[0] === 'mes-messages') return { type: 'client-messages' };
   if (parts[0] === 'livreur') return { type: 'livreur' };
   return { type: 'home' };
 }
@@ -2284,6 +2325,11 @@ async function init() {
   else if (route.type === 'client-favorites') {
     await restoreClientSession();
     if (S.client) { go('s-client-favorites'); loadClientFavorites(); }
+    else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
+  }
+  else if (route.type === 'client-messages') {
+    await restoreClientSession();
+    if (S.client) { go('s-client-messages'); loadClientConversations(); }
     else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
   }
   else go('s-land');
@@ -2422,6 +2468,7 @@ function pg(pageId, el) {
   if (pageId === 'p-produits') loadCategories();
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-livraison') { loadDeliveryZones(); startDeliveryZonesRealtimeListener(ownerId()); }
+  if (pageId === 'p-messages') loadShopConversations();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-abo') loadPaymentsHistory();
@@ -3369,7 +3416,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-livraison', 'p-aide', 'p-gerant-notifs'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-livraison', 'p-messages', 'p-aide', 'p-gerant-notifs'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -3505,6 +3552,7 @@ async function loginAs(user) {
   renderProds();
   renderCmds();
   renderCategories();
+  sb.rpc('shop_get_conversations', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: user.email }).then(({ data }) => updateShopMessagesBadge(data || []));
 
   go('s-dash');
   toast(`Bienvenue ${user.name} ! 👋`);
@@ -5073,6 +5121,7 @@ function previewShop(prodId, isPublic) {
         </div>
       </div>
           <button class="btn btn-red btn-w cta-shake" style="max-width:320px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span> à la livraison</button>
+          <button class="btn btn-ghost btn-w" style="max-width:320px;margin-top:8px" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
         </div>
       </div>
     </div>
@@ -5905,6 +5954,7 @@ function updateMarketplaceClientNav() {
   if (!zone) return;
   if (S.client) {
     zone.innerHTML = `
+      <button class="mkt-client-btn" onclick="goToClientMessages()">💬</button>
       <button class="mkt-client-btn" onclick="goToClientFavorites()">❤️ Favoris</button>
       <button class="mkt-client-btn" onclick="goToClientOrders()">👤 ${S.client.name || 'Mon compte'}</button>`;
     loadClientFavoriteIds();
@@ -6101,6 +6151,216 @@ async function submitReportMerchant() {
   const ov = document.getElementById('report-merchant-overlay'); if (ov) ov.remove();
   window._pendingReport = null;
   toast('Signalement envoyé. Merci, notre équipe va l\'étudier. 🙏');
+}
+
+// ═══════════════════════════════════════════════
+// MESSAGERIE CLIENT ↔ MARCHAND/GÉRANT
+// ═══════════════════════════════════════════════
+let chatRealtimeChannel = null;
+
+function chatBubble(m, myRole) {
+  const isMe = m.sender_type === myRole;
+  const safe = hcEscape(m.message);
+  const time = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  if (isMe) return `<div style="align-self:flex-end;max-width:78%">
+      <div style="background:var(--blue);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:13.5px">${safe}</div>
+      <div style="font-size:10px;color:var(--gray);text-align:right;margin-top:2px">${time}</div>
+    </div>`;
+  return `<div style="align-self:flex-start;max-width:78%">
+      <div style="font-size:10.5px;color:var(--gray);margin-bottom:2px;margin-left:3px">${hcEscape(m.sender_name||'')}</div>
+      <div style="background:var(--gray-l);color:var(--black);padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:13.5px">${safe}</div>
+      <div style="font-size:10px;color:var(--gray);margin-top:2px;margin-left:3px">${time}</div>
+    </div>`;
+}
+
+function closeChatOverlay() {
+  document.getElementById('chat-overlay').classList.remove('on');
+  if (chatRealtimeChannel) { sb.removeChannel(chatRealtimeChannel); chatRealtimeChannel = null; }
+}
+
+// Ouvre (ou crée) la conversation entre le client actuel et le marchand de
+// la page produit en cours, puis affiche le chat.
+async function openChatWithMerchant() {
+  if (!S.client) { showClientLoginPopup(); return; }
+  const targetOwnerId = ownerId();
+  const productName = (S.curProd && S.curProd.name) || '';
+  const { data, error } = await sb.rpc('client_start_conversation', { p_client_id: S.client.id, p_email: S.client.email, p_owner_id: targetOwnerId, p_product_name: productName });
+  if (error || !data || !data.success) { toast('Impossible d\'ouvrir la discussion', 'err'); console.error('openChatWithMerchant error', error, data); return; }
+  openChatThread(data.conversation_id, 'client', { ownerId: targetOwnerId, shopName: (S.shop && S.shop.name) || '' });
+}
+
+// Ouvre un fil de discussion précis. ctx contient les infos nécessaires à
+// l'envoi (owner_id pour le client, ou owner_id+gérant pour la boutique).
+function openChatThread(conversationId, role, ctx) {
+  S.chatConversationId = conversationId;
+  S.chatRole = role;
+  S.chatCtx = ctx || {};
+  document.getElementById('chat-header-title').textContent = role === 'client' ? (ctx.shopName || 'Discussion') : (ctx.clientName || 'Discussion');
+  document.getElementById('chat-overlay').classList.add('on');
+  loadChatMessages();
+}
+
+async function loadChatMessages() {
+  const box = document.getElementById('chat-messages');
+  if (!box) return;
+  box.innerHTML = `<p style="font-size:12.5px;color:var(--gray);text-align:center">Chargement…</p>`;
+  let data, error;
+  if (S.chatRole === 'client') {
+    ({ data, error } = await sb.rpc('client_get_conversation_messages', { p_client_id: S.client.id, p_email: S.client.email, p_conversation_id: S.chatConversationId }));
+  } else {
+    ({ data, error } = await sb.rpc('shop_get_conversation_messages', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_conversation_id: S.chatConversationId }));
+  }
+  if (error) { console.error('loadChatMessages error', error); box.innerHTML = `<p style="font-size:12.5px;color:var(--red);text-align:center">Erreur de chargement.</p>`; return; }
+  renderChatMessages(data || []);
+  startChatRealtime();
+}
+
+function renderChatMessages(messages) {
+  const box = document.getElementById('chat-messages');
+  if (!box) return;
+  if (!messages.length) {
+    box.innerHTML = `<p style="font-size:12.5px;color:var(--gray);text-align:center;margin-top:20px">Aucun message pour le moment.<br>Dites bonjour ! 👋</p>`;
+  } else {
+    box.innerHTML = messages.map(m => chatBubble(m, S.chatRole)).join('');
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function startChatRealtime() {
+  if (chatRealtimeChannel) { sb.removeChannel(chatRealtimeChannel); chatRealtimeChannel = null; }
+  chatRealtimeChannel = sb
+    .channel('conv-listen-' + S.chatConversationId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversation_messages', filter: `conversation_id=eq.${S.chatConversationId}` }, () => {
+      loadChatMessages();
+    })
+    .subscribe();
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  input.value = '';
+  if (S.chatRole === 'client') {
+    const { data, error } = await sb.rpc('client_send_message', { p_client_id: S.client.id, p_email: S.client.email, p_conversation_id: S.chatConversationId, p_message: text });
+    if (error || !data || !data.success) { toast('Message non envoyé', 'err'); input.value = text; return; }
+    notifyShopNewMessage(S.chatCtx.ownerId, S.client.name || 'Un client', text);
+  } else {
+    const senderName = S.isGerant ? (S.user.name || S.user.email) : ((S.shop && S.shop.name) || S.user.shopName || 'La boutique');
+    const { data, error } = await sb.rpc('shop_send_message', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_conversation_id: S.chatConversationId, p_message: text, p_sender_name: senderName });
+    if (error || !data || !data.success) { toast('Message non envoyé', 'err'); input.value = text; return; }
+    notifyClientNewMessage(S.chatCtx.clientId, senderName, text, (S.shop && S.shop.name) || '');
+  }
+  loadChatMessages();
+}
+
+// Notifie le marchand + tous ses gérants actifs — même modèle que pour les
+// nouvelles commandes, jamais bloquant, jamais en série.
+async function notifyShopNewMessage(targetOwnerId, senderName, message) {
+  try {
+    const { data, error } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: targetOwnerId });
+    if (error || !data || !data.email) return;
+    const payload = { recipientLabel: 'Bonjour', senderName, message, contextLabel: data.shop_name, dashboardLink: `${window.location.origin}/login?goto=messages` };
+    fetch(`${window.location.origin.includes('vercel')?'':''}https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-conversation-message`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, to: data.email })
+    }).catch(()=>{});
+    sb.rpc('get_active_gerants_for_notification', { p_owner_id: targetOwnerId }).then(({ data: gerants }) => {
+      (gerants || []).forEach(g => {
+        fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-conversation-message', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, to: g.email })
+        }).catch(()=>{});
+      });
+    });
+  } catch (e) { console.error('notifyShopNewMessage error', e); }
+}
+
+async function notifyClientNewMessage(clientId, senderName, message, shopName) {
+  // On a besoin de l'email du client, transmis via le contexte de la
+  // conversation ouverte côté marchand (voir shop_get_conversations).
+  if (!S.chatCtx || !S.chatCtx.clientEmail) return;
+  fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-conversation-message', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to: S.chatCtx.clientEmail, recipientLabel: 'Bonjour', senderName, message, contextLabel: shopName, dashboardLink: `${window.location.origin}/marketplace` })
+  }).catch(()=>{});
+}
+
+function goToClientMessages() {
+  if (!S.client) { showClientLoginPopup(); return; }
+  navTo('/mes-messages');
+  go('s-client-messages');
+  loadClientConversations();
+}
+
+async function loadClientConversations() {
+  const list = document.getElementById('client-messages-list');
+  if (!list) return;
+  list.innerHTML = `<div class="mkt-empty"><p>Chargement…</p></div>`;
+  const { data, error } = await sb.rpc('client_get_conversations', { p_client_id: S.client.id, p_email: S.client.email });
+  if (error) { console.error('loadClientConversations error', error); list.innerHTML = `<div class="mkt-empty"><p>Erreur de chargement.</p></div>`; return; }
+  renderClientConversations(data || []);
+}
+
+function renderClientConversations(rows) {
+  const list = document.getElementById('client-messages-list');
+  if (!list) return;
+  if (!rows.length) { list.innerHTML = `<div class="mkt-empty"><div class="mkt-empty-ico">💬</div><p>Aucune conversation pour le moment.</p></div>`; return; }
+  window._clientConversations = rows;
+  list.innerHTML = rows.map((r, idx) => `
+    <div class="mkt-order-card" style="cursor:pointer" onclick="openClientConversationFromList(${idx})">
+      <div>
+        <div class="mkt-order-name">${r.shop_name || ''}</div>
+        <div class="mkt-order-detail">${r.last_product_name || ''}</div>
+      </div>
+      ${r.unread_count > 0 ? `<span class="mkt-badge livree">${r.unread_count}</span>` : ''}
+    </div>`).join('');
+}
+
+function openClientConversationFromList(idx) {
+  const r = window._clientConversations && window._clientConversations[idx];
+  if (!r) return;
+  openChatThread(r.conversation_id, 'client', { ownerId: r.owner_id, shopName: r.shop_name });
+}
+
+// ═══════════════════════════════════════════════
+// MESSAGERIE — CÔTÉ MARCHAND / GÉRANT
+// ═══════════════════════════════════════════════
+async function loadShopConversations() {
+  const list = document.getElementById('shop-messages-list');
+  if (!list) return;
+  list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Chargement…</p>`;
+  const { data, error } = await sb.rpc('shop_get_conversations', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email });
+  if (error) { console.error('loadShopConversations error', error); list.innerHTML = `<p style="font-size:13px;color:var(--red)">Erreur de chargement.</p>`; return; }
+  renderShopConversations(data || []);
+  updateShopMessagesBadge(data || []);
+}
+
+function renderShopConversations(rows) {
+  const list = document.getElementById('shop-messages-list');
+  if (!list) return;
+  if (!rows.length) { list.innerHTML = `<div class="empty card"><div class="empty-ico">💬</div><p>Aucune conversation pour le moment.</p></div>`; return; }
+  window._shopConversations = rows;
+  list.innerHTML = rows.map((r, idx) => `
+    <div class="cmd-card" style="cursor:pointer" onclick="openShopConversationFromList(${idx})">
+      <div class="cmd-info">
+        <div class="cmd-name">${r.client_name || 'Client'}</div>
+        <div class="cmd-detail">${r.last_product_name || ''}</div>
+      </div>
+      ${r.unread_count > 0 ? `<span class="badge b-red">${r.unread_count}</span>` : ''}
+    </div>`).join('');
+}
+
+function openShopConversationFromList(idx) {
+  const r = window._shopConversations && window._shopConversations[idx];
+  if (!r) return;
+  openChatThread(r.conversation_id, 'shop', { clientId: r.client_id, clientName: r.client_name, clientEmail: r.client_email });
+}
+
+function updateShopMessagesBadge(rows) {
+  const badge = document.getElementById('p-messages-badge');
+  if (!badge) return;
+  const nb = (rows || []).reduce((sum, r) => sum + (Number(r.unread_count) || 0), 0);
+  if (nb > 0) { badge.textContent = nb; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
 }
 
 function goToProductFromGrid(prodId) {
