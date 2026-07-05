@@ -1589,6 +1589,10 @@ canvas{display:block;}
       <span class="mkt-search-ico">🔍</span>
       <input id="mk-search" class="mkt-search" placeholder="Rechercher un produit…" oninput="debouncedMarketplaceSearch()">
     </div>
+    <div class="mkt-search-wrap" style="margin-top:10px">
+      <span class="mkt-search-ico">🌍</span>
+      <select id="mk-country-filter" class="mkt-search" style="cursor:pointer" onchange="onMarketplaceCountryFilterChange()"></select>
+    </div>
   </div>
   <div class="mkt-body">
     <div id="mk-tabs" class="mkt-tabs">
@@ -2361,7 +2365,7 @@ async function init() {
   else if (route.type === 'register') go('s-register');
   else if (route.type === 'admin') go('s-admin-login');
   else if (route.type === 'livreur') { await resumeLivreurSession(); }
-  else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); loadMarketplace('new'); loadMarketplaceBannerStrip(); }
+  else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); populateMarketplaceCountryFilter(); loadMarketplace('new'); loadMarketplaceBannerStrip(); }
   else if (route.type === 'client-orders') {
     await restoreClientSession(); // s'assure que la session est bien restaurée avant de décider
     if (S.client) { go('s-client-orders'); loadClientOrders(); }
@@ -4661,7 +4665,7 @@ function renderAdminWithdrawals(rows) {
   if (!list) return;
   if (!rows.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune demande de retrait.</p>`; return; }
   window._adminWithdrawals = rows;
-  const methodLabels = { mobile_money: '📱 Mobile Money', banque: '🏦 Banque' };
+  const methodLabels = { visa: '💳 Visa', mobile_money: '📱 Mobile Money', banque: '🏦 Banque' };
   list.innerHTML = rows.map((r, idx) => `
     <div class="cmd-card">
       <div class="cmd-info">
@@ -5895,6 +5899,7 @@ function goToMarketplace() {
   navTo('/marketplace');
   go('s-marketplace');
   updateMarketplaceClientNav();
+  populateMarketplaceCountryFilter();
   loadMarketplace('new');
   loadMarketplaceBannerStrip();
 }
@@ -5934,7 +5939,8 @@ async function loadMarketplace(sort) {
   const grid = document.getElementById('mk-grid');
   if (grid) grid.innerHTML = `<div class="mkt-empty"><p>Chargement…</p></div>`;
   const clientCountry = guessClientCountryCode(); // met en avant les boutiques du même pays, sans jamais cacher les autres
-  const { data, error } = await sb.rpc('marketplace_products', { p_sort: sort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: 0, p_client_country_code: clientCountry });
+  const countryFilter = document.getElementById('mk-country-filter') ? document.getElementById('mk-country-filter').value : '';
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: sort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: 0, p_client_country_code: clientCountry, p_country_filter: countryFilter || null });
   if (error) { console.error('loadMarketplace error', error); if (grid) grid.innerHTML = `<div class="mkt-empty"><p>Erreur de chargement.</p></div>`; return; }
   S.marketplaceItems = data || [];
   S.marketplaceHasMore = (data || []).length === 24;
@@ -5946,11 +5952,27 @@ async function loadMoreMarketplace() {
   if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
   S.marketplaceOffset += 24;
   const clientCountry = guessClientCountryCode();
-  const { data, error } = await sb.rpc('marketplace_products', { p_sort: S.marketplaceSort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: S.marketplaceOffset, p_client_country_code: clientCountry });
+  const countryFilter = document.getElementById('mk-country-filter') ? document.getElementById('mk-country-filter').value : '';
+  const { data, error } = await sb.rpc('marketplace_products', { p_sort: S.marketplaceSort, p_search: S.marketplaceSearch || null, p_limit: 24, p_offset: S.marketplaceOffset, p_client_country_code: clientCountry, p_country_filter: countryFilter || null });
   if (error) { console.error('loadMoreMarketplace error', error); if (btn) { btn.disabled = false; btn.textContent = 'Réessayer'; } return; }
   S.marketplaceItems = (S.marketplaceItems || []).concat(data || []);
   S.marketplaceHasMore = (data || []).length === 24;
   renderMarketplaceGrid();
+}
+
+// Remplit le sélecteur de pays de la Marketplace, avec le pays deviné du
+// client pré-sélectionné (mais toujours changeable librement).
+function populateMarketplaceCountryFilter() {
+  const sel = document.getElementById('mk-country-filter');
+  if (!sel || sel.dataset.filled) return; // ne le remplit qu'une fois
+  const guessed = guessClientCountryCode();
+  sel.innerHTML = '<option value="">🌍 Tous les pays</option>' +
+    AFRICA_COUNTRIES.map(c => `<option value="${c.code}" ${c.code === guessed ? 'selected' : ''}>${c.flag} ${c.name}</option>`).join('');
+  sel.dataset.filled = '1';
+}
+
+function onMarketplaceCountryFilterChange() {
+  loadMarketplace(S.marketplaceSort || 'new');
 }
 
 function renderMarketplaceGrid() {
@@ -6680,14 +6702,10 @@ function showWithdrawalForm() {
   overlay.innerHTML = `<div class="popup" style="max-width:400px">
     <div class="popup-handle"></div>
     <h3 style="text-align:center">Demander un retrait</h3>
+    <p style="font-size:12px;color:var(--gray);text-align:center;margin-bottom:14px">Par carte Visa uniquement. Zyntelo ne conserve jamais votre numéro complet.</p>
     <div class="fgrp"><label>Montant (FCFA)</label><input type="number" id="wd-amount"></div>
-    <div class="fgrp"><label>Méthode</label>
-      <select id="wd-method">
-        <option value="mobile_money">Mobile Money</option>
-        <option value="banque">Compte bancaire</option>
-      </select>
-    </div>
-    <div class="fgrp"><label>Détails (numéro Mobile Money ou RIB)</label><input id="wd-destination" placeholder="Ex : +225 07 00 00 00 00"></div>
+    <div class="fgrp"><label>Nom sur la carte</label><input id="wd-cardname" placeholder="Ex : Awa Koné"></div>
+    <div class="fgrp"><label>4 derniers chiffres de la carte Visa</label><input id="wd-last4" maxlength="4" inputmode="numeric" placeholder="Ex : 4242"></div>
     <button class="btn btn-blue btn-w" onclick="submitWithdrawalRequest()">Envoyer la demande</button>
     <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('withdrawal-overlay').remove()">Annuler</button>
   </div>`;
@@ -6696,10 +6714,11 @@ function showWithdrawalForm() {
 
 async function submitWithdrawalRequest() {
   const amount = parseFloat(document.getElementById('wd-amount').value);
-  const method = document.getElementById('wd-method').value;
-  const destination = document.getElementById('wd-destination').value.trim();
-  if (!amount || !destination) { toast('Remplissez tous les champs', 'err'); return; }
-  const { data, error } = await sb.rpc('shop_request_withdrawal', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_amount: amount, p_method: method, p_destination: destination });
+  const cardName = document.getElementById('wd-cardname').value.trim();
+  const last4 = document.getElementById('wd-last4').value.trim();
+  if (!amount || !cardName || last4.length !== 4) { toast('Remplissez tous les champs (4 chiffres exactement)', 'err'); return; }
+  const destination = `Visa •••• ${last4} — ${cardName}`;
+  const { data, error } = await sb.rpc('shop_request_withdrawal', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_amount: amount, p_method: 'visa', p_destination: destination });
   if (error || !data || !data.success) {
     toast(data && data.error === 'montant_superieur_au_disponible' ? 'Montant supérieur à votre solde disponible' : 'Erreur', 'err');
     return;
