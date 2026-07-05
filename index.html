@@ -1307,6 +1307,7 @@ canvas{display:block;}
           </div>
         </div>
         <button class="btn btn-blue btn-sm" onclick="showWithdrawalForm()">Demander un retrait</button>
+        <p style="font-size:11.5px;color:var(--gray);margin-top:10px">💡 "En attente" = un client a payé, l'argent est protégé chez Zyntelo. Il devient "Disponible" automatiquement après 7 jours, ou dès que le client confirme la réception — sauf en cas de litige, examiné par Zyntelo.</p>
         <h3 style="margin:20px 0 10px;font-size:14px">Historique</h3>
         <div id="wallet-history"></div>
       </div>
@@ -2380,7 +2381,15 @@ async function init() {
   }
   else if (route.type === 'client-messages') {
     await restoreClientSession();
-    if (S.client) { go('s-client-messages'); loadClientConversations(); }
+    if (S.client) {
+      go('s-client-messages');
+      await loadClientConversations();
+      const openId = new URLSearchParams(window.location.search).get('open');
+      if (openId) {
+        const idx = (window._clientConversations || []).findIndex(c => c.conversation_id === openId);
+        if (idx > -1) openClientConversationFromList(idx);
+      }
+    }
     else { go('s-marketplace'); loadMarketplace('new'); showClientLoginPopup(); }
   }
   else go('s-land');
@@ -6380,11 +6389,12 @@ function chatBubble(m, myRole) {
 
 const ESCROW_STATUS_LABELS = {
   en_attente_paiement: { label: '⏳ En attente de paiement', color: 'var(--gray)' },
-  protege: { label: '🛡️ Fonds protégés', color: 'var(--blue)' },
-  litige: { label: '⚠️ Litige en cours', color: 'var(--yellow)' },
+  protege: { label: '🛡️ Fonds protégés — versés au marchand dans 7 jours si rien ne se passe', color: 'var(--blue)' },
+  litige: { label: '⚠️ Litige en cours d\'examen par Zyntelo', color: 'var(--yellow)' },
   libere: { label: '✅ Fonds libérés au marchand', color: 'var(--green)' },
   rembourse_total: { label: '↩️ Remboursé intégralement', color: 'var(--red)' },
   rembourse_partiel: { label: '↩️ Remboursé partiellement', color: 'var(--red)' },
+  annule: { label: '✕ Lien annulé par le marchand', color: 'var(--gray)' },
 };
 
 function escrowCardHtml(m, myRole) {
@@ -6424,7 +6434,17 @@ async function refreshEscrowCardStatus(escrowId) {
         <button class="btn btn-blue btn-w btn-sm" onclick="confirmEscrowReceipt('${escrowId}')">✅ Confirmer la réception</button>
         <button class="btn btn-ghost btn-w btn-sm" style="margin-top:6px" onclick="openEscrowDisputeForm('${escrowId}')">⚠️ Signaler un problème</button>`;
     }
+  } else if (data.status === 'en_attente_paiement') {
+    actions.innerHTML = `<button class="btn btn-ghost btn-w btn-sm" style="color:var(--red)" onclick="cancelEscrowPayment('${escrowId}')">✕ Annuler ce lien</button>`;
   }
+}
+
+async function cancelEscrowPayment(escrowId) {
+  if (!confirm('Annuler ce lien Zyn Assurance ? Le client ne pourra plus payer avec.')) return;
+  const { data, error } = await sb.rpc('shop_cancel_escrow_payment', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_escrow_id: escrowId });
+  if (error || !data || !data.success) { toast('Erreur : impossible d\'annuler (déjà payé ?)', 'err'); return; }
+  toast('Lien annulé ✓');
+  refreshEscrowCardStatus(escrowId);
 }
 
 function showCreateEscrowForm() {
@@ -6439,7 +6459,7 @@ function showCreateEscrowForm() {
     <h3 style="text-align:center">🛡️ Créer un lien Zyn Assurance</h3>
     <div class="fgrp"><label>Produit</label><select id="esc-product" onchange="updateEscrowFormTotal()">${options}</select></div>
     <div class="fgrp"><label>Quantité</label><input type="number" id="esc-qty" value="1" min="1" onchange="updateEscrowFormTotal()" oninput="updateEscrowFormTotal()"></div>
-    <div class="fgrp"><label>Prix unitaire (FCFA)</label><input type="number" id="esc-price" onchange="updateEscrowFormTotal()" oninput="updateEscrowFormTotal()"></div>
+    <div class="fgrp"><label>Prix unitaire (FCFA) — modifiable si vous avez négocié une réduction</label><input type="number" id="esc-price" oninput="this.dataset.touched='1';updateEscrowFormTotal()"></div>
     <div style="font-size:14px;font-weight:700;margin:10px 0">Total : <span id="esc-total">0</span> FCFA</div>
     <button class="btn btn-blue btn-w" onclick="submitCreateEscrow()">Envoyer dans le chat</button>
     <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('escrow-form-overlay').remove()">Annuler</button>
@@ -6483,7 +6503,7 @@ async function payEscrowNow(escrowId) {
   try {
     const res = await fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/create-escrow-payment', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ escrowId, productName: e.product_name, amount: e.total_amount })
+      body: JSON.stringify({ escrowId, productName: e.product_name, amount: e.total_amount, conversationId: S.chatConversationId })
     });
     const result = await res.json();
     if (result.checkoutUrl) window.location.href = result.checkoutUrl;
@@ -6534,6 +6554,7 @@ async function submitEscrowDispute(escrowId) {
 function closeChatOverlay() {
   document.getElementById('chat-overlay').classList.remove('on');
   if (chatRealtimeChannel) { sb.removeChannel(chatRealtimeChannel); chatRealtimeChannel = null; }
+  if (S.chatStatusPoll) { clearInterval(S.chatStatusPoll); S.chatStatusPoll = null; }
 }
 
 // Ouvre (ou crée) la conversation entre le client actuel et le marchand de
@@ -6583,6 +6604,19 @@ function renderChatMessages(messages) {
     box.innerHTML = messages.map(m => chatBubble(m, S.chatRole)).join('');
   }
   box.scrollTop = box.scrollHeight;
+
+  // Vérifie automatiquement toutes les 5s si une carte Zyn Assurance en
+  // attente a été payée entre-temps — utile si le client revient de
+  // paiement sans recharger complètement la page.
+  const escrowMessages = messages.filter(m => m.message_type === 'zyn_assurance');
+  if (S.chatStatusPoll) clearInterval(S.chatStatusPoll);
+  if (escrowMessages.length) {
+    S.chatStatusPoll = setInterval(() => {
+      escrowMessages.forEach(m => {
+        try { refreshEscrowCardStatus(JSON.parse(m.message).escrow_id); } catch {}
+      });
+    }, 5000);
+  }
 }
 
 function startChatRealtime() {
@@ -6781,7 +6815,7 @@ function renderWalletHistory(rows) {
   const box = document.getElementById('wallet-history');
   if (!box) return;
   if (!rows.length) { box.innerHTML = `<div class="empty card"><p>Aucune transaction Zyn Assurance pour le moment.</p></div>`; return; }
-  const labels = { en_attente_paiement: '⏳ En attente', protege: '🛡️ Protégé', litige: '⚠️ Litige', libere: '✅ Libéré', rembourse_total: '↩️ Remboursé', rembourse_partiel: '↩️ Remb. partiel' };
+  const labels = { en_attente_paiement: '⏳ En attente', protege: '🛡️ Protégé', litige: '⚠️ Litige', libere: '✅ Libéré', rembourse_total: '↩️ Remboursé', rembourse_partiel: '↩️ Remb. partiel', annule: '✕ Annulé' };
   box.innerHTML = rows.map(r => `
     <div class="cmd-card">
       <div class="cmd-info">
