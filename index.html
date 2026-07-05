@@ -4675,12 +4675,27 @@ function renderAdminEscrowDisputes(rows) {
 async function resolveEscrowDispute(idx, action) {
   const r = window._adminEscrowDisputes && window._adminEscrowDisputes[idx];
   if (!r) return;
+  let partialAmount = null;
+  if (action === 'remboursement_partiel') {
+    partialAmount = parseFloat(prompt(`Montant à rembourser (sur ${(+r.total_amount).toLocaleString()} FCFA) :`));
+    if (!partialAmount || partialAmount <= 0) { toast('Montant invalide, annulé', 'err'); return; }
+  }
   const note = prompt('Note interne (facultatif) :') || null;
-  if (!confirm('Confirmer cette décision ? Elle est définitive.')) return;
-  const { data, error } = await sb.rpc('admin_resolve_escrow_dispute', { p_escrow_id: r.id, p_action: action, p_note: note });
-  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
-  toast('Décision enregistrée ✓');
-  loadAdminEscrow();
+  if (!confirm('Confirmer cette décision ? Elle est définitive et déclenche un vrai remboursement si applicable.')) return;
+  toast('Traitement en cours…', 'ok');
+  try {
+    const res = await fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/resolve-escrow-dispute', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escrowId: r.id, action, note, partialAmount, adminUid: S.user.id })
+    });
+    const result = await res.json();
+    if (!res.ok || result.error) { toast('Erreur : ' + (result.error || 'inconnue'), 'err'); return; }
+    toast('Décision enregistrée et notifiée ✓');
+    loadAdminEscrow();
+  } catch (e) {
+    console.error('resolveEscrowDispute error', e);
+    toast('Erreur réseau', 'err');
+  }
 }
 
 function renderAdminWithdrawals(rows) {
