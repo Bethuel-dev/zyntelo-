@@ -3552,7 +3552,7 @@ async function loginAs(user) {
   renderProds();
   renderCmds();
   renderCategories();
-  sb.rpc('shop_get_conversations', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: user.email }).then(({ data }) => updateShopMessagesBadge(data || []));
+  sb.rpc('shop_get_conversations', { p_owner_id: ownerId, p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: user.email }).then(({ data }) => updateShopMessagesBadge(data || []));
 
   go('s-dash');
   toast(`Bienvenue ${user.name} ! 👋`);
