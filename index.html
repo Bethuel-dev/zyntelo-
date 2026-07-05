@@ -978,6 +978,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-produits',this)"><span class="ni"><i data-lucide="package"></i></span>Produits</div>
       <div class="nav-item" onclick="pg('p-promos',this)"><span class="ni"><i data-lucide="tag"></i></span>Offres promotionnelles</div>
       <div class="nav-item" onclick="pg('p-messages',this)"><span class="ni"><i data-lucide="message-circle"></i></span>Messages <span id="p-messages-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
+      <div class="nav-item" onclick="pg('p-wallet',this)"><span class="ni"><i data-lucide="wallet"></i></span>Portefeuille</div>
       <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison et expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
@@ -1290,6 +1291,24 @@ canvas{display:block;}
       <div class="dash-page" id="p-messages">
         <div class="page-head"><h1>💬 Messages</h1><p>Vos discussions avec les clients</p></div>
         <div id="shop-messages-list"></div>
+      </div>
+
+      <!-- PORTEFEUILLE (Zyn Assurance) -->
+      <div class="dash-page" id="p-wallet">
+        <div class="page-head"><h1>💰 Portefeuille</h1><p>Vos paiements protégés par Zyn Assurance</p></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+          <div class="card" style="flex:1;min-width:150px">
+            <div style="font-size:12px;color:var(--gray)">En attente (protégé)</div>
+            <div id="wallet-pending" style="font-size:22px;font-weight:800;color:var(--yellow)">—</div>
+          </div>
+          <div class="card" style="flex:1;min-width:150px">
+            <div style="font-size:12px;color:var(--gray)">Disponible</div>
+            <div id="wallet-available" style="font-size:22px;font-weight:800;color:var(--green)">—</div>
+          </div>
+        </div>
+        <button class="btn btn-blue btn-sm" onclick="showWithdrawalForm()">Demander un retrait</button>
+        <h3 style="margin:20px 0 10px;font-size:14px">Historique</h3>
+        <div id="wallet-history"></div>
       </div>
 
       <!-- CLIENTS (de la boutique) -->
@@ -1637,6 +1656,9 @@ canvas{display:block;}
       <span style="color:var(--gray)">Les paiements effectués en dehors de Zyntelo ne sont pas protégés.</span>
     </div>
     <div id="chat-messages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div id="chat-escrow-btn-wrap" style="display:none;padding:0 12px;flex-shrink:0">
+      <button class="btn btn-blue btn-w btn-sm" style="margin-bottom:8px" onclick="showCreateEscrowForm()">🛡️ Envoyer un lien Zyn Assurance</button>
+    </div>
     <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
       <input type="text" id="chat-input" placeholder="Votre message…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
       <button onclick="sendChatMessage()" style="background:var(--blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0">➤</button>
@@ -1709,6 +1731,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
       <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands <span id="adm-reports-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
       <div class="nav-item" onclick="admPg('adm-empreinte',this)"><span class="ni"><i data-lucide="award"></i></span>Empreinte</div>
+      <div class="nav-item" onclick="admPg('adm-escrow',this)"><span class="ni"><i data-lucide="shield"></i></span>Zyn Assurance</div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -1900,6 +1923,28 @@ Merci pour votre confiance 🙏
           <button class="btn btn-blue btn-sm" onclick="submitEmpreinte()">Ajouter</button>
         </div>
         <div id="empreinte-admin-list" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:16px"></div>
+      </div>
+
+      <!-- ZYN ASSURANCE (admin) -->
+      <div class="dash-page" id="adm-escrow">
+        <div class="page-head"><h1>🛡️ Zyn Assurance</h1><p>Paiements protégés, litiges et retraits</p></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+          <div class="card" style="flex:1;min-width:180px">
+            <div style="font-size:12px;color:var(--gray)">Total sous séquestre (tous marchands)</div>
+            <div id="esc-total-protege" style="font-size:20px;font-weight:800;color:var(--blue)">—</div>
+          </div>
+          <div class="card" style="flex:1;min-width:180px">
+            <div style="font-size:12px;color:var(--gray)">Libéré, pas encore retiré</div>
+            <div id="esc-total-libere" style="font-size:20px;font-weight:800;color:var(--green)">—</div>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--gray);margin-bottom:20px">⚠️ Rappel : le solde réel de ton compte GeniusPay inclut ces deux montants — ils ne sont jamais "ton" argent disponible tant qu'ils apparaissent ici.</p>
+
+        <h3 style="font-size:15px;margin-bottom:10px">⚠️ Litiges en cours</h3>
+        <div id="esc-disputes-list" style="margin-bottom:24px"></div>
+
+        <h3 style="font-size:15px;margin-bottom:10px">💸 Demandes de retrait</h3>
+        <div id="esc-withdrawals-list"></div>
       </div>
     </div>
   </main>
@@ -2469,6 +2514,7 @@ function pg(pageId, el) {
   if (pageId === 'p-promos') loadPromoOffers();
   if (pageId === 'p-livraison') { loadDeliveryZones(); startDeliveryZonesRealtimeListener(ownerId()); }
   if (pageId === 'p-messages') loadShopConversations();
+  if (pageId === 'p-wallet') loadWallet();
   if (pageId === 'p-appearance') { loadAppearanceFormFromShop(); bindColorHexPairs(); }
   if (pageId === 'p-boutique') renderDomainStatus();
   if (pageId === 'p-abo') loadPaymentsHistory();
@@ -2492,6 +2538,7 @@ function admPg(pageId, el) {
   if (pageId === 'adm-reports') loadAdminReports();
   if (pageId === 'adm-profil') loadAdminBanners();
   if (pageId === 'adm-empreinte') loadAdminEmpreinte();
+  if (pageId === 'adm-escrow') loadAdminEscrow();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -3416,7 +3463,7 @@ async function loginAsGerant(g, shop) {
 
 function applyGerantRestrictions() {
   // Cache tous les onglets sauf Produits, Commandes, Clients (s'il existe)
-  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-livraison', 'p-messages', 'p-aide', 'p-gerant-notifs'];
+  const allowedPages = ['p-produits', 'p-commandes', 'p-clients-shop', 'p-stock', 'p-promos', 'p-livraison', 'p-messages', 'p-wallet', 'p-aide', 'p-gerant-notifs'];
   document.querySelectorAll('#s-dash .sb-nav .nav-item').forEach(item => {
     const onclickAttr = item.getAttribute('onclick') || '';
     const isAllowed = allowedPages.some(p => onclickAttr.includes(`'${p}'`));
@@ -4557,6 +4604,86 @@ async function deleteEmpreinte(idx) {
   if (error) { toast('Erreur : ' + error.message, 'err'); return; }
   toast('Retiré');
   loadAdminEmpreinte();
+}
+
+// ═══════════════════════════════════════════════
+// ZYN ASSURANCE (admin)
+// ═══════════════════════════════════════════════
+async function loadAdminEscrow() {
+  const { data: overview } = await sb.rpc('admin_get_escrow_overview');
+  if (overview && overview.success) {
+    document.getElementById('esc-total-protege').textContent = (overview.total_protege_tous_marchands || 0).toLocaleString() + ' FCFA';
+    document.getElementById('esc-total-libere').textContent = (overview.total_libere_non_retire || 0).toLocaleString() + ' FCFA';
+  }
+  const { data: disputes } = await sb.rpc('admin_get_escrow_disputes');
+  renderAdminEscrowDisputes(disputes || []);
+  const { data: withdrawals } = await sb.rpc('admin_get_withdrawal_requests');
+  renderAdminWithdrawals(withdrawals || []);
+}
+
+function renderAdminEscrowDisputes(rows) {
+  const list = document.getElementById('esc-disputes-list');
+  if (!list) return;
+  if (!rows.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucun litige en cours.</p>`; return; }
+  window._adminEscrowDisputes = rows;
+  const reasonLabels = { non_recu: 'Produit jamais reçu', non_conforme: 'Produit non conforme', autre: 'Autre problème' };
+  list.innerHTML = rows.map((r, idx) => `
+    <div class="review-card">
+      <div class="review-card-hdr">
+        <span class="review-card-name">${r.shop_name}</span>
+        <span class="badge b-red">${(+r.total_amount).toLocaleString()} FCFA</span>
+      </div>
+      <div style="font-size:13px;margin-top:6px"><strong>Produit :</strong> ${r.product_name}</div>
+      <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.dispute_reason] || r.dispute_reason}</div>
+      ${r.dispute_message ? `<div class="review-card-comment" style="margin-top:6px">${r.dispute_message}</div>` : ''}
+      <div style="font-size:12px;color:var(--gray);margin-top:8px">Client : ${r.client_name} · ${r.client_email} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="resolveEscrowDispute(${idx},'remboursement_total')">↩️ Remb. total</button>
+        <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="resolveEscrowDispute(${idx},'remboursement_partiel')">↩️ Remb. partiel</button>
+        <button class="btn btn-sm" style="background:var(--green-l);color:var(--green)" onclick="resolveEscrowDispute(${idx},'liberation_marchand')">✅ Libérer au marchand</button>
+      </div>
+    </div>`).join('');
+}
+
+async function resolveEscrowDispute(idx, action) {
+  const r = window._adminEscrowDisputes && window._adminEscrowDisputes[idx];
+  if (!r) return;
+  const note = prompt('Note interne (facultatif) :') || null;
+  if (!confirm('Confirmer cette décision ? Elle est définitive.')) return;
+  const { data, error } = await sb.rpc('admin_resolve_escrow_dispute', { p_escrow_id: r.id, p_action: action, p_note: note });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  toast('Décision enregistrée ✓');
+  loadAdminEscrow();
+}
+
+function renderAdminWithdrawals(rows) {
+  const list = document.getElementById('esc-withdrawals-list');
+  if (!list) return;
+  if (!rows.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune demande de retrait.</p>`; return; }
+  window._adminWithdrawals = rows;
+  const methodLabels = { mobile_money: '📱 Mobile Money', banque: '🏦 Banque' };
+  list.innerHTML = rows.map((r, idx) => `
+    <div class="cmd-card">
+      <div class="cmd-info">
+        <div class="cmd-name">${r.shop_name} — ${(+r.amount).toLocaleString()} FCFA</div>
+        <div class="cmd-detail">${methodLabels[r.method] || r.method} · ${r.destination_details} · ${new Date(r.requested_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+      ${r.status === 'demande' ? `
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" style="background:var(--green-l);color:var(--green)" onclick="processWithdrawal(${idx},'complete')">✅ Traité</button>
+          <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="processWithdrawal(${idx},'rejete')">✕ Rejeter</button>
+        </div>` : `<span class="badge ${r.status==='complete'?'b-green':'b-red'}">${r.status === 'complete' ? '✅ Traité' : '✕ Rejeté'}</span>`}
+    </div>`).join('');
+}
+
+async function processWithdrawal(idx, newStatus) {
+  const r = window._adminWithdrawals && window._adminWithdrawals[idx];
+  if (!r) return;
+  if (!confirm(newStatus === 'complete' ? 'Confirmer que le virement a bien été effectué manuellement ?' : 'Rejeter cette demande ?')) return;
+  const { data, error } = await sb.rpc('admin_process_withdrawal', { p_withdrawal_id: r.id, p_new_status: newStatus });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  toast('Mis à jour ✓');
+  loadAdminEscrow();
 }
 
 // ═══════════════════════════════════════════════
@@ -6159,6 +6286,7 @@ async function submitReportMerchant() {
 let chatRealtimeChannel = null;
 
 function chatBubble(m, myRole) {
+  if (m.message_type === 'zyn_assurance') return escrowCardHtml(m, myRole);
   const isMe = m.sender_type === myRole;
   const safe = hcEscape(m.message);
   const time = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -6171,6 +6299,159 @@ function chatBubble(m, myRole) {
       <div style="background:var(--gray-l);color:var(--black);padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:13.5px">${safe}</div>
       <div style="font-size:10px;color:var(--gray);margin-top:2px;margin-left:3px">${time}</div>
     </div>`;
+}
+
+const ESCROW_STATUS_LABELS = {
+  en_attente_paiement: { label: '⏳ En attente de paiement', color: 'var(--gray)' },
+  protege: { label: '🛡️ Fonds protégés', color: 'var(--blue)' },
+  litige: { label: '⚠️ Litige en cours', color: 'var(--yellow)' },
+  libere: { label: '✅ Fonds libérés au marchand', color: 'var(--green)' },
+  rembourse_total: { label: '↩️ Remboursé intégralement', color: 'var(--red)' },
+  rembourse_partiel: { label: '↩️ Remboursé partiellement', color: 'var(--red)' },
+};
+
+function escrowCardHtml(m, myRole) {
+  let data;
+  try { data = JSON.parse(m.message); } catch { return ''; }
+  const cardId = 'escrow-card-' + data.escrow_id;
+  setTimeout(() => refreshEscrowCardStatus(data.escrow_id), 50); // rafraîchit le vrai statut juste après l'affichage
+  return `<div id="${cardId}" style="align-self:center;width:100%;max-width:92%;background:#fff;border:1.5px solid var(--blue-l);border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+    <div style="display:flex;gap:10px;align-items:center">
+      ${data.product_image ? `<img src="${data.product_image}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0">` : `<div style="width:52px;height:52px;border-radius:8px;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🛡️</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13.5px">${hcEscape(data.product_name||'')}</div>
+        <div style="font-size:12px;color:var(--gray)">Qté : ${data.quantity} · <strong style="color:var(--black)">${(+data.total_amount).toLocaleString()} FCFA</strong></div>
+      </div>
+    </div>
+    <div class="escrow-status-badge" style="font-size:12px;font-weight:700;margin-top:10px">Vérification…</div>
+    <div class="escrow-actions" style="margin-top:8px"></div>
+  </div>`;
+}
+
+async function refreshEscrowCardStatus(escrowId) {
+  const card = document.getElementById('escrow-card-' + escrowId);
+  if (!card) return;
+  const { data } = await sb.rpc('get_escrow_status', { p_escrow_id: escrowId });
+  if (!data || !data.success) return;
+  const info = ESCROW_STATUS_LABELS[data.status] || { label: data.status, color: 'var(--gray)' };
+  const badge = card.querySelector('.escrow-status-badge');
+  if (badge) { badge.textContent = info.label; badge.style.color = info.color; }
+  const actions = card.querySelector('.escrow-actions');
+  if (!actions) return;
+  actions.innerHTML = '';
+  if (S.chatRole === 'client') {
+    if (data.status === 'en_attente_paiement') {
+      actions.innerHTML = `<button class="btn btn-blue btn-w btn-sm" onclick="payEscrowNow('${escrowId}')">🛡️ Payer avec Zyn Assurance</button>`;
+    } else if (data.status === 'protege') {
+      actions.innerHTML = `
+        <button class="btn btn-blue btn-w btn-sm" onclick="confirmEscrowReceipt('${escrowId}')">✅ Confirmer la réception</button>
+        <button class="btn btn-ghost btn-w btn-sm" style="margin-top:6px" onclick="openEscrowDisputeForm('${escrowId}')">⚠️ Signaler un problème</button>`;
+    }
+  }
+}
+
+function showCreateEscrowForm() {
+  const options = (S.products || []).map(p => `<option value="${p.id}" data-price="${p.newP}" data-img="${(p.imgs&&p.imgs[0])||''}">${hcEscape(p.name)}</option>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'escrow-form-overlay';
+  overlay.style.zIndex = '9999';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="popup" style="max-width:400px">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">🛡️ Créer un lien Zyn Assurance</h3>
+    <div class="fgrp"><label>Produit</label><select id="esc-product" onchange="updateEscrowFormTotal()">${options}</select></div>
+    <div class="fgrp"><label>Quantité</label><input type="number" id="esc-qty" value="1" min="1" onchange="updateEscrowFormTotal()" oninput="updateEscrowFormTotal()"></div>
+    <div class="fgrp"><label>Prix unitaire (FCFA)</label><input type="number" id="esc-price" onchange="updateEscrowFormTotal()" oninput="updateEscrowFormTotal()"></div>
+    <div style="font-size:14px;font-weight:700;margin:10px 0">Total : <span id="esc-total">0</span> FCFA</div>
+    <button class="btn btn-blue btn-w" onclick="submitCreateEscrow()">Envoyer dans le chat</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('escrow-form-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  updateEscrowFormTotal();
+}
+
+function updateEscrowFormTotal() {
+  const sel = document.getElementById('esc-product');
+  const opt = sel.options[sel.selectedIndex];
+  const priceEl = document.getElementById('esc-price');
+  if (priceEl && !priceEl.dataset.touched && opt) priceEl.value = opt.dataset.price || 0;
+  const qty = parseInt(document.getElementById('esc-qty').value) || 1;
+  const price = parseFloat(priceEl.value) || 0;
+  document.getElementById('esc-total').textContent = (qty * price).toLocaleString();
+}
+
+async function submitCreateEscrow() {
+  const sel = document.getElementById('esc-product');
+  const opt = sel.options[sel.selectedIndex];
+  const qty = parseInt(document.getElementById('esc-qty').value) || 1;
+  const price = parseFloat(document.getElementById('esc-price').value) || 0;
+  if (!opt || !price || qty < 1) { toast('Vérifiez les champs', 'err'); return; }
+  const { data, error } = await sb.rpc('shop_create_escrow_payment', {
+    p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email,
+    p_conversation_id: S.chatConversationId, p_product_name: opt.textContent, p_product_image: opt.dataset.img || null,
+    p_quantity: qty, p_unit_price: price
+  });
+  if (error || !data || !data.success) { toast('Erreur lors de la création', 'err'); return; }
+  document.getElementById('escrow-form-overlay').remove();
+  loadChatMessages();
+  toast('Lien Zyn Assurance envoyé ✓');
+}
+
+async function payEscrowNow(escrowId) {
+  toast('Redirection vers le paiement…', 'ok');
+  const { data: escrowData, error: escrowErr } = await sb.rpc('client_get_escrow_payment', { p_client_id: S.client.id, p_email: S.client.email, p_escrow_id: escrowId });
+  if (escrowErr || !escrowData || !escrowData.length) { toast('Erreur', 'err'); return; }
+  const e = escrowData[0];
+  try {
+    const res = await fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/create-escrow-payment', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escrowId, productName: e.product_name, amount: e.total_amount })
+    });
+    const result = await res.json();
+    if (result.checkoutUrl) window.location.href = result.checkoutUrl;
+    else toast('Erreur lors de la création du paiement', 'err');
+  } catch (err) { console.error('payEscrowNow error', err); toast('Erreur réseau', 'err'); }
+}
+
+async function confirmEscrowReceipt(escrowId) {
+  if (!confirm('Confirmer que vous avez bien reçu votre commande ? Les fonds seront alors versés au marchand.')) return;
+  const { data, error } = await sb.rpc('client_confirm_escrow_receipt', { p_client_id: S.client.id, p_email: S.client.email, p_escrow_id: escrowId });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  toast('Réception confirmée, merci ! 🎉');
+  refreshEscrowCardStatus(escrowId);
+}
+
+function openEscrowDisputeForm(escrowId) {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'escrow-dispute-overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `<div class="popup" style="max-width:400px">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">⚠️ Signaler un problème</h3>
+    <div class="fgrp"><label>Motif</label>
+      <select id="esd-reason">
+        <option value="non_recu">Produit jamais reçu</option>
+        <option value="non_conforme">Produit non conforme</option>
+        <option value="autre">Autre problème</option>
+      </select>
+    </div>
+    <div class="fgrp"><label>Expliquez la situation</label><textarea id="esd-message" rows="3"></textarea></div>
+    <button class="btn btn-blue btn-w" onclick="submitEscrowDispute('${escrowId}')">Envoyer à Zyntelo</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('escrow-dispute-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitEscrowDispute(escrowId) {
+  const reason = document.getElementById('esd-reason').value;
+  const message = document.getElementById('esd-message').value.trim();
+  const { data, error } = await sb.rpc('client_open_escrow_dispute', { p_client_id: S.client.id, p_email: S.client.email, p_escrow_id: escrowId, p_reason: reason, p_message: message });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  document.getElementById('escrow-dispute-overlay').remove();
+  toast('Litige ouvert, notre équipe va examiner la situation.');
+  refreshEscrowCardStatus(escrowId);
 }
 
 function closeChatOverlay() {
@@ -6197,6 +6478,7 @@ function openChatThread(conversationId, role, ctx) {
   S.chatCtx = ctx || {};
   document.getElementById('chat-header-title').textContent = role === 'client' ? (ctx.shopName || 'Discussion') : (ctx.clientName || 'Discussion');
   document.getElementById('chat-overlay').classList.add('on');
+  document.getElementById('chat-escrow-btn-wrap').style.display = role === 'shop' ? '' : 'none';
   loadChatMessages();
 }
 
@@ -6361,6 +6643,70 @@ function updateShopMessagesBadge(rows) {
   const nb = (rows || []).reduce((sum, r) => sum + (Number(r.unread_count) || 0), 0);
   if (nb > 0) { badge.textContent = nb; badge.style.display = ''; }
   else { badge.style.display = 'none'; }
+}
+
+// ═══════════════════════════════════════════════
+// PORTEFEUILLE MARCHAND (Zyn Assurance)
+// ═══════════════════════════════════════════════
+async function loadWallet() {
+  const { data } = await sb.rpc('shop_get_wallet_summary', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email });
+  if (data && data.success) {
+    document.getElementById('wallet-pending').textContent = (data.solde_en_attente || 0).toLocaleString() + ' FCFA';
+    document.getElementById('wallet-available').textContent = (data.solde_disponible || 0).toLocaleString() + ' FCFA';
+  }
+  const { data: history } = await sb.rpc('shop_get_escrow_history', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email });
+  renderWalletHistory(history || []);
+}
+
+function renderWalletHistory(rows) {
+  const box = document.getElementById('wallet-history');
+  if (!box) return;
+  if (!rows.length) { box.innerHTML = `<div class="empty card"><p>Aucune transaction Zyn Assurance pour le moment.</p></div>`; return; }
+  const labels = { en_attente_paiement: '⏳ En attente', protege: '🛡️ Protégé', litige: '⚠️ Litige', libere: '✅ Libéré', rembourse_total: '↩️ Remboursé', rembourse_partiel: '↩️ Remb. partiel' };
+  box.innerHTML = rows.map(r => `
+    <div class="cmd-card">
+      <div class="cmd-info">
+        <div class="cmd-name">${r.product_name} — ${r.client_name || ''}</div>
+        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · ${(+r.total_amount).toLocaleString()} FCFA</div>
+      </div>
+      <span class="badge b-blue">${labels[r.status] || r.status}</span>
+    </div>`).join('');
+}
+
+function showWithdrawalForm() {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'withdrawal-overlay';
+  overlay.innerHTML = `<div class="popup" style="max-width:400px">
+    <div class="popup-handle"></div>
+    <h3 style="text-align:center">Demander un retrait</h3>
+    <div class="fgrp"><label>Montant (FCFA)</label><input type="number" id="wd-amount"></div>
+    <div class="fgrp"><label>Méthode</label>
+      <select id="wd-method">
+        <option value="mobile_money">Mobile Money</option>
+        <option value="banque">Compte bancaire</option>
+      </select>
+    </div>
+    <div class="fgrp"><label>Détails (numéro Mobile Money ou RIB)</label><input id="wd-destination" placeholder="Ex : +225 07 00 00 00 00"></div>
+    <button class="btn btn-blue btn-w" onclick="submitWithdrawalRequest()">Envoyer la demande</button>
+    <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('withdrawal-overlay').remove()">Annuler</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitWithdrawalRequest() {
+  const amount = parseFloat(document.getElementById('wd-amount').value);
+  const method = document.getElementById('wd-method').value;
+  const destination = document.getElementById('wd-destination').value.trim();
+  if (!amount || !destination) { toast('Remplissez tous les champs', 'err'); return; }
+  const { data, error } = await sb.rpc('shop_request_withdrawal', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email, p_amount: amount, p_method: method, p_destination: destination });
+  if (error || !data || !data.success) {
+    toast(data && data.error === 'montant_superieur_au_disponible' ? 'Montant supérieur à votre solde disponible' : 'Erreur', 'err');
+    return;
+  }
+  document.getElementById('withdrawal-overlay').remove();
+  toast('Demande de retrait envoyée ✓');
+  loadWallet();
 }
 
 function goToProductFromGrid(prodId) {
