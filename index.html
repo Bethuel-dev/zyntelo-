@@ -7292,7 +7292,7 @@ async function submitOrder() {
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
   S._submittingOrder = true;
   const cmdButtons = document.querySelectorAll('[onclick="submitOrder()"]');
-  cmdButtons.forEach(b => { b.disabled = true; b.dataset.origText = b.textContent; b.textContent = 'Envoi en cours…'; });
+  cmdButtons.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
   try {
   // Le secteur de livraison est facultatif : le client peut commander sans le
   // choisir, le marchand/gérant le contactera de toute façon pour finaliser.
@@ -7329,7 +7329,7 @@ async function submitOrder() {
   }
   } finally {
     S._submittingOrder = false;
-    cmdButtons.forEach(b => { b.disabled = false; if (b.dataset.origText) b.textContent = b.dataset.origText; });
+    cmdButtons.forEach(b => { b.disabled = false; b.style.opacity = ''; b.style.pointerEvents = ''; });
   }
 }
 
