@@ -1403,6 +1403,7 @@ canvas{display:block;}
           <div class="card-title">➕ Ajouter un livreur</div>
           <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Le livreur se connectera sur zyntelo.app → « Livreur » avec son numéro et le code que vous choisissez. Il verra uniquement les commandes que vous lui assignez.</p>
           <div class="fgrp"><label>Nom du livreur *</label><input id="lvf-name" placeholder="Koffi Yao"></div>
+          <div class="fgrp"><label>Email (pour recevoir ses livraisons assignées)</label><input id="lvf-email" type="email" placeholder="koffi@email.com"></div>
           <div class="fgrp"><label>Numéro de téléphone *</label>
             <div class="phone-grp">
               <div class="ctry-sel" id="lvf-phone-cc-wrap"><button type="button" class="ctry-sel-btn" onclick="toggleCountryDropdown('lvf-phone-cc')"><span id="lvf-phone-cc-label">🇨🇮 +225</span><span class="ctry-sel-arrow">▾</span></button><input type="hidden" id="lvf-phone-cc" value="+225"><div class="ctry-sel-dropdown" id="lvf-phone-cc-dropdown" style="display:none"><input type="text" class="ctry-sel-search" placeholder="Rechercher un pays…" oninput="filterCountryDropdown('lvf-phone-cc', this.value)" onclick="event.stopPropagation()"><div class="ctry-sel-list" id="lvf-phone-cc-list"></div></div></div>
@@ -3377,10 +3378,22 @@ function startOrdersRealtimeListener(targetOwnerId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `owner_id=eq.${targetOwnerId}` }, (payload) => {
       playCashSound();
       toast('🛒 Nouvelle commande reçue !');
-      if (document.getElementById('p-commandes').classList.contains('on')) renderCmds();
       const newOrder = { ...payload.new.data, id:'o_'+Date.now(), _rowId: payload.new.id };
       S.orders.unshift(newOrder);
+      if (document.getElementById('p-commandes').classList.contains('on')) renderCmds();
       showOrderNotif(newOrder);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `owner_id=eq.${targetOwnerId}` }, (payload) => {
+      // Sans ça, une commande validée par un livreur ou un gérant reste
+      // affichée comme "en attente" tant que le marchand n'a pas rechargé
+      // la page — la base de données était juste, l'écran non.
+      const idx = S.orders.findIndex(o => o._rowId === payload.new.id);
+      if (idx > -1) {
+        S.orders[idx] = { ...payload.new.data, id: S.orders[idx].id, _rowId: payload.new.id };
+      } else {
+        S.orders.unshift({ ...payload.new.data, id: 'o_' + Date.now(), _rowId: payload.new.id });
+      }
+      if (document.getElementById('p-commandes').classList.contains('on')) renderCmds();
     })
     .subscribe();
 }
@@ -7269,6 +7282,7 @@ async function sendPushEvent(targetOwnerId, eventType, refId, title, body) {
 }
 
 async function submitOrder() {
+  if (S._submittingOrder) return; // empêche un double-clic d'envoyer deux fois la même commande
   const prenom=document.getElementById('or-prenom').value.trim();
   const ville=document.getElementById('or-ville').value.trim();
   const qrt=document.getElementById('or-qrt').value.trim();
@@ -7276,6 +7290,10 @@ async function submitOrder() {
   const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
   const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
+  S._submittingOrder = true;
+  const cmdButtons = document.querySelectorAll('[onclick="submitOrder()"]');
+  cmdButtons.forEach(b => { b.disabled = true; b.dataset.origText = b.textContent; b.textContent = 'Envoi en cours…'; });
+  try {
   // Le secteur de livraison est facultatif : le client peut commander sans le
   // choisir, le marchand/gérant le contactera de toute façon pour finaliser.
   const sectorOpt = sectorId && sectorSel ? sectorSel.options[sectorSel.selectedIndex] : null;
@@ -7308,6 +7326,10 @@ async function submitOrder() {
     Promise.resolve(sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_client_id: orderData.id, p_owner_id: ownerId() })).catch(()=>{});
   } else {
     setTimeout(() => showPostOrderSignup(orderData.id, ownerId(), prenom, tel), 1200);
+  }
+  } finally {
+    S._submittingOrder = false;
+    cmdButtons.forEach(b => { b.disabled = false; if (b.dataset.origText) b.textContent = b.dataset.origText; });
   }
 }
 
@@ -8132,6 +8154,7 @@ async function _lvUpload(inputId, bucket, path) {
 
 async function addLivreur() {
   const name = document.getElementById('lvf-name').value.trim();
+  const email = document.getElementById('lvf-email').value.trim();
   const phone = getPhoneValue('lvf-phone');
   const code = document.getElementById('lvf-code').value.trim();
   if (!name || !phone) { toast('Nom et numéro obligatoires', 'err'); return; }
@@ -8144,14 +8167,19 @@ async function addLivreur() {
     const idFront = await _lvUpload('lvf-id-front', 'livreurs-docs', `${ownerId()}/${ts}-recto`);
     const idBack  = await _lvUpload('lvf-id-back',  'livreurs-docs', `${ownerId()}/${ts}-verso`);
     const { error } = await sb.from('shop_livreurs').insert({
-      owner_id: ownerId(), name, phone, access_code: code,
+      owner_id: ownerId(), name, phone, email: email || null, access_code: code,
       photo_url: photoUrl, id_card_front_url: idFront, id_card_back_url: idBack
     });
     if (error) {
       toast(error.message.includes('duplicate') ? 'Ce numéro utilise déjà ce code.' : 'Erreur : ' + error.message, 'err');
       return;
     }
-    ['lvf-name','lvf-code','lvf-phone-num','lvf-photo','lvf-id-front','lvf-id-back'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    if (email) {
+      try {
+        await sb.functions.invoke('send-livreur-invite', { body: { to: email, name, shopName: S.shop.name, phone, code } });
+      } catch (e) { console.error('Erreur envoi invitation livreur', e); }
+    }
+    ['lvf-name','lvf-email','lvf-code','lvf-phone-num','lvf-photo','lvf-id-front','lvf-id-back'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     toast('Livreur ajouté ✓ Transmettez-lui son code');
     renderLivreurs();
   } finally { btn.disabled = false; btn.textContent = 'Ajouter le livreur'; }
@@ -8170,7 +8198,7 @@ async function renderLivreurs() {
       <div class="gerant-ava" style="overflow:hidden">${l.photo_url ? `<img src="${esc(l.photo_url)}" style="width:100%;height:100%;object-fit:cover">` : '🛵'}</div>
       <div class="gerant-info">
         <div class="gerant-name">${esc(l.name)}</div>
-        <div class="gerant-role">${esc(l.phone)} · Code : ${esc(l.access_code)}</div>
+        <div class="gerant-role">${esc(l.phone)} · Code : ${esc(l.access_code)}${l.email ? ' · ' + esc(l.email) : ''}</div>
       </div>
       ${l.id_card_front_url ? `<button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="viewLivreurDocs('${l.id}')">🪪 Pièces</button>` : ''}
       <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="removeLivreur('${l.id}')">Retirer</button>
@@ -8205,6 +8233,12 @@ function openAssignLivreur(orderId) {
     const { error } = await sb.from('orders').update({ livreur_id: livreur.id, data: cleanData }).eq('id', o._rowId);
     if (error) { toast('Erreur : ' + error.message, 'err'); return; }
     toast(`Commande assignée à ${livreur.name} ✓`);
+    if (livreur.email) {
+      fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-livreur-event', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: livreur.email, type: 'assigned', orderInfo: cleanData })
+      }).catch(() => {});
+    }
     renderCmds();
   };
   const open = (livreurs) => {
@@ -8303,7 +8337,26 @@ async function livreurMark(rowId, result) {
   const { data, error } = await sb.rpc('livreur_mark_order', { p_livreur_id: s.livreurId, p_phone: s.phone, p_code: s.code, p_order_id: rowId, p_result: result });
   if (error || !data || !data.success) { toast('Erreur — réessayez', 'err'); return; }
   toast(result === 'livree' ? 'Livraison confirmée ✓' : 'Note enregistrée — le marchand est informé');
+  notifyMerchantOfLivreurEvent(data.owner_id, result === 'livree' ? 'delivered' : 'absent', data.order_data, s.name);
   loadLivreurOrders();
+}
+
+// Envoie réellement l'email au marchand + à ses gérants actifs — ce qui
+// manquait complètement avant, malgré le message affiché au livreur.
+async function notifyMerchantOfLivreurEvent(targetOwnerId, type, orderInfo, livreurName) {
+  try {
+    const { data: contact } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: targetOwnerId });
+    const recipients = [];
+    if (contact && contact.email) recipients.push(contact.email);
+    const { data: gerants } = await sb.rpc('get_active_gerants_for_notification', { p_owner_id: targetOwnerId });
+    (gerants || []).forEach(g => { if (g.email) recipients.push(g.email); });
+    recipients.forEach(to => {
+      fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-livreur-event', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, type, orderInfo, livreurName })
+      }).catch(() => {});
+    });
+  } catch (e) { console.error('notifyMerchantOfLivreurEvent error', e); }
 }
 
 function livreurLogout() {
