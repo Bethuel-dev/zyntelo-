@@ -1754,7 +1754,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-support',this)"><span class="ni"><i data-lucide="life-buoy"></i></span>Préoccupations</div>
       <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands <span id="adm-reports-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
       <div class="nav-item" onclick="admPg('adm-empreinte',this)"><span class="ni"><i data-lucide="award"></i></span>Empreinte</div>
-      <div class="nav-item" onclick="admPg('adm-escrow',this)"><span class="ni"><i data-lucide="shield"></i></span>Zyn Assurance</div>
+      <div class="nav-item" onclick="admPg('adm-escrow',this)"><span class="ni"><i data-lucide="shield"></i></span>Zyn Assurance <span id="adm-escrow-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -3996,6 +3996,12 @@ async function openAdmin() {
   await renderAdminClients();
   await loadProfileForm();
   loadAdminReports(); // pour que le badge de compteur soit visible immédiatement, sans avoir à ouvrir la page
+  sb.rpc('admin_count_pending_disputes').then(({ data }) => {
+    const badge = document.getElementById('adm-escrow-badge');
+    if (!badge) return;
+    if (data > 0) { badge.textContent = data; badge.style.display = ''; }
+    else { badge.style.display = 'none'; }
+  });
   go('s-admin');
   toast('Espace admin ouvert ✓');
 }
@@ -4681,6 +4687,11 @@ async function loadAdminEscrow() {
   }
   const { data: disputes } = await sb.rpc('admin_get_escrow_disputes');
   renderAdminEscrowDisputes(disputes || []);
+  const badge = document.getElementById('adm-escrow-badge');
+  if (badge) {
+    const nb = (disputes || []).length;
+    if (nb > 0) { badge.textContent = nb; badge.style.display = ''; } else { badge.style.display = 'none'; }
+  }
   const { data: withdrawals } = await sb.rpc('admin_get_withdrawal_requests');
   renderAdminWithdrawals(withdrawals || []);
 }
@@ -4694,19 +4705,78 @@ function renderAdminEscrowDisputes(rows) {
   list.innerHTML = rows.map((r, idx) => `
     <div class="review-card">
       <div class="review-card-hdr">
-        <span class="review-card-name">${r.shop_name}</span>
+        <span class="review-card-name">${esc(r.shop_name)}</span>
         <span class="badge b-red">${(+r.total_amount).toLocaleString()} FCFA</span>
       </div>
-      <div style="font-size:13px;margin-top:6px"><strong>Produit :</strong> ${r.product_name}</div>
-      <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.dispute_reason] || r.dispute_reason}</div>
-      ${r.dispute_message ? `<div class="review-card-comment" style="margin-top:6px">${r.dispute_message}</div>` : ''}
-      <div style="font-size:12px;color:var(--gray);margin-top:8px">Client : ${r.client_name} · ${r.client_email} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+      <div style="font-size:13px;margin-top:6px"><strong>Produit :</strong> ${esc(r.product_name)}</div>
+      <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.dispute_reason] || esc(r.dispute_reason)}</div>
+      ${r.dispute_message ? `<div class="review-card-comment" style="margin-top:6px">${esc(r.dispute_message)}</div>` : ''}
+      ${r.dispute_image_url ? `<a href="${esc(r.dispute_image_url)}" target="_blank" rel="noopener"><img src="${esc(r.dispute_image_url)}" style="max-width:140px;border-radius:8px;margin-top:8px;display:block"></a>` : ''}
+      <div style="font-size:12px;color:var(--gray);margin-top:8px">Client : ${esc(r.client_name)} · ${esc(r.client_email)} · ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openAdminEscrowConversation(${idx})">💬 Voir la conversation / interroger les deux parties</button>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
         <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="resolveEscrowDispute(${idx},'remboursement_total')">↩️ Remb. total</button>
         <button class="btn btn-sm" style="background:var(--yellow-l);color:var(--yellow)" onclick="resolveEscrowDispute(${idx},'remboursement_partiel')">↩️ Remb. partiel</button>
         <button class="btn btn-sm" style="background:var(--green-l);color:var(--green)" onclick="resolveEscrowDispute(${idx},'liberation_marchand')">✅ Libérer au marchand</button>
       </div>
     </div>`).join('');
+}
+
+// Permet à l'admin de consulter l'historique complet de la conversation
+// liée à un litige, et d'y écrire pour interroger le client ou le marchand
+// avant de trancher — visible des deux côtés, signé "Zyntelo".
+async function openAdminEscrowConversation(idx) {
+  const r = window._adminEscrowDisputes && window._adminEscrowDisputes[idx];
+  if (!r || !r.conversation_id) { toast('Conversation introuvable', 'err'); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'admin-conv-overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `<div class="popup" style="max-width:440px;height:75vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="font-weight:700;font-size:15px">${esc(r.shop_name)} ↔ ${esc(r.client_name)}</div>
+      <button onclick="document.getElementById('admin-conv-overlay').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray)">✕</button>
+    </div>
+    <div id="admin-conv-messages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px"><p style="font-size:12.5px;color:var(--gray);text-align:center">Chargement…</p></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="admin-conv-input" placeholder="Écrire au client et au marchand…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendAdminConvMessage('${r.conversation_id}')">
+      <button onclick="sendAdminConvMessage('${r.conversation_id}')" style="background:var(--blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0">➤</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  loadAdminConvMessages(r.conversation_id);
+}
+
+async function loadAdminConvMessages(conversationId) {
+  const box = document.getElementById('admin-conv-messages');
+  const { data, error } = await sb.rpc('admin_get_conversation_messages', { p_conversation_id: conversationId });
+  if (!box) return;
+  if (error) { box.innerHTML = `<p style="font-size:12.5px;color:var(--red);text-align:center">Erreur de chargement.</p>`; return; }
+  if (!data || !data.length) { box.innerHTML = `<p style="font-size:12.5px;color:var(--gray);text-align:center">Aucun message.</p>`; return; }
+  box.innerHTML = data.map(m => {
+    const isAdmin = m.sender_type === 'admin';
+    const label = isAdmin ? 'Zyntelo' : (m.sender_type === 'client' ? (m.sender_name || 'Client') : (m.sender_name || 'Marchand'));
+    const bg = isAdmin ? 'var(--blue)' : 'var(--gray-l)';
+    const color = isAdmin ? '#fff' : 'var(--black)';
+    const time = new Date(m.created_at).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour: '2-digit', minute: '2-digit' });
+    const body = m.message_type === 'text' ? esc(m.message) : (m.message_type === 'zyn_assurance' ? '🛡️ Carte de paiement Zyn Assurance' : '📎 Pièce jointe');
+    return `<div style="align-self:${isAdmin ? 'flex-end' : 'flex-start'};max-width:82%">
+      <div style="font-size:10.5px;color:var(--gray);margin-bottom:2px;${isAdmin?'text-align:right':''}">${esc(label)}</div>
+      <div style="background:${bg};color:${color};padding:9px 13px;border-radius:12px;font-size:13.5px">${body}</div>
+      <div style="font-size:10px;color:var(--gray);margin-top:2px;${isAdmin?'text-align:right':''}">${time}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendAdminConvMessage(conversationId) {
+  const input = document.getElementById('admin-conv-input');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  input.value = '';
+  const { data, error } = await sb.rpc('admin_send_conversation_message', { p_conversation_id: conversationId, p_message: text });
+  if (error || !data || !data.success) { toast('Erreur d\'envoi', 'err'); input.value = text; return; }
+  loadAdminConvMessages(conversationId);
 }
 
 async function resolveEscrowDispute(idx, action) {
@@ -6563,20 +6633,57 @@ function openEscrowDisputeForm(escrowId) {
       </select>
     </div>
     <div class="fgrp"><label>Expliquez la situation</label><textarea id="esd-message" rows="3"></textarea></div>
-    <button class="btn btn-blue btn-w" onclick="submitEscrowDispute('${escrowId}')">Envoyer à Zyntelo</button>
+    <div class="fgrp"><label>Photo à l'appui (facultatif)</label>
+      <input type="file" id="esd-image" accept="image/*">
+      <div id="esd-image-preview" style="margin-top:8px"></div>
+    </div>
+    <button class="btn btn-blue btn-w" id="esd-submit-btn" onclick="submitEscrowDispute('${escrowId}')">Envoyer à Zyntelo</button>
     <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="document.getElementById('escrow-dispute-overlay').remove()">Annuler</button>
   </div>`;
   document.body.appendChild(overlay);
+  document.getElementById('esd-image').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    const preview = document.getElementById('esd-image-preview');
+    preview.innerHTML = f ? `<div style="font-size:12px;color:var(--gray)">📷 ${esc(f.name)}</div>` : '';
+  });
 }
 
 async function submitEscrowDispute(escrowId) {
   const reason = document.getElementById('esd-reason').value;
   const message = document.getElementById('esd-message').value.trim();
-  const { data, error } = await sb.rpc('client_open_escrow_dispute', { p_client_id: S.client.id, p_email: S.client.email, p_escrow_id: escrowId, p_reason: reason, p_message: message });
-  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
-  document.getElementById('escrow-dispute-overlay').remove();
-  toast('Litige ouvert, notre équipe va examiner la situation.');
-  refreshEscrowCardStatus(escrowId);
+  const imageFile = document.getElementById('esd-image').files[0];
+  const btn = document.getElementById('esd-submit-btn');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  try {
+    let imageUrl = null;
+    if (imageFile) {
+      const base64 = await compressImage(imageFile, 1000, 0.75);
+      const blob = dataURLToBlob(base64);
+      const fileName = `dispute_${escrowId}_${Date.now()}.jpg`;
+      const { error: upErr } = await sb.storage.from('chat-attachments').upload(fileName, blob, { contentType: 'image/jpeg' });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('chat-attachments').getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+    }
+    const { data, error } = await sb.rpc('client_open_escrow_dispute', { p_client_id: S.client.id, p_email: S.client.email, p_escrow_id: escrowId, p_reason: reason, p_message: message, p_image_url: imageUrl });
+    if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+    document.getElementById('escrow-dispute-overlay').remove();
+    toast('Litige ouvert, notre équipe va examiner la situation.');
+    refreshEscrowCardStatus(escrowId);
+    notifyAdminEscrowDispute(escrowId, reason, message);
+  } finally { btn.disabled = false; btn.textContent = 'Envoyer à Zyntelo'; }
+}
+
+// Prévient Zyntelo par email dès qu'un litige est ouvert — pour ne jamais
+// devoir aller vérifier "à l'aveugle" si quelque chose est en attente.
+async function notifyAdminEscrowDispute(escrowId, reason, message) {
+  try {
+    await fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/notify-conversation-message', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: 'supportzyntelo@gmail.com', recipientLabel: 'Bonjour', senderName: 'Un client', message: `Nouveau litige Zyn Assurance ouvert (motif : ${reason}). ${message || ''}`, contextLabel: 'Litige Zyn Assurance', dashboardLink: `${window.location.origin}/admin` })
+    });
+  } catch (e) { console.error('notifyAdminEscrowDispute error', e); }
 }
 
 function closeChatOverlay() {
