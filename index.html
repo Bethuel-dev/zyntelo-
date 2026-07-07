@@ -6951,14 +6951,18 @@ function renderWalletHistory(rows) {
   if (!box) return;
   if (!rows.length) { box.innerHTML = `<div class="empty card"><p>Aucune transaction Zyn Assurance pour le moment.</p></div>`; return; }
   const labels = { en_attente_paiement: '⏳ En attente', protege: '🛡️ Protégé', litige: '⚠️ Litige', libere: '✅ Libéré', rembourse_total: '↩️ Remboursé', rembourse_partiel: '↩️ Remb. partiel', annule: '✕ Annulé' };
-  box.innerHTML = rows.map(r => `
+  box.innerHTML = rows.map(r => {
+    const displayAmount = r.status === 'rembourse_partiel' ? (r.merchant_share_amount || 0) : r.total_amount;
+    const note = r.status === 'rembourse_partiel' ? ' (votre part après remboursement client)' : '';
+    return `
     <div class="cmd-card">
       <div class="cmd-info">
-        <div class="cmd-name">${r.product_name} — ${r.client_name || ''}</div>
-        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · ${(+r.total_amount).toLocaleString()} FCFA</div>
+        <div class="cmd-name">${esc(r.product_name)} — ${esc(r.client_name || '')}</div>
+        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · ${(+displayAmount).toLocaleString()} FCFA${note}</div>
       </div>
       <span class="badge b-blue">${labels[r.status] || r.status}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function showWithdrawalForm() {
