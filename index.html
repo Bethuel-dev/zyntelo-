@@ -880,7 +880,6 @@ canvas{display:block;}
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-gerant-login')">👤 Gérant</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-livreur-login')">🛵 Livreur</button>
       <div class="auth-switch">Pas de compte ? <a onclick="go('s-register')">Créer une boutique</a></div>
-      <div class="auth-admin-link"><a onclick="go('s-admin-login')">Accès administrateur</a></div>
     </div>
   </div>
 </div>
@@ -1276,6 +1275,19 @@ canvas{display:block;}
       <!-- COMMANDES -->
       <div class="dash-page" id="p-commandes">
         <div class="page-head"><h1>Commandes</h1><p>Gérez les commandes de vos clients</p></div>
+        <div class="stats-filter-row">
+          <button class="stats-filter-btn on" data-range="all" onclick="setCmdsRange('all',this)">Tout</button>
+          <button class="stats-filter-btn" data-range="today" onclick="setCmdsRange('today',this)">Aujourd'hui</button>
+          <button class="stats-filter-btn" data-range="week" onclick="setCmdsRange('week',this)">Cette semaine</button>
+          <button class="stats-filter-btn" data-range="month" onclick="setCmdsRange('month',this)">Ce mois</button>
+          <button class="stats-filter-btn" data-range="year" onclick="setCmdsRange('year',this)">Cette année</button>
+          <button class="stats-filter-btn" data-range="custom" onclick="setCmdsRange('custom',this)">Personnalisé</button>
+        </div>
+        <div id="cmds-custom-range" style="display:none" class="form-row">
+          <div class="fgrp"><label>Du</label><input type="date" id="cmds-date-from"></div>
+          <div class="fgrp"><label>Au</label><input type="date" id="cmds-date-to"></div>
+          <button class="btn btn-blue btn-sm" style="align-self:flex-end;margin-bottom:14px" onclick="applyCustomCmdsRange()">Appliquer</button>
+        </div>
         <div id="cmds-list"></div>
       </div>
 
@@ -2306,7 +2318,7 @@ function parseRoute() {
   }
   if (parts[0] === 'login') return { type: 'login' };
   if (parts[0] === 'register') return { type: 'register' };
-  if (parts[0] === 'admin') return { type: 'admin' };
+  if (parts[0] === 'zt-portal-8k3m2x') return { type: 'admin' };
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
   if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
   if (parts[0] === 'mes-favoris') return { type: 'client-favorites' };
@@ -2508,7 +2520,7 @@ function go(screenId) {
   if (screenId === 's-land') { navTo('/'); triggerLandingReveal(); loadLandingEmpreinteStrip(); }
   if (screenId === 's-login') navTo('/login');
   if (screenId === 's-register') navTo('/register');
-  if (screenId === 's-admin-login') navTo('/admin');
+  if (screenId === 's-admin-login') navTo('/zt-portal-8k3m2x');
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
   refreshLucideIcons();
@@ -5421,6 +5433,10 @@ function previewShop(prodId, isPublic) {
         <button class="btn btn-blue btn-sm" onclick="submitProductReview()">Envoyer mon avis</button>
       </div>
     </div>
+    <div class="prod-reviews-section" id="similar-products-section" style="display:none">
+      <h3 class="prod-reviews-title">Produits similaires</h3>
+      <div id="similar-products-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px"></div>
+    </div>
     <div style="text-align:center;padding:18px 0 6px">
       <a onclick="showReportMerchantPopup()" style="font-size:12.5px;color:var(--gray);text-decoration:underline;cursor:pointer">🚩 Signaler ce marchand</a>
     </div>`;
@@ -5429,6 +5445,7 @@ function previewShop(prodId, isPublic) {
   loadProductReviews(p.id);
   renderProductOffers(p);
   loadAndPopulateDeliverySectors();
+  loadSimilarProducts(p.id);
 }
 
 let prodReviewStars = 0;
@@ -5460,6 +5477,32 @@ async function loadProductReviews(productId) {
       ${r.comment ? `<div class="review-card-comment">${esc(r.comment)}</div>` : ''}
       <div class="review-card-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
     </div>`).join('');
+}
+
+// Recommandations simples, basées sur des règles (mêmes catégories, sinon
+// même boutique) — pas de machine learning, mais un résultat utile et
+// rapide, sans aucun impact sur les fonctionnalités existantes.
+async function loadSimilarProducts(productId) {
+  const section = document.getElementById('similar-products-section');
+  const row = document.getElementById('similar-products-row');
+  if (!section || !row) return;
+  const { data, error } = await sb.rpc('get_similar_products', { p_product_id: productId, p_limit: 8 });
+  if (error || !data || !data.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  row.innerHTML = data.map(item => {
+    const p = item.data || {};
+    const img = (p.imgs && p.imgs[0]) ? p.imgs[0] : '';
+    // Même logique de secours que partout ailleurs : certains anciens
+    // produits n'ont pas de slug enregistré en base.
+    const prodSlug = p.slug || (slugify(p.name || 'produit') + '-' + String(item.id || '').slice(-4));
+    return `<div style="flex:0 0 130px;cursor:pointer" onclick="goToMarketplaceProduct('${escJs(item.shop_slug)}','${escJs(prodSlug)}')">
+      <div style="width:130px;height:130px;border-radius:10px;overflow:hidden;background:var(--gray-l)">
+        ${img ? `<img src="${esc(img)}" style="width:100%;height:100%;object-fit:cover">` : ''}
+      </div>
+      <div style="font-size:12px;font-weight:600;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(p.name)||''}</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--blue);margin-top:2px">${(+p.newP||0).toLocaleString()} FCFA</div>
+    </div>`;
+  }).join('');
 }
 
 async function submitProductReview() {
@@ -7538,13 +7581,23 @@ async function submitPostOrderSignup() {
 function renderCmds() {
   const list=document.getElementById('cmds-list');
   const ov=document.getElementById('ov-cmds');
-  if (!S.orders.length) {
-    const emp=`<div class="empty card"><div class="empty-ico">📭</div><p>Aucune commande pour le moment.</p></div>`;
+  // Filtre par période — identique au principe de Statistiques. Si "Tout"
+  // est sélectionné (comportement par défaut), aucune commande n'est
+  // écartée : le comportement reste exactement celui d'avant.
+  const filteredOrders = cmdsRange.type === 'all' ? S.orders : S.orders.filter(o => {
+    const d = ordDate(o);
+    if (!d) return false;
+    return d >= cmdsRange.from && d <= cmdsRange.to;
+  });
+  if (!filteredOrders.length) {
+    const emp = cmdsRange.type === 'all'
+      ? `<div class="empty card"><div class="empty-ico">📭</div><p>Aucune commande pour le moment.</p></div>`
+      : `<div class="empty card"><div class="empty-ico">📭</div><p>Aucune commande sur cette période.</p></div>`;
     list.innerHTML=emp;
     if(ov) ov.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><p>Partagez votre boutique pour recevoir des commandes !</p></div>`;
     return;
   }
-  const html=S.orders.slice().reverse().map(o=>{
+  const html=filteredOrders.slice().reverse().map(o=>{
     const badge=o.status==='livree'?`<span class="badge b-green">Livrée ✓</span>`:o.status==='annulee'?`<span class="badge b-red">Annulée</span>`:`<span class="badge b-yellow">En attente</span>`;
     const actions=o.status==='attente'
       ?`${!S.isGerant?`<button class="bw" onclick="openAssignLivreur('${o.id}')">🛵 ${o.livreurName?'Réassigner':'Assigner'}</button>`:''}<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
@@ -7700,6 +7753,7 @@ function updateStats() {
 
 // (v101) Statistiques marchand avec périodes (Tout / Aujourd'hui / Semaine / Mois / Année / Personnalisé)
 let shopStatsRange = { type: 'all', from: null, to: null };
+let cmdsRange = { type: 'all', from: null, to: null };
 
 function setShopStatsRange(type, btn) {
   document.querySelectorAll('#p-stats .stats-filter-btn').forEach(b => b.classList.remove('on'));
@@ -7719,6 +7773,29 @@ function applyCustomShopStatsRange() {
   const to = new Date(toVal); to.setHours(23,59,59,999);
   shopStatsRange = { type: 'custom', from, to };
   renderStats();
+}
+
+// Même mécanique que le filtre de Statistiques, appliquée cette fois à
+// l'affichage des commandes elles-mêmes — sans toucher à la logique
+// existante de rendu, juste un filtre appliqué juste avant.
+function setCmdsRange(type, btn) {
+  document.querySelectorAll('#p-commandes .stats-filter-btn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  document.getElementById('cmds-custom-range').style.display = type === 'custom' ? 'flex' : 'none';
+  if (type === 'custom') return;
+  if (type === 'all') { cmdsRange = { type: 'all', from: null, to: null }; }
+  else { const { from, to } = getRangeDates(type); cmdsRange = { type, from, to }; }
+  renderCmds();
+}
+
+function applyCustomCmdsRange() {
+  const fromVal = document.getElementById('cmds-date-from').value;
+  const toVal = document.getElementById('cmds-date-to').value;
+  if (!fromVal || !toVal) { toast('Choisissez les deux dates', 'err'); return; }
+  const from = new Date(fromVal); from.setHours(0,0,0,0);
+  const to = new Date(toVal); to.setHours(23,59,59,999);
+  cmdsRange = { type: 'custom', from, to };
+  renderCmds();
 }
 
 // Date d'une commande : createdAt (récentes) ou date "JJ/MM/AAAA" (anciennes)
