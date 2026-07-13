@@ -2870,7 +2870,7 @@ function renderBadgesProgress(allShops, confirmedOrdersCountByOwner) {
         <div class="badge-progress-icon">🏅</div>
         <div class="badge-progress-body">
           <div class="badge-progress-top">
-            <span class="badge-progress-title">${name} — Badge Pro Bleu</span>
+            <span class="badge-progress-title">${name} — Badge Pro</span>
             <span class="badge-progress-pct">${bluePct.toFixed(bluePct === 100 || bluePct === 0 ? 0 : 1)}%</span>
           </div>
           <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${bluePct}%"></div></div>
@@ -2881,7 +2881,7 @@ function renderBadgesProgress(allShops, confirmedOrdersCountByOwner) {
         <div class="badge-progress-icon">🏆</div>
         <div class="badge-progress-body">
           <div class="badge-progress-top">
-            <span class="badge-progress-title">${name} — Badge Meilleur Rouge</span>
+            <span class="badge-progress-title">${name} — Badge Excellent</span>
             <span class="badge-progress-pct">${redPct.toFixed(redPct === 100 || redPct === 0 ? 0 : 1)}%</span>
           </div>
           <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${redPct}%"></div></div>
@@ -5301,8 +5301,13 @@ async function recordActivityEvent(ownerIdVal, eventType) {
 }
 
 function badgeHtml(badge) {
-  if (badge === 'bleu') return `<span class="shop-badge bleu">🏅 Pro Bleu</span>`;
-  if (badge === 'rouge') return `<span class="shop-badge rouge">🏆 Pro Rouge</span>`;
+  // Badge façon "compte vérifié" (sceau à crans + coche) — bleu pour Pro
+  // (100 ventes), rouge pour Excellent (500 ventes). Ne touche jamais à la
+  // logique d'attribution elle-même (recompute_shop_badge), uniquement à
+  // l'apparence et au nom affiché.
+  const verifiedIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 1.5l2.6 1.9 3.2-.5 1 3.1 3.1 1-.5 3.2 1.9 2.6-1.9 2.6.5 3.2-3.1 1-1 3.1-3.2-.5L12 24l-2.6-1.9-3.2.5-1-3.1-3.1-1 .5-3.2L.7 12.7 2.6 12l-.5-3.2 3.1-1 1-3.1 3.2.5L12 1.5z"/><path d="M8.5 12.2l2.3 2.3 4.7-4.7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if (badge === 'bleu') return `<span class="shop-badge bleu">${verifiedIcon} Pro</span>`;
+  if (badge === 'rouge') return `<span class="shop-badge rouge">${verifiedIcon} Excellent</span>`;
   return '';
 }
 
@@ -5315,9 +5320,9 @@ async function checkAndNotifyBadge(ownerIdVal) {
   const { data, error } = await sb.rpc('recompute_shop_badge', { p_owner_id: ownerIdVal });
   if (error || !data) return null;
   if (data.just_unlocked === 'bleu') {
-    showBadgeUnlockedNotif('🎉 Félicitations ! 👏 Vous avez atteint 100 ventes confirmées sur Zyntelo. En récompense de votre professionnalisme, nous vous attribuons le badge Pro Bleu. Continuez à développer votre activité pour débloquer le prochain niveau !');
+    showBadgeUnlockedNotif('🎉 Félicitations ! 👏 Vous avez atteint 100 ventes confirmées sur Zyntelo. En récompense de votre professionnalisme, nous vous attribuons le badge Pro. Continuez à développer votre activité pour débloquer le prochain niveau !');
   } else if (data.just_unlocked === 'rouge') {
-    showBadgeUnlockedNotif('🏆 Félicitations ! 👏 Vous avez atteint 500 ventes confirmées sur Zyntelo. Vous faites désormais partie de nos vendeurs les plus performants et recevez le badge Pro Rouge. Continuez à faire grandir votre activité pour atteindre de nouveaux sommets !');
+    showBadgeUnlockedNotif('🏆 Félicitations ! 👏 Vous avez atteint 500 ventes confirmées sur Zyntelo. Vous faites désormais partie de nos vendeurs les plus performants et recevez le badge Excellent. Continuez à faire grandir votre activité pour atteindre de nouveaux sommets !');
   }
   return data.badge;
 }
@@ -7860,7 +7865,7 @@ async function renderStats() {
 }
 
 // Parcours des badges du marchand lui-même — affiché dans SA page Statistiques pour le
-// motiver à progresser vers les paliers Pro Bleu (100 ventes) et Meilleur Rouge (500).
+// motiver à progresser vers les paliers Pro (100 ventes) et Excellent (500).
 // Basé sur le nombre de commandes livrées de sa boutique (cohérent avec « Commandes validées »).
 function renderMyBadgesProgress(sales) {
   const box = document.getElementById('my-badges-progress');
@@ -7872,13 +7877,13 @@ function renderMyBadgesProgress(sales) {
 
   let encouragement;
   if (s >= 500) {
-    encouragement = '🏆 Bravo ! Vous avez atteint le plus haut niveau : le badge Meilleur Rouge. Vous faites partie des vendeurs les plus performants de Zyntelo !';
+    encouragement = '🏆 Bravo ! Vous avez atteint le plus haut niveau : le badge Excellent. Vous faites partie des vendeurs les plus performants de Zyntelo !';
   } else if (s >= 100) {
     const reste = 500 - s;
-    encouragement = `🏅 Badge Pro Bleu obtenu ! Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour décrocher le badge Meilleur Rouge.`;
+    encouragement = `🏅 Badge Pro obtenu ! Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour décrocher le badge Excellent.`;
   } else {
     const reste = 100 - s;
-    encouragement = `Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour débloquer votre premier badge : le Pro Bleu ! 🎉`;
+    encouragement = `Plus que <strong>${reste}</strong> vente(s) confirmée(s) pour débloquer votre premier badge : le Pro ! 🎉`;
   }
 
   box.innerHTML = `
@@ -7887,7 +7892,7 @@ function renderMyBadgesProgress(sales) {
       <div class="badge-progress-icon">🏅</div>
       <div class="badge-progress-body">
         <div class="badge-progress-top">
-          <span class="badge-progress-title">Badge Pro Bleu</span>
+          <span class="badge-progress-title">Badge Pro</span>
           <span class="badge-progress-pct">${fmt(bluePct)}%</span>
         </div>
         <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${bluePct}%"></div></div>
@@ -7898,7 +7903,7 @@ function renderMyBadgesProgress(sales) {
       <div class="badge-progress-icon">🏆</div>
       <div class="badge-progress-body">
         <div class="badge-progress-top">
-          <span class="badge-progress-title">Badge Meilleur Rouge</span>
+          <span class="badge-progress-title">Badge Excellent</span>
           <span class="badge-progress-pct">${fmt(redPct)}%</span>
         </div>
         <div class="badge-progress-track"><div class="badge-progress-fill" style="width:${redPct}%"></div></div>
