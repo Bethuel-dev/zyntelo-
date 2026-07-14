@@ -3955,6 +3955,7 @@ async function generateUniqueSlug(shopName) {
 }
 
 async function doRegister() {
+  if (S._registering) return; // empêche les clics répétés d'envoyer plusieurs inscriptions
   const name = document.getElementById('rg-name').value.trim();
   const wa = getPhoneValue('rg-wa');
   const shopName = document.getElementById('rg-shop').value.trim();
@@ -3963,6 +3964,11 @@ async function doRegister() {
   if (!name||!wa||!shopName||!email||!pass) { toast('Remplissez tous les champs *','err'); return; }
   if (pass.length < 6) { toast('Mot de passe : 6 caractères minimum','err'); return; }
 
+  S._registering = true;
+  const regBtns = document.querySelectorAll('[onclick="doRegister()"]');
+  regBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
+
+  try {
   const slug = await generateUniqueSlug(shopName);
 
   const { data, error } = await sb.auth.signUp({
@@ -3972,6 +3978,8 @@ async function doRegister() {
   if (error) {
     if (error.message.includes('already registered') || error.message.includes('already exists')) {
       toast('Email déjà utilisé', 'err');
+    } else if (error.status === 429 || error.message.includes('rate limit')) {
+      toast('Trop de tentatives. Patientez une minute avant de réessayer.', 'err');
     } else {
       toast("Erreur : " + error.message, 'err');
     }
@@ -3994,6 +4002,10 @@ async function doRegister() {
   await loginAs(user);
   toast('Boutique créée avec succès ! 🎉');
   maybePromptPushNotifications();
+  } finally {
+    S._registering = false;
+    regBtns.forEach(b => { b.disabled = false; b.style.opacity = ''; b.style.pointerEvents = ''; });
+  }
 }
 
 async function doAdminLogin() {
