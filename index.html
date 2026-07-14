@@ -1532,7 +1532,7 @@ canvas{display:block;}
 <div id="s-boutique" class="screen">
   <div id="bann-bar" style="display:none" class="ann-bar"></div>
   <div class="bshop-hdr">
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="goToShopHomeFromProduct()">
       <img id="bshop-logo" src="" style="display:none;width:34px;height:34px;border-radius:9px;object-fit:cover">
       <div class="bshop-name" id="bshop-name">Boutique</div>
     </div>
@@ -1552,7 +1552,10 @@ canvas{display:block;}
       <img id="shh-logo" src="" style="display:none;width:34px;height:34px;border-radius:9px;object-fit:cover">
       <div class="bshop-name" id="shh-name">Boutique</div>
     </div>
-    <button class="btn-icon" onclick="toggleShopMenu()" style="font-size:22px" aria-label="Menu">☰</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-ghost btn-sm" id="shh-back-btn" style="display:none" onclick="goBackFromShopHome()">← Retour</button>
+      <button class="btn-icon" onclick="toggleShopMenu()" style="font-size:22px" aria-label="Menu">☰</button>
+    </div>
   </div>
   <div id="shh-menu" class="shh-menu">
     <div class="shh-menu-item" onclick="goToCatalogue()">📚 Catalogue</div>
@@ -3761,10 +3764,12 @@ function copyShopLink() {
 }
 
 function getShopLink() {
-  return `${window.location.origin}/b/${S.shop.slug}`;
+  // Toujours zyntelo.app, jamais l'adresse Vercel brute — même si le
+  // marchand est arrivé sur le site par un ancien lien ou favori.
+  return `https://zyntelo.app/b/${S.shop.slug}`;
 }
 function getProductLink(p) {
-  return `${window.location.origin}/b/${S.shop.slug}/p/${p.slug}`;
+  return `https://zyntelo.app/b/${S.shop.slug}/p/${p.slug}`;
 }
 
 // ═══════════════════════════════════════════════
@@ -7069,6 +7074,8 @@ function renderShopHome(isPublic) {
   if (S.shop.coverImage) { coverEl.src = S.shop.coverImage; coverEl.style.display = 'block'; }
   else { coverEl.style.display = 'none'; }
   document.getElementById('shh-prods-title').textContent = S.shop.productsTitle || 'Nos produits';
+  const backBtn = document.getElementById('shh-back-btn');
+  if (backBtn) backBtn.style.display = S.cameFromProduct ? '' : 'none';
   // Pied de page : "Zyntelo.app" par défaut. Si le commerçant a connecté son
   // propre domaine (et qu'il est bien actif), on affiche son domaine à la place.
   const footerDomain = (S.shop.domain && S.shop.domainStatus === 'active') ? S.shop.domain : 'Zyntelo.app';
@@ -7093,6 +7100,33 @@ function goToCatalogue() {
 function goBackToShopHome() {
   navTo(`/b/${S.shop.slug}`);
   renderShopHome(true);
+}
+
+// Depuis la fiche produit : mémorise le produit consulté pour pouvoir y
+// revenir, puis affiche la vraie page d'accueil de la boutique (grille de
+// tous ses produits), comme demandé.
+function goToShopHomeFromProduct() {
+  S.cameFromProduct = S.curProd ? S.curProd.id : null;
+  // Distingue le marchand qui prévisualise sa propre boutique (connecté,
+  // S.user défini) du vrai client public — même logique déjà utilisée par
+  // goBackInShop, pour ne jamais perturber l'URL affichée pendant une
+  // prévisualisation.
+  if (S.user) { navTo(`/b/${S.shop.slug}`); renderShopHome(false); return; }
+  goBackToShopHome();
+}
+
+// Bouton retour de la page d'accueil boutique — ne réapparaît que si le
+// client vient bien d'une fiche produit précise, pour ne jamais afficher
+// un bouton qui ne mènerait nulle part.
+function goBackFromShopHome() {
+  const backBtn = document.getElementById('shh-back-btn');
+  if (S.cameFromProduct) {
+    const prodId = S.cameFromProduct;
+    S.cameFromProduct = null;
+    previewShop(prodId, true);
+    return;
+  }
+  if (backBtn) backBtn.style.display = 'none';
 }
 
 function renderPublicCatalogue() {
@@ -7135,6 +7169,7 @@ function goBackInShop() {
   if (S.cameFromMarketplace) { S.cameFromMarketplace = null; goToMarketplace(); return; }
   if (S.cameFromCatalogue) { goToCategory(S.cameFromCatalogue); return; }
   if (S.user) { go('s-dash'); return; }
+  S.cameFromProduct = null; // évite de renvoyer vers un produit qui n'est plus le bon contexte
   goBackToShopHome();
 }
 
