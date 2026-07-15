@@ -4534,14 +4534,29 @@ async function applyEnhancedMatching(shop, { name, phone, email } = {}) {
 // navigateur, avec le même eventId — c'est ce même identifiant qui permet à
 // Meta de fusionner les deux versions du même événement au lieu de les
 // compter deux fois.
+function getCookieValue(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
 function sendCapiEvent(shop, eventName, eventId, customData, matchData) {
   if (!shop || shop.pixelDataLevel !== 'maximum' || !shop.id) return;
+  // Signaux supplémentaires recommandés par Meta pour améliorer la
+  // correspondance — le navigateur et les cookies posés par le pixel
+  // lui-même (_fbp/_fbc), jamais l'adresse IP (récupérée côté serveur
+  // uniquement, dans la fonction Edge, pour rester fiable).
+  const enrichedUserData = {
+    ...(matchData || {}),
+    client_user_agent: navigator.userAgent,
+    fbp: getCookieValue('_fbp') || undefined,
+    fbc: getCookieValue('_fbc') || undefined,
+  };
   fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/send-capi-event', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ownerId: shop.id, eventName, eventId,
       eventSourceUrl: window.location.href,
-      userData: matchData || {}, customData: customData || {}
+      userData: enrichedUserData, customData: customData || {}
     })
   }).then(() => pixelLog('CAPI envoyé', eventName, eventId)).catch(e => pixelLog('Erreur envoi CAPI (sans conséquence)', e));
 }
