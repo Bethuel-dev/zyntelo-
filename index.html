@@ -1121,10 +1121,17 @@ canvas{display:block;}
           <div class="fgrp"><label>TikTok Pixel ID</label><input id="sh-tiktok-pixel" placeholder="Ex : CTV8XXXXXXXXXXXXXXXX"></div>
           <div class="fgrp">
             <label>Niveau de partage des données</label>
-            <select id="sh-pixel-level">
+            <select id="sh-pixel-level" onchange="toggleCapiFields()">
               <option value="standard">Standard — comportement de navigation uniquement</option>
-              <option value="enhanced">Enhanced — améliore la précision (téléphone/email chiffrés, jamais lisibles)</option>
+              <option value="enhanced">Enhanced — améliore la précision (téléphone/email chiffrés)</option>
+              <option value="maximum">Maximum — ajoute l'API Conversions (suivi côté serveur, le plus fiable)</option>
             </select>
+          </div>
+          <div id="capi-fields-wrap" style="display:none">
+            <p style="font-size:11.5px;color:var(--gray);margin:6px 0 10px">🔒 Ces identifiants sont stockés dans un espace séparé et sécurisé, jamais visible publiquement — même pas par tes propres clients.</p>
+            <div class="fgrp"><label>Facebook — Token d'accès API Conversions</label><input id="sh-fb-capi-token" type="password" placeholder="Depuis Gestionnaire d'événements → Paramètres → API Conversions"></div>
+            <div class="fgrp"><label>Facebook — Code d'événement de test (facultatif)</label><input id="sh-fb-test-code" placeholder="Ex : TEST12345"></div>
+            <button class="btn btn-blue btn-sm" onclick="saveCapiSettings()">Enregistrer l'API Conversions</button>
           </div>
           <button class="btn btn-blue btn-sm" onclick="saveTrackingPixels()">Enregistrer les pixels</button>
           <p style="font-size:11px;color:var(--gray);margin-top:10px">💡 Ces identifiants se trouvent dans votre Gestionnaire d'événements Facebook, ou votre TikTok Ads Manager, sous "Pixels".</p>
@@ -4441,6 +4448,38 @@ function loadTrackingPixelsForm() {
   if (fb) fb.value = S.shop.fbPixelId || '';
   if (tk) tk.value = S.shop.tiktokPixelId || '';
   if (lvl) lvl.value = S.shop.pixelDataLevel || 'standard';
+  toggleCapiFields();
+  if ((S.shop.pixelDataLevel || 'standard') === 'maximum') loadCapiSettings();
+}
+
+function toggleCapiFields() {
+  const lvl = document.getElementById('sh-pixel-level');
+  const wrap = document.getElementById('capi-fields-wrap');
+  if (wrap) wrap.style.display = (lvl && lvl.value === 'maximum') ? '' : 'none';
+}
+
+// Charge l'état actuel — n'affiche jamais le vrai token en clair dans le
+// champ, juste un indicateur qu'il existe déjà, pour éviter de le
+// réexposer inutilement à l'écran.
+async function loadCapiSettings() {
+  const { data, error } = await sb.from('shop_capi_settings').select('fb_access_token, fb_test_event_code').eq('owner_id', ownerId()).maybeSingle();
+  if (error || !data) return;
+  const tokenField = document.getElementById('sh-fb-capi-token');
+  const codeField = document.getElementById('sh-fb-test-code');
+  if (tokenField && data.fb_access_token) tokenField.placeholder = '•••••••••• (déjà enregistré — retape pour changer)';
+  if (codeField && data.fb_test_event_code) codeField.value = data.fb_test_event_code;
+}
+
+async function saveCapiSettings() {
+  const token = document.getElementById('sh-fb-capi-token').value.trim();
+  const testCode = document.getElementById('sh-fb-test-code').value.trim();
+  const payload = { owner_id: ownerId(), fb_test_event_code: testCode || null, updated_at: new Date().toISOString() };
+  if (token) payload.fb_access_token = token; // ne remplace jamais un token déjà enregistré par du vide
+  const { error } = await sb.from('shop_capi_settings').upsert(payload, { onConflict: 'owner_id' });
+  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
+  document.getElementById('sh-fb-capi-token').value = '';
+  toast('API Conversions enregistrée ✓');
+  loadCapiSettings();
 }
 
 // ═══════════════════════════════════════════════
@@ -4478,16 +4517,33 @@ async function sha256Hex(text) {
 // connaît (au moment où le client remplit le formulaire) — jamais à
 // l'ouverture de la page, puisqu'on ne les a pas encore à ce moment-là.
 async function applyEnhancedMatching(shop, { name, phone, email } = {}) {
-  if (!shop || shop.pixelDataLevel !== 'enhanced') return;
+  if (!shop || (shop.pixelDataLevel !== 'enhanced' && shop.pixelDataLevel !== 'maximum')) return null;
   try {
     const matchData = {};
     if (phone) matchData.ph = await sha256Hex(phone.replace(/[^0-9]/g, ''));
     if (email) matchData.em = await sha256Hex(email);
     if (name) matchData.fn = await sha256Hex(name.split(' ')[0]);
-    if (Object.keys(matchData).length === 0) return;
+    if (Object.keys(matchData).length === 0) return null;
     if (window.fbq && shop.fbPixelId) { window.fbq('init', shop.fbPixelId, matchData); pixelLog('Enhanced Matching Facebook appliqué'); }
     if (window.ttq && shop.tiktokPixelId) { window.ttq.identify({ phone_number: matchData.ph, email: matchData.em }); pixelLog('Enhanced Matching TikTok appliqué'); }
-  } catch (e) { pixelLog('Erreur Enhanced Matching (sans conséquence)', e); }
+    return matchData; // réutilisé pour l'API Conversions si le niveau Maximum est actif
+  } catch (e) { pixelLog('Erreur Enhanced Matching (sans conséquence)', e); return null; }
+}
+
+// Envoie l'événement côté serveur (API Conversions) en parallèle du pixel
+// navigateur, avec le même eventId — c'est ce même identifiant qui permet à
+// Meta de fusionner les deux versions du même événement au lieu de les
+// compter deux fois.
+function sendCapiEvent(shop, eventName, eventId, customData, matchData) {
+  if (!shop || shop.pixelDataLevel !== 'maximum' || !shop.id) return;
+  fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/send-capi-event', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ownerId: shop.id, eventName, eventId,
+      eventSourceUrl: window.location.href,
+      userData: matchData || {}, customData: customData || {}
+    })
+  }).then(() => pixelLog('CAPI envoyé', eventName, eventId)).catch(e => pixelLog('Erreur envoi CAPI (sans conséquence)', e));
 }
 
 function injectTrackingPixels(shop) {
@@ -4558,8 +4614,8 @@ function firePixelAddToCart(product, qty) {
 }
 
 // Déclenché à l'ouverture du formulaire de commande (avant validation).
-function firePixelInitiateCheckout(product, qty) {
-  const eventId = generateEventId();
+function firePixelInitiateCheckout(product, qty, eventId, matchData) {
+  eventId = eventId || generateEventId();
   const params = {
     content_ids: [product.id],
     content_type: 'product',
@@ -4569,10 +4625,12 @@ function firePixelInitiateCheckout(product, qty) {
   };
   if (window.fbq) { window.fbq('track', 'InitiateCheckout', params, { eventID: eventId }); pixelLog('InitiateCheckout', params, eventId); }
   if (window.ttq) window.ttq.track('InitiateCheckout', params);
+  sendCapiEvent(S.shop, 'InitiateCheckout', eventId, params, matchData);
+  return eventId;
 }
 
-function firePixelOrderPlaced(order) {
-  const eventId = generateEventId();
+function firePixelOrderPlaced(order, eventId, matchData) {
+  eventId = eventId || generateEventId();
   const params = {
     content_ids: [order.prodId].filter(Boolean),
     content_type: 'product',
@@ -4582,6 +4640,8 @@ function firePixelOrderPlaced(order) {
   };
   if (window.fbq) { window.fbq('track', 'Purchase', params, { eventID: eventId }); pixelLog('Purchase', params, eventId); }
   if (window.ttq) window.ttq.track('CompletePayment', params);
+  sendCapiEvent(S.shop, 'Purchase', eventId, params, matchData);
+  return eventId;
 }
 
 function updateLink() {
@@ -7689,8 +7749,8 @@ async function submitOrder() {
   const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
   const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
-  await applyEnhancedMatching(S.shop, { name: prenom, phone: tel, email: S.client ? S.client.email : null });
-  if (S.curProd) firePixelInitiateCheckout(S.curProd, S.orderQty); // sans effet si aucun pixel n'est chargé
+  const matchData = await applyEnhancedMatching(S.shop, { name: prenom, phone: tel, email: S.client ? S.client.email : null });
+  if (S.curProd) firePixelInitiateCheckout(S.curProd, S.orderQty, null, matchData); // sans effet si aucun pixel n'est chargé
   S._submittingOrder = true;
   const cmdButtons = document.querySelectorAll('[onclick="submitOrder()"]');
   cmdButtons.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
@@ -7714,7 +7774,7 @@ async function submitOrder() {
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
-  firePixelOrderPlaced(orderData);
+  firePixelOrderPlaced(orderData, null, matchData);
   ['or-prenom','or-ville','or-qrt','or-tel-num'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const ccReset = document.getElementById('or-tel-cc'); if (ccReset) ccReset.value = '+225';
   if (sectorSel) sectorSel.value = '';
