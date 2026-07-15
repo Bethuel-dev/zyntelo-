@@ -1114,6 +1114,14 @@ canvas{display:block;}
           </div>
           <div id="domain-dns-instructions" style="display:none;margin-top:14px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:12px;font-family:monospace;"></div>
         </div>
+        <div class="card">
+          <div class="card-title">📊 Pixels de suivi publicitaire</div>
+          <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Connectez vos pixels Facebook et TikTok pour suivre vos ventes générées par vos publicités, et créer des audiences de retargeting — exactement comme sur Shopify.</p>
+          <div class="fgrp"><label>Facebook / Meta Pixel ID</label><input id="sh-fb-pixel" placeholder="Ex : 1234567890123456"></div>
+          <div class="fgrp"><label>TikTok Pixel ID</label><input id="sh-tiktok-pixel" placeholder="Ex : CTV8XXXXXXXXXXXXXXXX"></div>
+          <button class="btn btn-blue btn-sm" onclick="saveTrackingPixels()">Enregistrer les pixels</button>
+          <p style="font-size:11px;color:var(--gray);margin-top:10px">💡 Ces identifiants se trouvent dans votre Gestionnaire d'événements Facebook, ou votre TikTok Ads Manager, sous "Pixels".</p>
+        </div>
       </div>
 
       <!-- APPARENCE -->
@@ -2110,7 +2118,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -2167,7 +2175,7 @@ const Store = {
       if (key.startsWith('shop_')) {
         const id = key.replace('shop_','');
         await sb.from('shops').update({
-          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, currency: val.currency||'FCFA', domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl
+          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, currency: val.currency||'FCFA', domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl, fb_pixel_id: val.fbPixelId, tiktok_pixel_id: val.tiktokPixelId
         }).eq('id', id);
         return;
       }
@@ -3632,6 +3640,7 @@ async function loginAs(user) {
   updateCurrencyLabels();
   setPhoneValue('sh-wa', S.shop.wa);
   document.getElementById('sh-domain').value = S.shop.domain||'';
+  loadTrackingPixelsForm();
   document.getElementById('sh-public-link').value = getShopLink();
   document.getElementById('sh-slug-input').value = S.shop.slug || '';
   document.getElementById('sh-products-title').value = S.shop.productsTitle || 'Nos produits';
@@ -4408,6 +4417,58 @@ async function saveShop() {
   updateLink();
   updateCurrencyLabels();
   toast('Boutique mise à jour ✓');
+}
+
+async function saveTrackingPixels() {
+  S.shop.fbPixelId = document.getElementById('sh-fb-pixel').value.trim() || null;
+  S.shop.tiktokPixelId = document.getElementById('sh-tiktok-pixel').value.trim() || null;
+  await Store.set('shop_'+ownerId(), S.shop);
+  toast('Pixels enregistrés ✓');
+}
+
+function loadTrackingPixelsForm() {
+  const fb = document.getElementById('sh-fb-pixel');
+  const tk = document.getElementById('sh-tiktok-pixel');
+  if (fb) fb.value = S.shop.fbPixelId || '';
+  if (tk) tk.value = S.shop.tiktokPixelId || '';
+}
+
+// ═══════════════════════════════════════════════
+// PIXELS DE SUIVI PUBLICITAIRE (Facebook / TikTok)
+// N'a aucun effet si le marchand n'a rien configuré — complètement
+// invisible et sans impact pour toutes les boutiques existantes.
+// ═══════════════════════════════════════════════
+let _pixelsLoadedFor = null; // évite de recharger les scripts plusieurs fois pour la même boutique
+
+function injectTrackingPixels(shop) {
+  if (!shop || (!shop.fbPixelId && !shop.tiktokPixelId)) return;
+  if (_pixelsLoadedFor === shop.id) { firePixelPageView(); return; }
+  _pixelsLoadedFor = shop.id;
+
+  if (shop.fbPixelId && !window.fbq) {
+    (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    window.fbq('init', shop.fbPixelId);
+  }
+  if (shop.tiktokPixelId && !window.ttq) {
+    (function (w, d, t) {w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)}}(window, document, 'ttq'));
+    window.ttq.load(shop.tiktokPixelId);
+  }
+  firePixelPageView();
+}
+
+function firePixelPageView() {
+  if (window.fbq) window.fbq('track', 'PageView');
+  if (window.ttq) window.ttq.page();
+}
+
+function firePixelViewContent(product) {
+  if (window.fbq) window.fbq('track', 'ViewContent', { content_name: product.name, value: +product.newP || 0, currency: CUR() });
+  if (window.ttq) window.ttq.track('ViewContent', { content_name: product.name, value: +product.newP || 0, currency: CUR() });
+}
+
+function firePixelOrderPlaced(order) {
+  if (window.fbq) window.fbq('track', 'Purchase', { value: +order.total || 0, currency: order.currency || CUR() });
+  if (window.ttq) window.ttq.track('CompletePayment', { value: +order.total || 0, currency: order.currency || CUR() });
 }
 
 function updateLink() {
@@ -5468,6 +5529,7 @@ function previewShop(prodId, isPublic) {
   renderProductOffers(p);
   loadAndPopulateDeliverySectors();
   loadSimilarProducts(p.id);
+  if (isPublic) { injectTrackingPixels(S.shop); firePixelViewContent(p); }
 }
 
 let prodReviewStars = 0;
@@ -7101,6 +7163,7 @@ function renderShopHome(isPublic) {
   }
   go('s-shop-home');
   if (!isPublic) navTo(`/b/${S.shop.slug}`);
+  if (isPublic) injectTrackingPixels(S.shop);
 }
 
 function goToCatalogue() {
@@ -7534,6 +7597,7 @@ async function submitOrder() {
   if (error) { toast('Erreur lors de l\'envoi de la commande : ' + error.message, 'err'); return; }
   await recordActivityEvent(ownerId(), 'commande');
   notifyOwnerNewOrder(orderData); // ne bloque jamais l'expérience client, erreurs silencieuses
+  firePixelOrderPlaced(orderData);
   ['or-prenom','or-ville','or-qrt','or-tel-num'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const ccReset = document.getElementById('or-tel-cc'); if (ccReset) ccReset.value = '+225';
   if (sectorSel) sectorSel.value = '';
