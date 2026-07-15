@@ -4503,6 +4503,17 @@ function generateEventId() {
   return 'zt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
 }
 
+// Meta et TikTok exigent un vrai code devise ISO 4217 à 3 lettres — "FCFA"
+// est le symbole affiché aux utilisateurs partout dans Zyntelo, mais n'est
+// pas reconnu par ces plateformes. Cette conversion ne sert QUE pour les
+// pixels/API, jamais pour l'affichage (qui doit rester "FCFA", familier
+// pour les marchands et clients).
+function pixelCurrency(displayCurrency) {
+  const map = { FCFA: 'XOF' }; // XOF = zone Afrique de l'Ouest (marché principal de Zyntelo)
+  const cur = displayCurrency || CUR();
+  return map[cur] || cur;
+}
+
 // Chiffre une donnée avant tout envoi — jamais l'email ou le téléphone en
 // clair. Utilise le chiffrement intégré du navigateur (Web Crypto), aucune
 // dépendance externe. C'est exactement le principe qu'utilise Shopify pour
@@ -4606,7 +4617,7 @@ function firePixelViewContent(product) {
     content_type: 'product',
     content_name: product.name,
     value: +product.newP || 0,
-    currency: CUR()
+    currency: pixelCurrency()
   };
   if (window.fbq) { window.fbq('track', 'ViewContent', params, { eventID: eventId }); pixelLog('ViewContent', params, eventId); }
   if (window.ttq) window.ttq.track('ViewContent', params);
@@ -4621,7 +4632,7 @@ function firePixelAddToCart(product, qty) {
     content_type: 'product',
     content_name: product.name,
     value: (+product.newP || 0) * (qty || 1),
-    currency: CUR(),
+    currency: pixelCurrency(),
     contents: [{ id: product.id, quantity: qty || 1 }]
   };
   if (window.fbq) { window.fbq('track', 'AddToCart', params, { eventID: eventId }); pixelLog('AddToCart', params, eventId); }
@@ -4635,7 +4646,7 @@ function firePixelInitiateCheckout(product, qty, eventId, matchData) {
     content_ids: [product.id],
     content_type: 'product',
     value: (+product.newP || 0) * (qty || 1),
-    currency: CUR(),
+    currency: pixelCurrency(),
     contents: [{ id: product.id, quantity: qty || 1 }]
   };
   if (window.fbq) { window.fbq('track', 'InitiateCheckout', params, { eventID: eventId }); pixelLog('InitiateCheckout', params, eventId); }
@@ -4650,7 +4661,7 @@ function firePixelOrderPlaced(order, eventId, matchData) {
     content_ids: [order.prodId].filter(Boolean),
     content_type: 'product',
     value: +order.total || 0,
-    currency: order.currency || CUR(),
+    currency: pixelCurrency(order.currency),
     contents: [{ id: order.prodId, quantity: order.qty || 1 }]
   };
   if (window.fbq) { window.fbq('track', 'Purchase', params, { eventID: eventId }); pixelLog('Purchase', params, eventId); }
