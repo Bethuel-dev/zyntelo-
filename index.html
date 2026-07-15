@@ -1119,6 +1119,13 @@ canvas{display:block;}
           <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Connectez vos pixels Facebook et TikTok pour suivre vos ventes générées par vos publicités, et créer des audiences de retargeting — exactement comme sur Shopify.</p>
           <div class="fgrp"><label>Facebook / Meta Pixel ID</label><input id="sh-fb-pixel" placeholder="Ex : 1234567890123456"></div>
           <div class="fgrp"><label>TikTok Pixel ID</label><input id="sh-tiktok-pixel" placeholder="Ex : CTV8XXXXXXXXXXXXXXXX"></div>
+          <div class="fgrp">
+            <label>Niveau de partage des données</label>
+            <select id="sh-pixel-level">
+              <option value="standard">Standard — comportement de navigation uniquement</option>
+              <option value="enhanced">Enhanced — améliore la précision (téléphone/email chiffrés, jamais lisibles)</option>
+            </select>
+          </div>
           <button class="btn btn-blue btn-sm" onclick="saveTrackingPixels()">Enregistrer les pixels</button>
           <p style="font-size:11px;color:var(--gray);margin-top:10px">💡 Ces identifiants se trouvent dans votre Gestionnaire d'événements Facebook, ou votre TikTok Ads Manager, sous "Pixels".</p>
         </div>
@@ -2118,7 +2125,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id, pixelDataLevel:data.pixel_data_level||'standard' };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -2175,7 +2182,7 @@ const Store = {
       if (key.startsWith('shop_')) {
         const id = key.replace('shop_','');
         await sb.from('shops').update({
-          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, currency: val.currency||'FCFA', domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl, fb_pixel_id: val.fbPixelId, tiktok_pixel_id: val.tiktokPixelId
+          shop_name: val.name, ann: val.ann, anns: val.anns||[], wa: val.wa, currency: val.currency||'FCFA', domain: val.domain, blocked: val.blocked, logo_url: val.logoUrl, fb_pixel_id: val.fbPixelId, tiktok_pixel_id: val.tiktokPixelId, pixel_data_level: val.pixelDataLevel
         }).eq('id', id);
         return;
       }
@@ -4422,6 +4429,7 @@ async function saveShop() {
 async function saveTrackingPixels() {
   S.shop.fbPixelId = document.getElementById('sh-fb-pixel').value.trim() || null;
   S.shop.tiktokPixelId = document.getElementById('sh-tiktok-pixel').value.trim() || null;
+  S.shop.pixelDataLevel = document.getElementById('sh-pixel-level').value || 'standard';
   await Store.set('shop_'+ownerId(), S.shop);
   toast('Pixels enregistrés ✓');
 }
@@ -4429,8 +4437,10 @@ async function saveTrackingPixels() {
 function loadTrackingPixelsForm() {
   const fb = document.getElementById('sh-fb-pixel');
   const tk = document.getElementById('sh-tiktok-pixel');
+  const lvl = document.getElementById('sh-pixel-level');
   if (fb) fb.value = S.shop.fbPixelId || '';
   if (tk) tk.value = S.shop.tiktokPixelId || '';
+  if (lvl) lvl.value = S.shop.pixelDataLevel || 'standard';
 }
 
 // ═══════════════════════════════════════════════
@@ -4452,6 +4462,32 @@ function pixelLog(...args) {
 
 function generateEventId() {
   return 'zt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
+// Chiffre une donnée avant tout envoi — jamais l'email ou le téléphone en
+// clair. Utilise le chiffrement intégré du navigateur (Web Crypto), aucune
+// dépendance externe. C'est exactement le principe qu'utilise Shopify pour
+// son niveau "Enhanced".
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text.trim().toLowerCase());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Ré-informe Facebook/TikTok avec des identifiants chiffrés dès qu'on les
+// connaît (au moment où le client remplit le formulaire) — jamais à
+// l'ouverture de la page, puisqu'on ne les a pas encore à ce moment-là.
+async function applyEnhancedMatching(shop, { name, phone, email } = {}) {
+  if (!shop || shop.pixelDataLevel !== 'enhanced') return;
+  try {
+    const matchData = {};
+    if (phone) matchData.ph = await sha256Hex(phone.replace(/[^0-9]/g, ''));
+    if (email) matchData.em = await sha256Hex(email);
+    if (name) matchData.fn = await sha256Hex(name.split(' ')[0]);
+    if (Object.keys(matchData).length === 0) return;
+    if (window.fbq && shop.fbPixelId) { window.fbq('init', shop.fbPixelId, matchData); pixelLog('Enhanced Matching Facebook appliqué'); }
+    if (window.ttq && shop.tiktokPixelId) { window.ttq.identify({ phone_number: matchData.ph, email: matchData.em }); pixelLog('Enhanced Matching TikTok appliqué'); }
+  } catch (e) { pixelLog('Erreur Enhanced Matching (sans conséquence)', e); }
 }
 
 function injectTrackingPixels(shop) {
@@ -5405,7 +5441,7 @@ async function openPublicShopBySlug(route) {
     domain: shop.domain, blocked: shop.blocked, logoUrl: shop.logo_url, slug: shop.slug,
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
     badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA',
-    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id
+    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id, pixelDataLevel: shop.pixel_data_level||'standard'
   };
   S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
@@ -7653,6 +7689,7 @@ async function submitOrder() {
   const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
   const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
+  await applyEnhancedMatching(S.shop, { name: prenom, phone: tel, email: S.client ? S.client.email : null });
   if (S.curProd) firePixelInitiateCheckout(S.curProd, S.orderQty); // sans effet si aucun pixel n'est chargé
   S._submittingOrder = true;
   const cmdButtons = document.querySelectorAll('[onclick="submitOrder()"]');
