@@ -4436,39 +4436,116 @@ function loadTrackingPixelsForm() {
 // ═══════════════════════════════════════════════
 // PIXELS DE SUIVI PUBLICITAIRE (Facebook / TikTok)
 // N'a aucun effet si le marchand n'a rien configuré — complètement
-// invisible et sans impact pour toutes les boutiques existantes.
+// invisible et sans impact pour toute boutique n'ayant pas renseigné de pixel.
+//
+// Architecture pensée pour accueillir l'API Conversions plus tard : chaque
+// événement génère déjà un eventID unique (nécessaire pour la déduplication
+// navigateur/serveur), même si seul le pixel navigateur l'utilise pour
+// l'instant.
 // ═══════════════════════════════════════════════
-let _pixelsLoadedFor = null; // évite de recharger les scripts plusieurs fois pour la même boutique
+let _pixelsLoadedForShop = null; // quel shop.id a déjà son script fbq/ttq chargé
+const PIXEL_DEBUG = false; // mettre à true uniquement en développement local
+
+function pixelLog(...args) {
+  if (PIXEL_DEBUG) console.log('[Pixel]', ...args);
+}
+
+function generateEventId() {
+  return 'zt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
 
 function injectTrackingPixels(shop) {
-  if (!shop || (!shop.fbPixelId && !shop.tiktokPixelId)) return;
-  if (_pixelsLoadedFor === shop.id) { firePixelPageView(); return; }
-  _pixelsLoadedFor = shop.id;
+  if (!shop || (!shop.fbPixelId && !shop.tiktokPixelId)) { pixelLog('Aucun pixel configuré pour cette boutique'); return; }
 
-  if (shop.fbPixelId && !window.fbq) {
-    (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    window.fbq('init', shop.fbPixelId);
+  // Si on change de boutique dans la même session (Marketplace → boutique A
+  // → boutique B), il faut réinitialiser le pixel avec le NOUVEL identifiant
+  // — l'ancienne version ne le faisait jamais si fbq existait déjà.
+  const shopChanged = _pixelsLoadedForShop !== shop.id;
+  _pixelsLoadedForShop = shop.id;
+
+  if (shop.fbPixelId) {
+    if (!window.fbq) {
+      (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', shop.fbPixelId);
+      pixelLog('Meta Pixel initialisé', shop.fbPixelId);
+    } else if (shopChanged) {
+      window.fbq('init', shop.fbPixelId); // même onglet, changement de boutique : ré-initialise avec le bon ID
+      pixelLog('Meta Pixel ré-initialisé pour nouvelle boutique', shop.fbPixelId);
+    }
   }
-  if (shop.tiktokPixelId && !window.ttq) {
-    (function (w, d, t) {w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)}}(window, document, 'ttq'));
-    window.ttq.load(shop.tiktokPixelId);
+  if (shop.tiktokPixelId) {
+    if (!window.ttq) {
+      (function (w, d, t) {w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)}}(window, document, 'ttq'));
+      window.ttq.load(shop.tiktokPixelId);
+      pixelLog('TikTok Pixel initialisé', shop.tiktokPixelId);
+    } else if (shopChanged) {
+      window.ttq.load(shop.tiktokPixelId);
+      pixelLog('TikTok Pixel ré-initialisé pour nouvelle boutique', shop.tiktokPixelId);
+    }
   }
   firePixelPageView();
 }
 
 function firePixelPageView() {
-  if (window.fbq) window.fbq('track', 'PageView');
+  const eventId = generateEventId();
+  if (window.fbq) { window.fbq('track', 'PageView', {}, { eventID: eventId }); pixelLog('PageView', eventId); }
   if (window.ttq) window.ttq.page();
 }
 
 function firePixelViewContent(product) {
-  if (window.fbq) window.fbq('track', 'ViewContent', { content_name: product.name, value: +product.newP || 0, currency: CUR() });
-  if (window.ttq) window.ttq.track('ViewContent', { content_name: product.name, value: +product.newP || 0, currency: CUR() });
+  const eventId = generateEventId();
+  const params = {
+    content_ids: [product.id],
+    content_type: 'product',
+    content_name: product.name,
+    value: +product.newP || 0,
+    currency: CUR()
+  };
+  if (window.fbq) { window.fbq('track', 'ViewContent', params, { eventID: eventId }); pixelLog('ViewContent', params, eventId); }
+  if (window.ttq) window.ttq.track('ViewContent', params);
+}
+
+// Déclenché quand le client choisit une quantité/variante avant de passer
+// commande — équivalent "ajout au panier" pour un parcours sans vrai panier.
+function firePixelAddToCart(product, qty) {
+  const eventId = generateEventId();
+  const params = {
+    content_ids: [product.id],
+    content_type: 'product',
+    content_name: product.name,
+    value: (+product.newP || 0) * (qty || 1),
+    currency: CUR(),
+    contents: [{ id: product.id, quantity: qty || 1 }]
+  };
+  if (window.fbq) { window.fbq('track', 'AddToCart', params, { eventID: eventId }); pixelLog('AddToCart', params, eventId); }
+  if (window.ttq) window.ttq.track('AddToCart', params);
+}
+
+// Déclenché à l'ouverture du formulaire de commande (avant validation).
+function firePixelInitiateCheckout(product, qty) {
+  const eventId = generateEventId();
+  const params = {
+    content_ids: [product.id],
+    content_type: 'product',
+    value: (+product.newP || 0) * (qty || 1),
+    currency: CUR(),
+    contents: [{ id: product.id, quantity: qty || 1 }]
+  };
+  if (window.fbq) { window.fbq('track', 'InitiateCheckout', params, { eventID: eventId }); pixelLog('InitiateCheckout', params, eventId); }
+  if (window.ttq) window.ttq.track('InitiateCheckout', params);
 }
 
 function firePixelOrderPlaced(order) {
-  if (window.fbq) window.fbq('track', 'Purchase', { value: +order.total || 0, currency: order.currency || CUR() });
-  if (window.ttq) window.ttq.track('CompletePayment', { value: +order.total || 0, currency: order.currency || CUR() });
+  const eventId = generateEventId();
+  const params = {
+    content_ids: [order.prodId].filter(Boolean),
+    content_type: 'product',
+    value: +order.total || 0,
+    currency: order.currency || CUR(),
+    contents: [{ id: order.prodId, quantity: order.qty || 1 }]
+  };
+  if (window.fbq) { window.fbq('track', 'Purchase', params, { eventID: eventId }); pixelLog('Purchase', params, eventId); }
+  if (window.ttq) window.ttq.track('CompletePayment', params);
 }
 
 function updateLink() {
@@ -5327,7 +5404,8 @@ async function openPublicShopBySlug(route) {
     id: shop.id, name: shop.shop_name, ann: shop.ann, anns: shop.anns||[], wa: shop.wa,
     domain: shop.domain, blocked: shop.blocked, logoUrl: shop.logo_url, slug: shop.slug,
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
-    badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA'
+    badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA',
+    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id
   };
   S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
@@ -7357,6 +7435,7 @@ function chQty(d) {
   // Si la quantité change manuellement, on resynchronise la sélection d'offre sur le palier correspondant
   syncOfferSelectionWithQty();
   updTotal();
+  if (S.curProd) firePixelAddToCart(S.curProd, S.orderQty); // sans effet si aucun pixel n'est chargé (prévisualisation marchand)
 }
 
 function getApplicableOffersForProduct(prodId) {
@@ -7574,6 +7653,7 @@ async function submitOrder() {
   const sectorSel = document.querySelector('.overlay.on [id="or-sector"]') || document.querySelector('.screen.on [id="or-sector"]');
   const sectorId = sectorSel ? sectorSel.value : '';
   if (!prenom||!ville||!qrt||!tel) { toast('Remplissez tous les champs *','err'); return; }
+  if (S.curProd) firePixelInitiateCheckout(S.curProd, S.orderQty); // sans effet si aucun pixel n'est chargé
   S._submittingOrder = true;
   const cmdButtons = document.querySelectorAll('[onclick="submitOrder()"]');
   cmdButtons.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
