@@ -7768,6 +7768,7 @@ async function sendPushEvent(targetOwnerId, eventType, refId, title, body) {
 
 async function submitOrder() {
   if (S._submittingOrder) return; // empêche un double-clic d'envoyer deux fois la même commande
+  if (S.shop && S.shop.blocked) { toast('Cette boutique est temporairement indisponible.', 'err'); return; }
   const prenom=document.getElementById('or-prenom').value.trim();
   const ville=document.getElementById('or-ville').value.trim();
   const qrt=document.getElementById('or-qrt').value.trim();
