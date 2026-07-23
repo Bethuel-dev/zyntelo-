@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zyntelo</title>
+<title>Zyntelo — Marketplace et boutiques en ligne protégées en Côte d'Ivoire</title>
+<meta name="description" content="Zyntelo est une marketplace multi-boutiques en Côte d'Ivoire. Créez votre boutique en ligne gratuitement, vendez avec Zyn Assurance (paiement protégé jusqu'à la livraison), gérez vos commandes, livreurs et équipe depuis votre téléphone.">
 <link rel="manifest" href="/manifest.json">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <meta name="theme-color" content="#1A56E8">
@@ -723,6 +724,16 @@ canvas{display:block;}
     </div>
   </div>
 
+  <section class="nl-section" style="background:linear-gradient(160deg,#0B2D8C,#1A56E8);padding:56px 0">
+    <div class="nl-wrap">
+      <div class="nl-section-head nl-reveal">
+        <div class="nl-eyebrow" style="color:rgba(255,255,255,0.7)">Notre différence</div>
+        <h2 style="color:#fff">🛡️ Zyn Assurance — le paiement protégé</h2>
+        <p style="color:rgba(255,255,255,0.85)">Sur Zyntelo, l'argent du client reste en sécurité jusqu'à confirmation de la livraison — pas besoin de se demander "vais-je vraiment être livré ?". Le marchand est payé automatiquement après 7 jours, ou dès que le client confirme.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="nl-section">
     <div class="nl-wrap">
       <div class="nl-section-head nl-reveal">
@@ -731,8 +742,11 @@ canvas{display:block;}
         <p>Une seule plateforme, pensée pour les vendeurs. Pas besoin de dix applications différentes.</p>
       </div>
       <div class="nl-grid">
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">🛒</div><h3>Marketplace commune</h3><p>Votre boutique est aussi visible sur la Marketplace Zyntelo, où des clients découvrent des centaines de produits — une source de visibilité en plus de votre lien personnel.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">💬</div><h3>Messagerie directe</h3><p>Vos clients peuvent vous écrire directement depuis la fiche produit, avant même de commander — images et fichiers compris.</p></div>
         <div class="nl-card nl-reveal"><div class="nl-card-ico">🏪</div><h3>Boutique personnalisée</h3><p>Couleurs, logo, bannière, nom de domaine propre. Votre boutique vous ressemble, partageable par un simple lien.</p></div>
         <div class="nl-card nl-reveal"><div class="nl-card-ico">📦</div><h3>Produits &amp; stocks</h3><p>Fiches produits avec variantes, gestion du stock en temps réel, alertes automatiques.</p></div>
+        <div class="nl-card nl-reveal"><div class="nl-card-ico">🛵</div><h3>Livreurs intégrés</h3><p>Assignez vos livraisons à vos livreurs directement depuis Zyntelo, avec leur propre espace de suivi.</p></div>
         <div class="nl-card nl-reveal"><div class="nl-card-ico">📋</div><h3>Commandes en direct</h3><p>Recevez et validez vos commandes en un clic, avec notification instantanée sur votre téléphone.</p></div>
         <div class="nl-card nl-reveal"><div class="nl-card-ico">📈</div><h3>Statistiques claires</h3><p>Chiffre d'affaires, bénéfices, performances — suivez tout en temps réel, sans calcul manuel.</p></div>
         <div class="nl-card nl-reveal"><div class="nl-card-ico">🔥</div><h3>Promotions intelligentes</h3><p>Créez des offres à paliers pour vendre plus, et fidélisez vos clients facilement.</p></div>
@@ -2343,6 +2357,7 @@ function parseRoute() {
   }
   if (parts[0] === 'login') return { type: 'login' };
   if (parts[0] === 'register') return { type: 'register' };
+  if (parts[0] === 'a-propos') return { type: 'about' };
   if (parts[0] === 'zt-portal-8k3m2x') return { type: 'admin' };
   if (parts[0] === 'marketplace') return { type: 'marketplace' };
   if (parts[0] === 'mes-commandes') return { type: 'client-orders' };
@@ -2419,6 +2434,7 @@ async function init() {
   hide('loading');
   if (route.type === 'login') go('s-login');
   else if (route.type === 'register') go('s-register');
+  else if (route.type === 'about') go('s-about');
   else if (route.type === 'admin') go('s-admin-login');
   else if (route.type === 'livreur') { await resumeLivreurSession(); }
   else if (route.type === 'marketplace') { go('s-marketplace'); await restoreClientSession(); updateMarketplaceClientNav(); populateMarketplaceCountryFilter(); loadMarketplace('new'); loadMarketplaceBannerStrip(); }
@@ -2540,7 +2556,7 @@ function go(screenId) {
     s.classList.remove('on');
   });
   document.getElementById(screenId).classList.add('on');
-  if (screenId === 's-about') loadAboutPage();
+  if (screenId === 's-about') { loadAboutPage(); navTo('/a-propos'); }
   if (screenId === 's-privacy') navTo('/confidentialite');
   if (screenId === 's-land') { navTo('/'); triggerLandingReveal(); loadLandingEmpreinteStrip(); }
   if (screenId === 's-login') navTo('/login');
