@@ -1233,6 +1233,7 @@ canvas{display:block;}
           <div class="fgrp"><label>Quantité en stock *</label><input id="pf-qty" type="number" placeholder="50"></div>
           <div class="fgrp">
             <label>Variantes (couleurs, tailles…)</label>
+            <input id="pf-var-label" placeholder="Nom de la variante — Ex : Couleur, Taille, Forme…" style="margin-bottom:8px">
             <div id="vars-cont"></div>
             <button class="btn-add-v" onclick="addVar()">+ Ajouter une variante</button>
           </div>
@@ -2048,6 +2049,7 @@ Merci pour votre confiance 🙏
             <div id="ann-img-preview" style="margin-top:10px"></div>
           </div>
           <div class="fgrp"><label>Description</label><textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea></div>
+          <div class="fgrp"><label>Lien vidéo (YouTube, facultatif)</label><input id="ann-video" placeholder="https://youtube.com/watch?v=..."></div>
           <button class="btn btn-blue btn-w" onclick="publishAnnouncement()">Publier l'annonce</button>
         </div>
         <h3 style="font-size:15px;margin-bottom:10px">Annonces publiées</h3>
@@ -4253,6 +4255,7 @@ function previewAnnonceImg(input) {
 
 async function publishAnnouncement() {
   const desc = document.getElementById('ann-desc').value.trim();
+  const videoUrl = document.getElementById('ann-video').value.trim() || null;
   if (!desc) { toast('Ajoutez une description', 'err'); return; }
   const box = document.getElementById('ann-img-preview');
   let imageUrl = null;
@@ -4264,9 +4267,10 @@ async function publishAnnouncement() {
     const { data } = sb.storage.from('logos').getPublicUrl(path);
     imageUrl = data.publicUrl;
   }
-  const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc });
+  const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc, p_video_url: videoUrl });
   if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
   document.getElementById('ann-desc').value = '';
+  document.getElementById('ann-video').value = '';
   document.getElementById('ann-img').value = '';
   box.innerHTML = ''; delete box.dataset.pending;
   toast('Annonce publiée ✓');
@@ -4276,15 +4280,26 @@ async function publishAnnouncement() {
 async function loadAdminAnnouncementsList() {
   const list = document.getElementById('adm-annonces-list');
   if (!list) return;
-  const { data, error } = await sb.from('admin_announcements').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('admin_announcements').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
   if (error || !data || !data.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune annonce publiée.</p>`; return; }
   list.innerHTML = data.map(a => `
-    <div class="review-card">
+    <div class="review-card" style="${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
+      ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
       <div style="font-size:13.5px">${esc(a.description)}</div>
+      ${a.video_url ? `<a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">🎬 Voir la vidéo</a>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-top:8px" onclick="deleteAnnouncementAdmin('${a.id}')">✕ Supprimer</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="togglePinAnnouncement('${a.id}')">${a.is_pinned ? '📌 Désépingler' : '📌 Épingler'}</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteAnnouncementAdmin('${a.id}')">✕ Supprimer</button>
+      </div>
     </div>`).join('');
+}
+
+async function togglePinAnnouncement(id) {
+  const { data, error } = await sb.rpc('admin_toggle_pin_announcement', { p_id: id });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  loadAdminAnnouncementsList();
 }
 
 async function deleteAnnouncementAdmin(id) {
@@ -4301,13 +4316,16 @@ async function loadDashboardAnnonces() {
   const wrap = document.getElementById('dash-annonces-wrap');
   const list = document.getElementById('dash-annonces-list');
   if (!wrap || !list) return;
-  const { data, error } = await sb.from('admin_announcements').select('*').order('created_at', { ascending: false }).limit(10);
+  const { data, error } = await sb.from('admin_announcements').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(10);
   if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
   list.innerHTML = data.map(a => `
-    <div class="card" style="display:flex;gap:12px;align-items:flex-start">
+    <div class="card" style="display:flex;gap:12px;align-items:flex-start;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0">` : ''}
-      <div style="font-size:13px;line-height:1.4">${esc(a.description)}</div>
+      <div style="font-size:13px;line-height:1.4">
+        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 </span>` : ''}${esc(a.description)}
+        ${a.video_url ? `<div><a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">🎬 Voir la vidéo</a></div>` : ''}
+      </div>
     </div>`).join('');
 }
 
@@ -5380,6 +5398,7 @@ function showAddForm() {
   document.getElementById('pf-new').value = '';
   document.getElementById('pf-buy').value = '';
   document.getElementById('pf-qty').value = '';
+  document.getElementById('pf-var-label').value = '';
   document.getElementById('pf-desc').value = '';
   document.getElementById('vars-cont').innerHTML = `<div class="var-row"><input placeholder="Ex: Rouge, Taille S…"><input type="file" accept="image/*" style="display:none" id="v_default1" onchange="handleVarImg(this,'v_default1')"><button type="button" class="btn-del-v" style="background:var(--blue-l);color:var(--blue)" onclick="document.getElementById('v_default1').click()" title="Image de la variante">🖼️</button><button class="btn-del-v" onclick="this.parentElement.remove()">×</button></div>`;
   document.getElementById('pf-prev').innerHTML = '';
@@ -5401,6 +5420,7 @@ function editProduct(id) {
   document.getElementById('pf-new').value = p.newP;
   document.getElementById('pf-buy').value = p.buyP||'';
   document.getElementById('pf-qty').value = p.qtyAvail;
+  document.getElementById('pf-var-label').value = p.varLabel || '';
   document.getElementById('pf-desc').value = p.desc||'';
   // Variantes
   const vc = document.getElementById('vars-cont');
@@ -5557,6 +5577,7 @@ async function saveProduct() {
   const newP = parseInt(document.getElementById('pf-new').value)||0;
   const buyP = parseInt(document.getElementById('pf-buy').value)||0;
   const qty = parseInt(document.getElementById('pf-qty').value)||0;
+  const varLabel = document.getElementById('pf-var-label').value.trim();
   const desc = document.getElementById('pf-desc').value.trim();
   if (!name) { toast('Donnez un nom au produit *','err'); restoreBtn(); return; }
   if (!newP) { toast('Ajoutez le prix de vente *','err'); restoreBtn(); return; }
@@ -5598,7 +5619,7 @@ async function saveProduct() {
     const idx = S.products.findIndex(p => p.id===editId);
     if (idx >= 0) {
       const old = S.products[idx];
-      S.products[idx] = { ...old, name, oldP, newP, buyP, qtyAvail: qty, desc, vars, imgs, sections };
+      S.products[idx] = { ...old, name, oldP, newP, buyP, qtyAvail: qty, desc, vars, varLabel, imgs, sections };
     }
     toast('Produit modifié ✓');
     if (S.isGerant) await logGerantActivity('modif_produit', `Produit modifié : ${name}`);
@@ -5607,7 +5628,7 @@ async function saveProduct() {
     if (!qty) { toast('Ajoutez la quantité en stock *','err'); restoreBtn(); return; }
     let slug = slugify(name);
     if (S.products.some(p => p.slug === slug)) slug = slug + '-' + Date.now().toString().slice(-4);
-    S.products.push({ id:'p_'+Date.now(), name, oldP, newP, buyP, qty, qtyAvail:qty, qtySold:0, desc, vars, imgs, sections, slug, date:new Date().toLocaleDateString('fr-FR') });
+    S.products.push({ id:'p_'+Date.now(), name, oldP, newP, buyP, qty, qtyAvail:qty, qtySold:0, desc, vars, varLabel, imgs, sections, slug, date:new Date().toLocaleDateString('fr-FR') });
     toast('Produit ajouté ✓');
     // Log activité gérant
     if (S.isGerant) await logGerantActivity('ajout_produit', `Ajout produit : ${name}`);
@@ -5648,7 +5669,7 @@ function renderProds() {
       <div class="prod-info">
         <div class="prod-name">${esc(p.name)}</div>
         <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} ${CUR()}</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} ${CUR()}</strong></div>
-        ${p.vars&&p.vars.length?`<div class="prod-vars">Variantes : ${p.vars.map(v=>(typeof v==='string')?v:v.name).join(', ')}</div>`:''}
+        ${p.vars&&p.vars.length?`<div class="prod-vars">${esc(p.varLabel||'Variantes')} : ${p.vars.map(v=>(typeof v==='string')?v:v.name).join(', ')}</div>`:''}
         <div class="prod-stock">Stock : <strong>${p.qtyAvail}</strong> dispo · ${p.qtySold||0} vendus</div>
       </div>
       <div class="prod-actions">
@@ -5829,7 +5850,7 @@ function previewShop(prodId, isPublic) {
   const mainImg = p.imgs&&p.imgs[0] ? `<img id="main-img" src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:68px">📦</span>`;
   const thumbs = p.imgs&&p.imgs.length>1 ? p.imgs.map((img,i)=>`<div class="pthumb ${i===0?'on':''}" onclick="setMainImg(this,'${img}')"><img src="${img}" loading="lazy" decoding="async"></div>`).join('') : '';
   S.curProdDefaultImg = p.imgs&&p.imgs[0] ? p.imgs[0] : '';
-  const varsHtml = p.vars&&p.vars.length ? `<div class="vars-sec"><div class="vars-lbl">Variante :</div><div class="vars-row">${p.vars.map((v,i)=>{
+  const varsHtml = p.vars&&p.vars.length ? `<div class="vars-sec"><div class="vars-lbl">${esc(p.varLabel||'Variante')} :</div><div class="vars-row">${p.vars.map((v,i)=>{
     const vName = (typeof v === 'string') ? v : v.name;
     const vImg = (typeof v === 'string') ? '' : (v.image||'');
     return `<button class="vbtn" onclick="selVar(this,'${escJs(vName)}','${escJs(vImg)}')">${esc(vName)}</button>`;
