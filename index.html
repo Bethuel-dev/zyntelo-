@@ -2038,6 +2038,7 @@ Merci pour votre confiance 🙏
           </div>
           <div class="fgrp"><label>Lien de la chaîne / vidéo YouTube</label><input id="yt-link" placeholder="https://youtube.com/@zyntelo"></div>
           <button class="btn btn-blue btn-w" onclick="saveYoutubeBanner()">Enregistrer</button>
+          <button class="btn btn-ghost btn-w" style="color:var(--red);margin-top:8px" onclick="removeYoutubeBanner()">🗑️ Retirer la bannière</button>
         </div>
       </div>
 
@@ -4218,8 +4219,24 @@ function loadYoutubeBannerForm() {
     const linkEl = document.getElementById('yt-link');
     if (linkEl) linkEl.value = adm.youtubeLink || '';
     const box = document.getElementById('yt-banner-preview');
-    if (box && adm.youtubeBannerImage) box.innerHTML = `<img src="${esc(adm.youtubeBannerImage)}" style="width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover">`;
+    if (box) {
+      delete box.dataset.pending;
+      box.innerHTML = adm.youtubeBannerImage
+        ? `<img src="${esc(adm.youtubeBannerImage)}" style="width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover"><p style="font-size:11px;color:var(--gray);margin-top:6px">Bannière actuelle — choisissez un nouveau fichier ci-dessus pour la remplacer.</p>`
+        : '';
+    }
   });
+}
+
+async function removeYoutubeBanner() {
+  if (!confirm('Retirer complètement la bannière YouTube ? Elle ne sera plus visible chez les marchands.')) return;
+  const adm = await Store.get('admin_settings') || {};
+  adm.youtubeBannerImage = null;
+  adm.youtubeLink = null;
+  await Store.set('admin_settings', adm);
+  document.getElementById('yt-link').value = '';
+  document.getElementById('yt-banner-preview').innerHTML = '';
+  toast('Bannière retirée ✓');
 }
 
 // Affichée sur le tableau de bord de chaque marchand, juste sous les 4
@@ -4320,12 +4337,12 @@ async function loadDashboardAnnonces() {
   if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
   list.innerHTML = data.map(a => `
-    <div class="card" style="display:flex;gap:12px;align-items:flex-start;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
-      ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0">` : ''}
-      <div style="font-size:13px;line-height:1.4">
-        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 </span>` : ''}${esc(a.description)}
-        ${a.video_url ? `<div><a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">🎬 Voir la vidéo</a></div>` : ''}
+    <div class="card" style="padding:14px;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
+      <div style="font-size:13.5px;line-height:1.5">
+        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${esc(a.description)}
       </div>
+      ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
+      ${a.video_url ? `<a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="display:block;margin-top:10px;font-size:13px;color:var(--blue);font-weight:600">🎬 Voir la vidéo</a>` : ''}
     </div>`).join('');
 }
 
