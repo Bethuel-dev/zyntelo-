@@ -1036,6 +1036,11 @@ canvas{display:block;}
           <div class="stat-box"><div class="stat-lbl">Bénéfice net</div><div class="stat-val" id="st-ben">0 FCFA</div></div>
           <div class="stat-box"><div class="stat-lbl">Produits</div><div class="stat-val" id="st-prods">0</div></div>
         </div>
+        <div id="dash-youtube-banner" style="display:none"></div>
+        <div id="dash-annonces-wrap" style="display:none">
+          <div class="card-title" style="margin:18px 0 10px">📣 Annonces</div>
+          <div id="dash-annonces-list" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
         <div class="card">
           <div class="card-title">📋 Dernières commandes</div>
           <div id="ov-cmds"><div class="empty"><div class="empty-ico">📭</div><p>Partagez votre boutique pour recevoir des commandes !</p></div></div>
@@ -1806,6 +1811,8 @@ canvas{display:block;}
       <div class="nav-item" onclick="admPg('adm-reports',this)"><span class="ni"><i data-lucide="flag"></i></span>Signalements marchands <span id="adm-reports-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
       <div class="nav-item" onclick="admPg('adm-empreinte',this)"><span class="ni"><i data-lucide="award"></i></span>Empreinte</div>
       <div class="nav-item" onclick="admPg('adm-escrow',this)"><span class="ni"><i data-lucide="shield"></i></span>Zyn Assurance <span id="adm-escrow-badge" style="display:none;background:#E11D48;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px"></span></div>
+      <div class="nav-item" onclick="admPg('adm-youtube',this)"><span class="ni"><i data-lucide="youtube"></i></span>Page YouTube</div>
+      <div class="nav-item" onclick="admPg('adm-annonces',this)"><span class="ni"><i data-lucide="megaphone"></i></span>Annonces</div>
     </nav>
     <div class="sb-foot"><button class="btn-logout" onclick="logout()">← Déconnexion</button></div>
   </aside>
@@ -2020,6 +2027,32 @@ Merci pour votre confiance 🙏
         <h3 style="font-size:15px;margin-bottom:10px">💸 Demandes de retrait</h3>
         <div id="esc-withdrawals-list"></div>
       </div>
+
+      <div class="dash-page" id="adm-youtube">
+        <div class="page-head"><h1>▶️ Page YouTube</h1><p>Bannière affichée sur le tableau de bord de chaque marchand</p></div>
+        <div class="card" style="max-width:480px">
+          <div class="fgrp"><label>Image de la bannière (format 16:9 recommandé)</label>
+            <input type="file" id="yt-banner-img" accept="image/*" onchange="previewYoutubeBanner(this)">
+            <div id="yt-banner-preview" style="margin-top:10px"></div>
+          </div>
+          <div class="fgrp"><label>Lien de la chaîne / vidéo YouTube</label><input id="yt-link" placeholder="https://youtube.com/@zyntelo"></div>
+          <button class="btn btn-blue btn-w" onclick="saveYoutubeBanner()">Enregistrer</button>
+        </div>
+      </div>
+
+      <div class="dash-page" id="adm-annonces">
+        <div class="page-head"><h1>📣 Annonces</h1><p>Visible immédiatement par tous les marchands sur leur tableau de bord</p></div>
+        <div class="card" style="max-width:480px;margin-bottom:24px">
+          <div class="fgrp"><label>Image (facultatif)</label>
+            <input type="file" id="ann-img" accept="image/*" onchange="previewAnnonceImg(this)">
+            <div id="ann-img-preview" style="margin-top:10px"></div>
+          </div>
+          <div class="fgrp"><label>Description</label><textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea></div>
+          <button class="btn btn-blue btn-w" onclick="publishAnnouncement()">Publier l'annonce</button>
+        </div>
+        <h3 style="font-size:15px;margin-bottom:10px">Annonces publiées</h3>
+        <div id="adm-annonces-list"></div>
+      </div>
     </div>
   </main>
 </div>
@@ -2129,7 +2162,8 @@ const Store = {
         if (!data) return null;
         return { wave: data.wave, om: data.om, mtn: data.mtn, adminCode: data.admin_code,
           profileName: data.profile_name, profileTitle: data.profile_title,
-          profileBio: data.profile_bio, profilePhoto: data.profile_photo };
+          profileBio: data.profile_bio, profilePhoto: data.profile_photo,
+          youtubeBannerImage: data.youtube_banner_image, youtubeLink: data.youtube_link };
       }
       if (key === 'users') {
         // Reconstitue la liste des "users" attendue par le code existant
@@ -2289,7 +2323,8 @@ const Store = {
         await sb.from('admin_settings').update({
           wave: val.wave, om: val.om, mtn: val.mtn, admin_code: val.adminCode,
           profile_name: val.profileName, profile_title: val.profileTitle,
-          profile_bio: val.profileBio, profile_photo: val.profilePhoto
+          profile_bio: val.profileBio, profile_photo: val.profilePhoto,
+          youtube_banner_image: val.youtubeBannerImage, youtube_link: val.youtubeLink
         }).eq('id', 1);
         return;
       }
@@ -2623,6 +2658,8 @@ function admPg(pageId, el) {
   if (pageId === 'adm-profil') loadAdminBanners();
   if (pageId === 'adm-empreinte') loadAdminEmpreinte();
   if (pageId === 'adm-escrow') loadAdminEscrow();
+  if (pageId === 'adm-youtube') loadYoutubeBannerForm();
+  if (pageId === 'adm-annonces') loadAdminAnnouncementsList();
   closeMobileSidebar();
   refreshLucideIcons();
 }
@@ -3696,6 +3733,8 @@ async function loginAs(user) {
   renderProds();
   renderCmds();
   renderCategories();
+  loadDashboardYoutubeBanner();
+  loadDashboardAnnonces();
   sb.rpc('shop_get_conversations', { p_owner_id: ownerId, p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: user.email }).then(({ data }) => updateShopMessagesBadge(data || []));
 
   go('s-dash');
@@ -4138,6 +4177,138 @@ async function saveProfile() {
   adm.profileBio = document.getElementById('prof-bio').value.trim();
   await Store.set('admin_settings', adm);
   toast('Profil mis à jour ✓');
+}
+
+// ═══════════════════════════════════════════════
+// PAGE YOUTUBE — bannière affichée sur le tableau de bord marchand
+// ═══════════════════════════════════════════════
+function previewYoutubeBanner(input) {
+  const file = input.files[0];
+  const box = document.getElementById('yt-banner-preview');
+  if (!file) { box.innerHTML = ''; return; }
+  compressImage(file, 1000, 0.75).then(compressed => {
+    box.innerHTML = `<img src="${compressed}" style="width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover">`;
+    box.dataset.pending = compressed;
+  }).catch(() => {});
+}
+
+async function saveYoutubeBanner() {
+  const link = document.getElementById('yt-link').value.trim();
+  if (!link) { toast('Ajoutez le lien YouTube', 'err'); return; }
+  const adm = await Store.get('admin_settings') || {};
+  const box = document.getElementById('yt-banner-preview');
+  if (box.dataset.pending) {
+    const blob = dataURLToBlob(box.dataset.pending);
+    const path = `admin-banners/youtube.jpg`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (upErr) { toast('Erreur upload : ' + upErr.message, 'err'); return; }
+    const { data } = sb.storage.from('logos').getPublicUrl(path);
+    adm.youtubeBannerImage = data.publicUrl + '?t=' + Date.now();
+  }
+  adm.youtubeLink = link;
+  await Store.set('admin_settings', adm);
+  toast('Bannière YouTube enregistrée ✓');
+}
+
+function loadYoutubeBannerForm() {
+  Store.get('admin_settings').then(adm => {
+    adm = adm || {};
+    const linkEl = document.getElementById('yt-link');
+    if (linkEl) linkEl.value = adm.youtubeLink || '';
+    const box = document.getElementById('yt-banner-preview');
+    if (box && adm.youtubeBannerImage) box.innerHTML = `<img src="${esc(adm.youtubeBannerImage)}" style="width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover">`;
+  });
+}
+
+// Affichée sur le tableau de bord de chaque marchand, juste sous les 4
+// cartes de statistiques — silencieuse (rien ne s'affiche) tant que
+// l'admin n'a pas configuré de bannière.
+async function loadDashboardYoutubeBanner() {
+  const adm = await Store.get('admin_settings') || {};
+  const wrap = document.getElementById('dash-youtube-banner');
+  if (!wrap) return;
+  if (!adm.youtubeBannerImage || !adm.youtubeLink) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <div class="card" style="cursor:pointer;padding:0;overflow:hidden" onclick="window.open('${esc(adm.youtubeLink)}','_blank')">
+      <img src="${esc(adm.youtubeBannerImage)}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">
+      <div style="padding:12px 14px">
+        <p style="font-size:13px;font-weight:600;line-height:1.4">Apprenez à utiliser Zyntelo grâce à nos courtes vidéos explicatives. Cliquez ici pour découvrir toutes les fonctionnalités de la plateforme.</p>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// ANNONCES — visibles immédiatement par tous les marchands
+// ═══════════════════════════════════════════════
+function previewAnnonceImg(input) {
+  const file = input.files[0];
+  const box = document.getElementById('ann-img-preview');
+  if (!file) { box.innerHTML = ''; return; }
+  compressImage(file, 900, 0.75).then(compressed => {
+    box.innerHTML = `<img src="${compressed}" style="max-width:100%;border-radius:10px">`;
+    box.dataset.pending = compressed;
+  }).catch(() => {});
+}
+
+async function publishAnnouncement() {
+  const desc = document.getElementById('ann-desc').value.trim();
+  if (!desc) { toast('Ajoutez une description', 'err'); return; }
+  const box = document.getElementById('ann-img-preview');
+  let imageUrl = null;
+  if (box.dataset.pending) {
+    const blob = dataURLToBlob(box.dataset.pending);
+    const path = `admin-announcements/${Date.now()}.jpg`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) { toast('Erreur upload : ' + upErr.message, 'err'); return; }
+    const { data } = sb.storage.from('logos').getPublicUrl(path);
+    imageUrl = data.publicUrl;
+  }
+  const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  document.getElementById('ann-desc').value = '';
+  document.getElementById('ann-img').value = '';
+  box.innerHTML = ''; delete box.dataset.pending;
+  toast('Annonce publiée ✓');
+  loadAdminAnnouncementsList();
+}
+
+async function loadAdminAnnouncementsList() {
+  const list = document.getElementById('adm-annonces-list');
+  if (!list) return;
+  const { data, error } = await sb.from('admin_announcements').select('*').order('created_at', { ascending: false });
+  if (error || !data || !data.length) { list.innerHTML = `<p style="font-size:13px;color:var(--gray)">Aucune annonce publiée.</p>`; return; }
+  list.innerHTML = data.map(a => `
+    <div class="review-card">
+      ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
+      <div style="font-size:13.5px">${esc(a.description)}</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-top:8px" onclick="deleteAnnouncementAdmin('${a.id}')">✕ Supprimer</button>
+    </div>`).join('');
+}
+
+async function deleteAnnouncementAdmin(id) {
+  if (!confirm('Supprimer cette annonce ?')) return;
+  const { data, error } = await sb.rpc('admin_delete_announcement', { p_id: id });
+  if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
+  toast('Annonce supprimée');
+  loadAdminAnnouncementsList();
+}
+
+// Affichée sur le tableau de bord de chaque marchand — reste invisible
+// (aucune section vide) tant qu'aucune annonce n'existe.
+async function loadDashboardAnnonces() {
+  const wrap = document.getElementById('dash-annonces-wrap');
+  const list = document.getElementById('dash-annonces-list');
+  if (!wrap || !list) return;
+  const { data, error } = await sb.from('admin_announcements').select('*').order('created_at', { ascending: false }).limit(10);
+  if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  list.innerHTML = data.map(a => `
+    <div class="card" style="display:flex;gap:12px;align-items:flex-start">
+      ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0">` : ''}
+      <div style="font-size:13px;line-height:1.4">${esc(a.description)}</div>
+    </div>`).join('');
 }
 
 async function loadAboutPage() {
