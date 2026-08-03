@@ -2050,7 +2050,7 @@ Merci pour votre confiance 🙏
             <div id="ann-img-preview" style="margin-top:10px"></div>
           </div>
           <div class="fgrp"><label>Description</label><textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea></div>
-          <div class="fgrp"><label>Vidéo (facultatif — max 25 Mo)</label>
+          <div class="fgrp"><label>Vidéo (facultatif — max 45 Mo)</label>
             <input type="file" id="ann-video-file" accept="video/*" onchange="previewAnnonceVideo(this)">
             <div id="ann-video-preview" style="margin-top:10px"></div>
           </div>
@@ -4286,9 +4286,9 @@ function previewAnnonceVideo(input) {
   const box = document.getElementById('ann-video-preview');
   const posterWrap = document.getElementById('ann-poster-wrap');
   if (!file) { box.innerHTML = ''; delete box.dataset.pendingFile; posterWrap.style.display = 'none'; return; }
-  const maxSize = 25 * 1024 * 1024; // 25 Mo
+  const maxSize = 45 * 1024 * 1024; // 45 Mo — juste sous le vrai plafond technique de Supabase (50 Mo)
   if (file.size > maxSize) {
-    toast('Vidéo trop lourde (max 25 Mo) — compressez-la avant', 'err');
+    toast('Vidéo trop lourde (max 45 Mo) — compressez-la avant', 'err');
     input.value = '';
     box.innerHTML = '';
     delete box.dataset.pendingFile;
@@ -4372,7 +4372,7 @@ async function loadAdminAnnouncementsList() {
       ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
       <div style="font-size:13.5px">${esc(a.description)}</div>
-      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;border-radius:10px;margin-bottom:8px;background:#000;display:block"></video>` : ''}
+      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;aspect-ratio:16/9;border-radius:10px;margin-bottom:8px;background:#000;object-fit:cover;display:block"></video>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-ghost btn-sm" onclick="togglePinAnnouncement('${a.id}')">${a.is_pinned ? '📌 Désépingler' : '📌 Épingler'}</button>
@@ -4410,7 +4410,7 @@ async function loadDashboardAnnonces() {
         ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${esc(a.description)}
       </div>
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
-      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;border-radius:10px;margin-top:10px;display:block;background:#000"></video>` : ''}
+      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-top:10px;display:block;background:#000;object-fit:cover"></video>` : ''}
     </div>`).join('');
 }
 
