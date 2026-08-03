@@ -2050,8 +2050,16 @@ Merci pour votre confiance 🙏
             <div id="ann-img-preview" style="margin-top:10px"></div>
           </div>
           <div class="fgrp"><label>Description</label><textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea></div>
-          <div class="fgrp"><label>Lien vidéo (YouTube, facultatif)</label><input id="ann-video" placeholder="https://youtube.com/watch?v=..."></div>
-          <button class="btn btn-blue btn-w" onclick="publishAnnouncement()">Publier l'annonce</button>
+          <div class="fgrp"><label>Vidéo (facultatif — max 25 Mo)</label>
+            <input type="file" id="ann-video-file" accept="video/*" onchange="previewAnnonceVideo(this)">
+            <div id="ann-video-preview" style="margin-top:10px"></div>
+          </div>
+          <div class="fgrp" id="ann-poster-wrap" style="display:none">
+            <label>Couverture de la vidéo (l'image qui attire l'attention avant le clic)</label>
+            <input type="file" id="ann-poster-file" accept="image/*" onchange="previewAnnoncePoster(this)">
+            <div id="ann-poster-preview" style="margin-top:10px"></div>
+          </div>
+          <button class="btn btn-blue btn-w" onclick="publishAnnouncement(this)">Publier l'annonce</button>
         </div>
         <h3 style="font-size:15px;margin-bottom:10px">Annonces publiées</h3>
         <div id="adm-annonces-list"></div>
@@ -4270,28 +4278,88 @@ function previewAnnonceImg(input) {
   }).catch(() => {});
 }
 
-async function publishAnnouncement() {
+// Aperçu léger uniquement (lecture locale du fichier, sans aucun envoi au
+// serveur à ce stade) — la vidéo elle-même n'est uploadée qu'au moment de
+// cliquer "Publier l'annonce", jamais avant.
+function previewAnnonceVideo(input) {
+  const file = input.files[0];
+  const box = document.getElementById('ann-video-preview');
+  const posterWrap = document.getElementById('ann-poster-wrap');
+  if (!file) { box.innerHTML = ''; delete box.dataset.pendingFile; posterWrap.style.display = 'none'; return; }
+  const maxSize = 25 * 1024 * 1024; // 25 Mo
+  if (file.size > maxSize) {
+    toast('Vidéo trop lourde (max 25 Mo) — compressez-la avant', 'err');
+    input.value = '';
+    box.innerHTML = '';
+    delete box.dataset.pendingFile;
+    posterWrap.style.display = 'none';
+    return;
+  }
+  const localUrl = URL.createObjectURL(file);
+  box.innerHTML = `<video src="${localUrl}" controls preload="metadata" style="width:100%;border-radius:10px;max-height:220px"></video>`;
+  window._pendingAnnonceVideoFile = file;
+  posterWrap.style.display = ''; // la couverture n'a de sens qu'avec une vidéo
+}
+
+function previewAnnoncePoster(input) {
+  const file = input.files[0];
+  const box = document.getElementById('ann-poster-preview');
+  if (!file) { box.innerHTML = ''; delete box.dataset.pending; return; }
+  compressImage(file, 900, 0.75).then(compressed => {
+    box.innerHTML = `<img src="${compressed}" style="max-width:100%;border-radius:10px">`;
+    box.dataset.pending = compressed;
+  }).catch(() => {});
+}
+
+async function publishAnnouncement(btn) {
   const desc = document.getElementById('ann-desc').value.trim();
-  const videoUrl = document.getElementById('ann-video').value.trim() || null;
   if (!desc) { toast('Ajoutez une description', 'err'); return; }
   const box = document.getElementById('ann-img-preview');
+  btn.disabled = true; const origText = btn.textContent; btn.textContent = 'Publication en cours…';
+  try {
   let imageUrl = null;
   if (box.dataset.pending) {
     const blob = dataURLToBlob(box.dataset.pending);
     const path = `admin-announcements/${Date.now()}.jpg`;
     const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { contentType: 'image/jpeg' });
-    if (upErr) { toast('Erreur upload : ' + upErr.message, 'err'); return; }
+    if (upErr) { toast('Erreur upload image : ' + upErr.message, 'err'); return; }
     const { data } = sb.storage.from('logos').getPublicUrl(path);
     imageUrl = data.publicUrl;
   }
-  const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc, p_video_url: videoUrl });
+  let videoUrl = null;
+  const videoFile = window._pendingAnnonceVideoFile;
+  if (videoFile) {
+    const ext = videoFile.name.split('.').pop() || 'mp4';
+    const path = `admin-announcements/${Date.now()}-video.${ext}`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, videoFile, { contentType: videoFile.type || 'video/mp4' });
+    if (upErr) { toast('Erreur upload vidéo : ' + upErr.message, 'err'); return; }
+    const { data } = sb.storage.from('logos').getPublicUrl(path);
+    videoUrl = data.publicUrl;
+  }
+  let posterUrl = null;
+  const posterBox = document.getElementById('ann-poster-preview');
+  if (videoFile && posterBox && posterBox.dataset.pending) {
+    const blob = dataURLToBlob(posterBox.dataset.pending);
+    const path = `admin-announcements/${Date.now()}-poster.jpg`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) { toast('Erreur upload couverture : ' + upErr.message, 'err'); return; }
+    const { data } = sb.storage.from('logos').getPublicUrl(path);
+    posterUrl = data.publicUrl;
+  }
+  const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc, p_video_url: videoUrl, p_video_poster_url: posterUrl });
   if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
   document.getElementById('ann-desc').value = '';
-  document.getElementById('ann-video').value = '';
   document.getElementById('ann-img').value = '';
+  document.getElementById('ann-video-file').value = '';
+  document.getElementById('ann-video-preview').innerHTML = '';
+  document.getElementById('ann-poster-file').value = '';
+  document.getElementById('ann-poster-preview').innerHTML = '';
+  document.getElementById('ann-poster-wrap').style.display = 'none';
+  window._pendingAnnonceVideoFile = null;
   box.innerHTML = ''; delete box.dataset.pending;
   toast('Annonce publiée ✓');
   loadAdminAnnouncementsList();
+  } finally { btn.disabled = false; btn.textContent = origText; }
 }
 
 async function loadAdminAnnouncementsList() {
@@ -4304,7 +4372,7 @@ async function loadAdminAnnouncementsList() {
       ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
       <div style="font-size:13.5px">${esc(a.description)}</div>
-      ${a.video_url ? `<a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">🎬 Voir la vidéo</a>` : ''}
+      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;border-radius:10px;margin-bottom:8px;background:#000;display:block"></video>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-ghost btn-sm" onclick="togglePinAnnouncement('${a.id}')">${a.is_pinned ? '📌 Désépingler' : '📌 Épingler'}</button>
@@ -4342,7 +4410,7 @@ async function loadDashboardAnnonces() {
         ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${esc(a.description)}
       </div>
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
-      ${a.video_url ? `<a href="${esc(a.video_url)}" target="_blank" rel="noopener" style="display:block;margin-top:10px;font-size:13px;color:var(--blue);font-weight:600">🎬 Voir la vidéo</a>` : ''}
+      ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;border-radius:10px;margin-top:10px;display:block;background:#000"></video>` : ''}
     </div>`).join('');
 }
 
