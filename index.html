@@ -1009,7 +1009,7 @@ canvas{display:block;}
       <div class="nav-item" onclick="pg('p-wallet',this)"><span class="ni"><i data-lucide="wallet"></i></span>Portefeuille</div>
       <div class="nav-item" onclick="pg('p-livraison',this)"><span class="ni"><i data-lucide="truck"></i></span>Livraison et expéditions</div>
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
-      <div class="nav-item gerant-only" style="display:none" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
+      <div class="nav-item" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
       <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni"><i data-lucide="trending-up"></i></span>Statistiques</div>
       <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni"><i data-lucide="user-cog"></i></span>Gérant</div>
@@ -4269,12 +4269,13 @@ async function loadDashboardYoutubeBanner() {
 // comme avant, seule la partie reconnue comme une vraie adresse web est
 // transformée, avec son adresse elle-même échappée aussi.
 function linkifyText(text) {
-  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/g;
   const parts = String(text).split(urlRegex);
   return parts.map(part => {
-    if (part.match(/^https?:\/\//)) {
+    if (part.match(/^(https?:\/\/|www\.)/)) {
       const safeUrl = esc(part);
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${safeUrl}</a>`;
+      const href = part.startsWith('www.') ? 'https://' + safeUrl : safeUrl;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${safeUrl}</a>`;
     }
     return esc(part);
   }).join('');
