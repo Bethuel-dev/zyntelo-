@@ -1041,10 +1041,6 @@ canvas{display:block;}
           <div class="card-title" style="margin:18px 0 10px">📣 Annonces</div>
           <div id="dash-annonces-list" style="display:flex;flex-direction:column;gap:10px"></div>
         </div>
-        <div class="card">
-          <div class="card-title">📋 Dernières commandes</div>
-          <div id="ov-cmds"><div class="empty"><div class="empty-ico">📭</div><p>Partagez votre boutique pour recevoir des commandes !</p></div></div>
-        </div>
       </div>
 
       <!-- BOUTIQUE SETTINGS -->
@@ -4268,6 +4264,22 @@ async function loadDashboardYoutubeBanner() {
 // ═══════════════════════════════════════════════
 // ANNONCES — visibles immédiatement par tous les marchands
 // ═══════════════════════════════════════════════
+// Transforme les liens présents dans un texte en vrais liens cliquables,
+// sans jamais compromettre la sécurité : le texte normal reste échappé
+// comme avant, seule la partie reconnue comme une vraie adresse web est
+// transformée, avec son adresse elle-même échappée aussi.
+function linkifyText(text) {
+  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  const parts = String(text).split(urlRegex);
+  return parts.map(part => {
+    if (part.match(/^https?:\/\//)) {
+      const safeUrl = esc(part);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${safeUrl}</a>`;
+    }
+    return esc(part);
+  }).join('');
+}
+
 function previewAnnonceImg(input) {
   const file = input.files[0];
   const box = document.getElementById('ann-img-preview');
@@ -4371,7 +4383,7 @@ async function loadAdminAnnouncementsList() {
     <div class="review-card" style="${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
-      <div style="font-size:13.5px">${esc(a.description)}</div>
+      <div style="font-size:13.5px">${linkifyText(a.description)}</div>
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;aspect-ratio:16/9;border-radius:10px;margin-bottom:8px;background:#000;object-fit:cover;display:block"></video>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -4407,7 +4419,7 @@ async function loadDashboardAnnonces() {
   list.innerHTML = data.map(a => `
     <div class="card" style="padding:14px;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       <div style="font-size:13.5px;line-height:1.5">
-        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${esc(a.description)}
+        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${linkifyText(a.description)}
       </div>
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-top:10px;display:block;background:#000;object-fit:cover"></video>` : ''}
