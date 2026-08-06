@@ -4372,6 +4372,12 @@ async function publishAnnouncement(btn) {
   box.innerHTML = ''; delete box.dataset.pending;
   toast('Annonce publiée ✓');
   loadAdminAnnouncementsList();
+  // Diffusion à tous les marchands — ne bloque jamais l'interface, se fait
+  // en arrière-plan pendant que l'admin continue son travail.
+  fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/broadcast-announcement', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminUid: S.user.id, description: desc, imageUrl })
+  }).catch(e => console.error('broadcast-announcement error', e));
   } finally { btn.disabled = false; btn.textContent = origText; }
 }
 
