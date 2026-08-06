@@ -4376,7 +4376,7 @@ async function publishAnnouncement(btn) {
   // en arrière-plan pendant que l'admin continue son travail.
   fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/broadcast-announcement', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminUid: S.user.id, description: desc, imageUrl })
+    body: JSON.stringify({ adminUid: ADMIN_UID, description: desc, imageUrl })
   }).catch(e => console.error('broadcast-announcement error', e));
   } finally { btn.disabled = false; btn.textContent = origText; }
 }
@@ -5401,7 +5401,7 @@ async function resolveEscrowDispute(idx, action) {
   try {
     const res = await fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/resolve-escrow-dispute', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ escrowId: r.id, action, note, partialAmount, adminUid: S.user.id })
+      body: JSON.stringify({ escrowId: r.id, action, note, partialAmount, adminUid: ADMIN_UID })
     });
     const result = await res.json();
     if (!res.ok || result.error) { toast('Erreur : ' + (result.error || 'inconnue'), 'err'); return; }
