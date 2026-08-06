@@ -4474,14 +4474,24 @@ async function loadReviews() {
 // retirés au profit de l'invitation intelligente après 10 commandes.)
 
 
-function nextMonth() {
+// Promotion de lancement : tout marchand qui s'inscrit avant le 1er
+// novembre 2026 ne commence à payer qu'à cette date — après le 1er
+// novembre, l'inscription redevient normale (30 jours après inscription).
+// N'affecte jamais le renouvellement d'un abonnement déjà payant.
+function getRegistrationExpiryDate() {
+  const cutoff = new Date('2026-11-01T00:00:00');
+  const now = new Date();
+  if (now < cutoff) return cutoff;
   const d = new Date(); d.setMonth(d.getMonth()+1);
-  return d.toLocaleDateString('fr-FR');
+  return d;
+}
+
+function nextMonth() {
+  return getRegistrationExpiryDate().toLocaleDateString('fr-FR');
 }
 
 function nextMonthISO() {
-  const d = new Date(); d.setMonth(d.getMonth()+1);
-  return d.toISOString().split('T')[0];
+  return getRegistrationExpiryDate().toISOString().split('T')[0];
 }
 
 function checkBlocked() {
