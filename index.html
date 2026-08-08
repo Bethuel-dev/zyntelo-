@@ -2,7 +2,10 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zyntelo">
 <title>Zyntelo — Marketplace et boutiques en ligne protégées en Côte d'Ivoire</title>
 <meta name="description" content="Zyntelo est une marketplace multi-boutiques en Côte d'Ivoire. Créez votre boutique en ligne gratuitement, vendez avec Zyn Assurance (paiement protégé jusqu'à la livraison), gérez vos commandes, livreurs et équipe depuis votre téléphone.">
 <link rel="manifest" href="/manifest.json">
@@ -21,7 +24,13 @@
   --orange:#EA580C;--orange-l:#FFEDD5;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);font-size:14px;}
+html{overflow-x:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);font-size:14px;overflow-x:hidden;max-width:100vw;}
+/* Empêche Safari sur iPhone de zoomer automatiquement quand on touche un
+   champ — cette règle s'applique en dernier et prime sur toute taille de
+   police oubliée en dessous de 16px, sans changer l'apparence du reste
+   du texte de l'application. */
+input,select,textarea{font-size:16px!important;}
 .screen{display:none!important;}
 .screen.on{display:block!important;}
 .flex-screen{display:none!important;}
@@ -91,7 +100,7 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
 /* FORM */
 .fgrp{margin-bottom:14px;}
 .fgrp label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:5px;}
-.fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
 .fgrp textarea{resize:vertical;}
 /* ═══ MARKETPLACE PREMIUM (blanc, cohérent avec le reste de l'app) ═══ */
@@ -337,7 +346,7 @@ tr:hover td{background:#fafafa;}
 .sec-handle:active{cursor:grabbing}
 .sec-type-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);flex:1}
 .sec-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:2px 6px}
-.sec-block textarea, .sec-block input[type=text]{width:100%;font-size:13px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-top:4px;font-family:inherit}
+.sec-block textarea, .sec-block input[type=text]{width:100%;font-size:16px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-top:4px;font-family:inherit}
 .sec-img-prev{max-width:120px;max-height:90px;border-radius:7px;object-fit:cover;display:block;margin-top:6px}
 .sec-upload-mini{display:inline-block;font-size:11px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;margin-top:6px}
 
@@ -510,7 +519,7 @@ canvas{display:block;}
 /* ADMIN MESSAGE */
 .msg-template{background:var(--gray-l);border-radius:9px;padding:14px;margin-bottom:10px;border-left:3px solid var(--blue);}
 .msg-template label{font-size:11px;font-weight:700;color:var(--blue);display:block;margin-bottom:6px;}
-.msg-template textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:'Inter',sans-serif;outline:none;resize:vertical;transition:.2s;background:#fff;}
+.msg-template textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:16px;font-family:'Inter',sans-serif;outline:none;resize:vertical;transition:.2s;background:#fff;}
 .msg-template textarea:focus{border-color:var(--blue);}
 
 /* LANDING */
@@ -1070,7 +1079,7 @@ canvas{display:block;}
           <div class="card-title">🔗 Lien de votre boutique</div>
           <p style="font-size:12px;color:var(--gray);margin-bottom:8px">Partagez ce lien à vos clients, sur WhatsApp, Facebook, ou dans vos publicités.</p>
           <div style="display:flex;gap:8px;align-items:center">
-            <input id="sh-public-link" readonly style="flex:1;font-size:12px;background:#f8f9fa" onclick="this.select()">
+            <input id="sh-public-link" readonly style="flex:1;font-size:16px;background:#f8f9fa" onclick="this.select()">
             <button class="btn btn-blue btn-sm" onclick="copyShopLink()">Copier</button>
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="previewMyShopHome()">👁 Voir ma boutique</button>
@@ -1536,7 +1545,7 @@ canvas{display:block;}
         .hc-typing span:nth-child(3){animation-delay:.4s}
         @keyframes hcbounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
         .hc-input{display:flex;gap:8px;margin-top:12px}
-        .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;height:46px}
+        .hc-input textarea{flex:1;border:1px solid var(--gray-l);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;resize:none;height:46px}
       </style>
       <!-- NOTIFICATIONS (gérant uniquement) -->
       <div class="dash-page gerant-only" id="p-gerant-notifs">
@@ -1736,7 +1745,7 @@ canvas{display:block;}
     <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
       <button onclick="document.getElementById('chat-file-input').click()" style="background:var(--gray-l);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0">📎</button>
       <input type="file" id="chat-file-input" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="handleChatAttachment(event)">
-      <input type="text" id="chat-input" placeholder="Votre message…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
+      <input type="text" id="chat-input" placeholder="Votre message…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:16px;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
       <button onclick="sendChatMessage()" style="background:var(--blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0">➤</button>
     </div>
   </div>
@@ -5347,7 +5356,7 @@ async function openAdminEscrowConversation(idx) {
     </div>
     <div id="admin-conv-messages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px"><p style="font-size:12.5px;color:var(--gray);text-align:center">Chargement…</p></div>
     <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-      <input type="text" id="admin-conv-input" placeholder="Écrire au client et au marchand…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendAdminConvMessage('${r.conversation_id}')">
+      <input type="text" id="admin-conv-input" placeholder="Écrire au client et au marchand…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:16px;outline:none" onkeydown="if(event.key==='Enter')sendAdminConvMessage('${r.conversation_id}')">
       <button onclick="sendAdminConvMessage('${r.conversation_id}')" style="background:var(--blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0">➤</button>
     </div>
   </div>`;
