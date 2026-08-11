@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1024">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zyntelo">
@@ -4063,8 +4063,6 @@ async function doRegister() {
   regBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.pointerEvents = 'none'; });
 
   try {
-  const slug = await generateUniqueSlug(shopName);
-
   const { data, error } = await sb.auth.signUp({
     email, password: pass,
     options: { data: { name, shopName, wa } }
@@ -4080,17 +4078,10 @@ async function doRegister() {
     return;
   }
   const userId = data.user.id;
-  // Créer la fiche boutique liée à ce compte — via une fonction serveur
-  // fiable, qui ne dépend pas de l'état exact de la session à cet instant
-  // précis (contrairement à une insertion directe, qui pouvait échouer
-  // silencieusement tant que l'email n'était pas encore confirmé).
-  const { data: shopResult, error: shopErr } = await sb.rpc('create_shop_after_signup', {
-    p_user_id: userId, p_name: name, p_shop_name: shopName, p_wa: wa, p_email: email, p_slug: slug
-  });
-  if (shopErr || !shopResult || !shopResult.success) {
-    toast("Erreur création boutique : " + (shopResult?.error || shopErr?.message || 'inconnue'), 'err');
-    return;
-  }
+  // La boutique est désormais créée automatiquement par la base de
+  // données elle-même, au même instant que le compte — impossible qu'elle
+  // manque, peu importe l'appareil, le navigateur, ou la rapidité de la
+  // connexion. Plus aucun appel séparé nécessaire ici.
 
   if (!data.session) {
     // Email de confirmation requis avant de pouvoir se connecter
@@ -4098,7 +4089,11 @@ async function doRegister() {
     go('s-login');
     return;
   }
-  const user = { id:userId, name, shopName, email, wa, slug, isAdmin:false, isGerant:false, blocked:false, expiry: nextMonth() };
+  // Récupère la vraie fiche boutique (créée automatiquement), pour avoir
+  // des informations exactes (notamment le lien de la boutique) avant de
+  // connecter le marchand.
+  const { data: newShop } = await sb.from('shops').select('slug').eq('id', userId).maybeSingle();
+  const user = { id:userId, name, shopName, email, wa, slug: newShop?.slug || '', isAdmin:false, isGerant:false, blocked:false, expiry: nextMonth() };
   await loginAs(user);
   toast('Boutique créée avec succès ! 🎉');
   maybePromptPushNotifications();
