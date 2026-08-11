@@ -3713,7 +3713,7 @@ async function loginAs(user) {
   startOrdersRealtimeListener(ownerId);
 
   document.getElementById('d-name').textContent = user.name + (user.isGerant ? ' (Gérant)':'');
-  document.getElementById('d-ava').textContent = user.name[0].toUpperCase();
+  document.getElementById('d-ava').textContent = (user.name && user.name[0] ? user.name[0] : '?').toUpperCase();
   document.getElementById('d-welcome').textContent = `Bienvenue, ${user.name} !`;
   document.getElementById('d-plan').textContent = S.shop.blocked ? '⛔ Bloqué' : 'Actif ✓';
 
@@ -8943,7 +8943,7 @@ async function renderGerants() {
   }
   list.innerHTML = S.gerants.map(g => `
     <div class="gerant-card">
-      <div class="gerant-ava">${(g.name||g.email)[0].toUpperCase()}</div>
+      <div class="gerant-ava">${((g.name||g.email||'?')[0]||'?').toUpperCase()}</div>
       <div class="gerant-info">
         <div class="gerant-name">${esc(g.name || g.email)}</div>
         <div class="gerant-role">${esc(g.email)} · Code : ${g.access_code} · ${g.status === 'pending' ? '⏳ En attente de confirmation' : '🟢 Actif'}</div>
