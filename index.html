@@ -4080,11 +4080,17 @@ async function doRegister() {
     return;
   }
   const userId = data.user.id;
-  // Créer la fiche boutique liée à ce compte
-  const { error: shopErr } = await sb.from('shops').insert({
-    id: userId, name, shop_name: shopName, wa, email, slug, expiry: nextMonthISO()
+  // Créer la fiche boutique liée à ce compte — via une fonction serveur
+  // fiable, qui ne dépend pas de l'état exact de la session à cet instant
+  // précis (contrairement à une insertion directe, qui pouvait échouer
+  // silencieusement tant que l'email n'était pas encore confirmé).
+  const { data: shopResult, error: shopErr } = await sb.rpc('create_shop_after_signup', {
+    p_user_id: userId, p_name: name, p_shop_name: shopName, p_wa: wa, p_email: email, p_slug: slug
   });
-  if (shopErr) { toast("Erreur création boutique : " + shopErr.message, 'err'); return; }
+  if (shopErr || !shopResult || !shopResult.success) {
+    toast("Erreur création boutique : " + (shopResult?.error || shopErr?.message || 'inconnue'), 'err');
+    return;
+  }
 
   if (!data.session) {
     // Email de confirmation requis avant de pouvoir se connecter
