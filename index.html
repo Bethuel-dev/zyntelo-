@@ -6734,6 +6734,7 @@ function marketplaceCardHtml(row) {
 function goToMarketplaceProduct(shopSlug, prodSlug) {
   if (!shopSlug || !prodSlug) return;
   S.cameFromMarketplace = true;
+  S.cameFromCatalogue = null; // évite qu'un ancien signal de catalogue ne reste actif par erreur
   navTo(`/b/${shopSlug}/p/${prodSlug}`);
   init();
 }
@@ -7663,6 +7664,7 @@ function goToProductFromGrid(prodId) {
   const p = S.products.find(x => x.id === prodId);
   if (!p) return;
   S.cameFromMarketplace = null; // navigation normale dans la boutique : le retour redevient normal
+  S.cameFromCatalogue = null;
   navTo(`/b/${S.shop.slug}/p/${p.slug}`);
   previewShop(prodId, true);
 }
@@ -7774,7 +7776,7 @@ function renderPublicCategory(catSlug) {
 // Bouton retour intelligent depuis la fiche produit (selon d'où on vient)
 function goBackInShop() {
   if (S.cameFromMarketplace) { S.cameFromMarketplace = null; goToMarketplace(); return; }
-  if (S.cameFromCatalogue) { goToCategory(S.cameFromCatalogue); return; }
+  if (S.cameFromCatalogue) { const cat = S.cameFromCatalogue; S.cameFromCatalogue = null; goToCategory(cat); return; }
   if (S.user) { go('s-dash'); return; }
   S.cameFromProduct = null; // évite de renvoyer vers un produit qui n'est plus le bon contexte
   goBackToShopHome();
@@ -9050,14 +9052,59 @@ async function renderLivreurs() {
   }
   list.innerHTML = S.livreurs.map(l => `
     <div class="gerant-card">
-      <div class="gerant-ava" style="overflow:hidden">${l.photo_url ? `<img src="${esc(l.photo_url)}" style="width:100%;height:100%;object-fit:cover">` : '🛵'}</div>
-      <div class="gerant-info">
+      <div class="gerant-ava" style="overflow:hidden;cursor:pointer" onclick="showLivreurDetails('${l.id}')">${l.photo_url ? `<img src="${esc(l.photo_url)}" style="width:100%;height:100%;object-fit:cover">` : '🛵'}</div>
+      <div class="gerant-info" style="cursor:pointer" onclick="showLivreurDetails('${l.id}')">
         <div class="gerant-name">${esc(l.name)}</div>
         <div class="gerant-role">${esc(l.phone)} · Code : ${esc(l.access_code)}${l.email ? ' · ' + esc(l.email) : ''}</div>
       </div>
-      ${l.id_card_front_url ? `<button class="btn btn-sm" style="background:var(--blue-l);color:var(--blue)" onclick="viewLivreurDocs('${l.id}')">🪪 Pièces</button>` : ''}
       <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="removeLivreur('${l.id}')">Retirer</button>
     </div>`).join('');
+}
+
+// Fiche complète du livreur — toutes les informations saisies à l'ajout,
+// y compris les photos, réunies au même endroit en un clic.
+async function showLivreurDetails(id) {
+  const l = (S.livreurs || []).find(x => x.id === id);
+  if (!l) return;
+
+  // Les pièces d'identité sont dans un espace privé — on récupère des
+  // liens temporaires et sécurisés, jamais une adresse publique directe.
+  let idFrontUrl = null, idBackUrl = null;
+  if (l.id_card_front_url) {
+    const { data } = await sb.storage.from('livreurs-docs').createSignedUrl(l.id_card_front_url, 300);
+    idFrontUrl = data?.signedUrl || null;
+  }
+  if (l.id_card_back_url) {
+    const { data } = await sb.storage.from('livreurs-docs').createSignedUrl(l.id_card_back_url, 300);
+    idBackUrl = data?.signedUrl || null;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay on';
+  overlay.id = 'livreur-details-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="popup" style="max-width:420px;max-height:88vh;overflow-y:auto">
+    <div class="popup-handle"></div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:36px">
+        ${l.photo_url ? `<img src="${esc(l.photo_url)}" style="width:100%;height:100%;object-fit:cover">` : '🛵'}
+      </div>
+      <h3>${esc(l.name)}</h3>
+    </div>
+    <div class="fgrp"><label>Téléphone</label><div style="font-size:14px;font-weight:600">${esc(l.phone)}</div></div>
+    ${l.email ? `<div class="fgrp"><label>Email</label><div style="font-size:14px;font-weight:600">${esc(l.email)}</div></div>` : ''}
+    <div class="fgrp"><label>Code d'accès</label><div style="font-size:14px;font-weight:600">${esc(l.access_code)}</div></div>
+    <div class="fgrp"><label>Ajouté le</label><div style="font-size:14px;font-weight:600">${new Date(l.created_at).toLocaleDateString('fr-FR')}</div></div>
+    ${(idFrontUrl || idBackUrl) ? `
+      <div class="fgrp"><label>Pièce d'identité</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${idFrontUrl ? `<img src="${idFrontUrl}" style="width:140px;border-radius:8px;cursor:pointer" onclick="window.open('${idFrontUrl}','_blank')">` : ''}
+          ${idBackUrl ? `<img src="${idBackUrl}" style="width:140px;border-radius:8px;cursor:pointer" onclick="window.open('${idBackUrl}','_blank')">` : ''}
+        </div>
+      </div>` : ''}
+    <button class="btn btn-ghost btn-w" style="margin-top:10px" onclick="document.getElementById('livreur-details-overlay').remove()">Fermer</button>
+  </div>`;
+  document.body.appendChild(overlay);
 }
 
 async function viewLivreurDocs(id) {
