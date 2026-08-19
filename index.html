@@ -99,6 +99,10 @@ input,select,textarea{font-size:16px!important;}
 
 /* FORM */
 .fgrp{margin-bottom:14px;}
+.fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.fmt-toolbar button{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:14px;cursor:pointer;flex-shrink:0;}
+.fmt-toolbar button.fmt-color{font-weight:800;}
+.fmt-toolbar .fmt-hint{font-size:11px;color:var(--gray);margin-left:2px;}
 .fgrp label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:5px;}
 .fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
@@ -1242,7 +1246,16 @@ canvas{display:block;}
             <div id="vars-cont"></div>
             <button class="btn-add-v" onclick="addVar()">+ Ajouter une variante</button>
           </div>
-          <div class="fgrp"><label>Description</label><textarea id="pf-desc" rows="4" placeholder="Décrivez votre produit…"></textarea></div>
+          <div class="fgrp"><label>Description</label>
+            <div class="fmt-toolbar">
+              <button type="button" onclick="applyFormat('pf-desc','bold')"><b>G</b></button>
+              <button type="button" class="fmt-color" style="color:#1A56E8" onclick="applyFormat('pf-desc','color','1A56E8')">A</button>
+              <button type="button" class="fmt-color" style="color:#E11D48" onclick="applyFormat('pf-desc','color','E11D48')">A</button>
+              <button type="button" class="fmt-color" style="color:#16A34A" onclick="applyFormat('pf-desc','color','16A34A')">A</button>
+              <span class="fmt-hint">Sélectionnez du texte, puis choisissez</span>
+            </div>
+            <textarea id="pf-desc" rows="4" placeholder="Décrivez votre produit…"></textarea>
+          </div>
 
           <div class="fgrp">
             <label>Sections additionnelles (facultatif)</label>
@@ -2054,7 +2067,16 @@ Merci pour votre confiance 🙏
             <input type="file" id="ann-img" accept="image/*" onchange="previewAnnonceImg(this)">
             <div id="ann-img-preview" style="margin-top:10px"></div>
           </div>
-          <div class="fgrp"><label>Description</label><textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea></div>
+          <div class="fgrp"><label>Description</label>
+            <div class="fmt-toolbar">
+              <button type="button" onclick="applyFormat('ann-desc','bold')"><b>G</b></button>
+              <button type="button" class="fmt-color" style="color:#1A56E8" onclick="applyFormat('ann-desc','color','1A56E8')">A</button>
+              <button type="button" class="fmt-color" style="color:#E11D48" onclick="applyFormat('ann-desc','color','E11D48')">A</button>
+              <button type="button" class="fmt-color" style="color:#16A34A" onclick="applyFormat('ann-desc','color','16A34A')">A</button>
+              <span class="fmt-hint">Sélectionnez du texte, puis choisissez</span>
+            </div>
+            <textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea>
+          </div>
           <div class="fgrp"><label>Vidéo (facultatif — max 45 Mo)</label>
             <input type="file" id="ann-video-file" accept="video/*" onchange="previewAnnonceVideo(this)">
             <div id="ann-video-preview" style="margin-top:10px"></div>
@@ -4278,17 +4300,33 @@ async function loadDashboardYoutubeBanner() {
 // sans jamais compromettre la sécurité : le texte normal reste échappé
 // comme avant, seule la partie reconnue comme une vraie adresse web est
 // transformée, avec son adresse elle-même échappée aussi.
-function linkifyText(text) {
-  const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/g;
-  const parts = String(text).split(urlRegex);
-  return parts.map(part => {
-    if (part.match(/^(https?:\/\/|www\.)/)) {
-      const safeUrl = esc(part);
-      const href = part.startsWith('www.') ? 'https://' + safeUrl : safeUrl;
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${safeUrl}</a>`;
-    }
-    return esc(part);
-  }).join('');
+// Insère une mise en forme légère (gras, couleur) autour du texte
+// sélectionné dans le champ — pas un vrai éditeur riche, juste un balisage
+// simple et sûr, comme **gras** utilisé par beaucoup d'apps de messagerie.
+function applyFormat(textareaId, type, colorHex) {
+  const ta = document.getElementById(textareaId);
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const selected = ta.value.slice(start, end);
+  if (!selected) { toast('Sélectionnez du texte à mettre en forme', 'err'); return; }
+  const wrapped = type === 'bold' ? `**${selected}**` : `[c=${colorHex}]${selected}[/c]`;
+  ta.value = ta.value.slice(0, start) + wrapped + ta.value.slice(end);
+  ta.focus();
+  ta.setSelectionRange(start, start + wrapped.length);
+}
+
+// Transforme le texte en HTML sûr, en une seule passe : échappement
+// complet d'abord (protection XSS), puis gras, couleur, et liens
+// cliquables appliqués uniquement sur ce texte déjà sécurisé.
+function parseFormattedText(text) {
+  if (!text) return '';
+  let safe = esc(text);
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/\[c=([0-9A-Fa-f]{6})\](.+?)\[\/c\]/g, '<span style="color:#$1">$2</span>');
+  safe = safe.replace(/((?:https?:\/\/|www\.)[^\s<]+)/g, (match) => {
+    const href = match.startsWith('www.') ? 'https://' + match : match;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${match}</a>`;
+  });
+  return safe;
 }
 
 function previewAnnonceImg(input) {
@@ -4400,7 +4438,7 @@ async function loadAdminAnnouncementsList() {
     <div class="review-card" style="${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
-      <div style="font-size:13.5px">${linkifyText(a.description)}</div>
+      <div style="font-size:13.5px;white-space:pre-line">${parseFormattedText(a.description)}</div>
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;aspect-ratio:16/9;border-radius:10px;margin-bottom:8px;background:#000;object-fit:cover;display:block"></video>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -4435,8 +4473,8 @@ async function loadDashboardAnnonces() {
   wrap.style.display = '';
   list.innerHTML = data.map(a => `
     <div class="card" style="padding:14px;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
-      <div style="font-size:13.5px;line-height:1.5">
-        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${linkifyText(a.description)}
+      <div style="font-size:13.5px;line-height:1.5;white-space:pre-line">
+        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${parseFormattedText(a.description)}
       </div>
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-top:10px;display:block;background:#000;object-fit:cover"></video>` : ''}
@@ -5993,7 +6031,7 @@ function previewShop(prodId, isPublic) {
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
         ${varsHtml}
-        ${p.desc?`<div class="p-desc">${esc(p.desc)}</div>`:''}
+        ${p.desc?`<div class="p-desc">${parseFormattedText(p.desc)}</div>`:''}
         ${renderProductSections(p.sections)}
 
         <div class="quick-order-box">
