@@ -100,9 +100,12 @@ input,select,textarea{font-size:16px!important;}
 /* FORM */
 .fgrp{margin-bottom:14px;}
 .fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
-.fmt-toolbar button{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:14px;cursor:pointer;flex-shrink:0;}
-.fmt-toolbar button.fmt-color{font-weight:800;}
+.fmt-toolbar button{height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;padding:0 10px;flex-shrink:0;}
+.fmt-toolbar input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;flex-shrink:0;}
 .fmt-toolbar .fmt-hint{font-size:11px;color:var(--gray);margin-left:2px;}
+.rich-editable{width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:16px;font-family:'Inter',sans-serif;outline:none;background:#fff;line-height:1.5;}
+.rich-editable:empty:before{content:attr(data-placeholder);color:#9CA3AF;}
+.rich-editable:focus{border-color:var(--blue);}
 .fgrp label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:5px;}
 .fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff;color:var(--black);}
 .fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--blue);}
@@ -1249,12 +1252,11 @@ canvas{display:block;}
           <div class="fgrp"><label>Description</label>
             <div class="fmt-toolbar">
               <button type="button" onclick="applyFormat('pf-desc','bold')"><b>G</b></button>
-              <button type="button" class="fmt-color" style="color:#1A56E8" onclick="applyFormat('pf-desc','color','1A56E8')">A</button>
-              <button type="button" class="fmt-color" style="color:#E11D48" onclick="applyFormat('pf-desc','color','E11D48')">A</button>
-              <button type="button" class="fmt-color" style="color:#16A34A" onclick="applyFormat('pf-desc','color','16A34A')">A</button>
+              <input type="color" id="pf-desc-color-pick" value="#1A56E8" title="Choisir une couleur">
+              <button type="button" onclick="applyFormat('pf-desc','color',document.getElementById('pf-desc-color-pick').value)">Appliquer la couleur</button>
               <span class="fmt-hint">Sélectionnez du texte, puis choisissez</span>
             </div>
-            <textarea id="pf-desc" rows="4" placeholder="Décrivez votre produit…"></textarea>
+            <div id="pf-desc" class="rich-editable" contenteditable="true" data-placeholder="Décrivez votre produit…"></div>
           </div>
 
           <div class="fgrp">
@@ -2070,12 +2072,11 @@ Merci pour votre confiance 🙏
           <div class="fgrp"><label>Description</label>
             <div class="fmt-toolbar">
               <button type="button" onclick="applyFormat('ann-desc','bold')"><b>G</b></button>
-              <button type="button" class="fmt-color" style="color:#1A56E8" onclick="applyFormat('ann-desc','color','1A56E8')">A</button>
-              <button type="button" class="fmt-color" style="color:#E11D48" onclick="applyFormat('ann-desc','color','E11D48')">A</button>
-              <button type="button" class="fmt-color" style="color:#16A34A" onclick="applyFormat('ann-desc','color','16A34A')">A</button>
+              <input type="color" id="ann-desc-color-pick" value="#1A56E8" title="Choisir une couleur">
+              <button type="button" onclick="applyFormat('ann-desc','color',document.getElementById('ann-desc-color-pick').value)">Appliquer la couleur</button>
               <span class="fmt-hint">Sélectionnez du texte, puis choisissez</span>
             </div>
-            <textarea id="ann-desc" rows="3" placeholder="Ex : Nouvelle fonctionnalité disponible..."></textarea>
+            <div id="ann-desc" class="rich-editable" contenteditable="true" data-placeholder="Ex : Nouvelle fonctionnalité disponible..."></div>
           </div>
           <div class="fgrp"><label>Vidéo (facultatif — max 45 Mo)</label>
             <input type="file" id="ann-video-file" accept="video/*" onchange="previewAnnonceVideo(this)">
@@ -4300,33 +4301,101 @@ async function loadDashboardYoutubeBanner() {
 // sans jamais compromettre la sécurité : le texte normal reste échappé
 // comme avant, seule la partie reconnue comme une vraie adresse web est
 // transformée, avec son adresse elle-même échappée aussi.
-// Insère une mise en forme légère (gras, couleur) autour du texte
-// sélectionné dans le champ — pas un vrai éditeur riche, juste un balisage
-// simple et sûr, comme **gras** utilisé par beaucoup d'apps de messagerie.
-function applyFormat(textareaId, type, colorHex) {
-  const ta = document.getElementById(textareaId);
-  const start = ta.selectionStart, end = ta.selectionEnd;
-  const selected = ta.value.slice(start, end);
-  if (!selected) { toast('Sélectionnez du texte à mettre en forme', 'err'); return; }
-  const wrapped = type === 'bold' ? `**${selected}**` : `[c=${colorHex}]${selected}[/c]`;
-  ta.value = ta.value.slice(0, start) + wrapped + ta.value.slice(end);
-  ta.focus();
-  ta.setSelectionRange(start, start + wrapped.length);
+// Applique une vraie mise en forme immédiate (gras, couleur) sur le texte
+// sélectionné — visible tout de suite, comme dans Word, pas un code à
+// interpréter plus tard.
+function applyFormat(fieldId, type, color) {
+  const field = document.getElementById(fieldId);
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !field.contains(sel.anchorNode)) {
+    toast('Sélectionnez du texte à mettre en forme', 'err');
+    return;
+  }
+  field.focus();
+  if (type === 'bold') {
+    document.execCommand('bold', false);
+  } else if (type === 'color') {
+    document.execCommand('foreColor', false, color);
+  }
 }
 
-// Transforme le texte en HTML sûr, en une seule passe : échappement
-// complet d'abord (protection XSS), puis gras, couleur, et liens
-// cliquables appliqués uniquement sur ce texte déjà sécurisé.
-function parseFormattedText(text) {
-  if (!text) return '';
-  let safe = esc(text);
-  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  safe = safe.replace(/\[c=([0-9A-Fa-f]{6})\](.+?)\[\/c\]/g, '<span style="color:#$1">$2</span>');
-  safe = safe.replace(/((?:https?:\/\/|www\.)[^\s<]+)/g, (match) => {
-    const href = match.startsWith('www.') ? 'https://' + match : match;
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;word-break:break-all">${match}</a>`;
-  });
-  return safe;
+// Nettoie un contenu enrichi avant de l'enregistrer ou de l'afficher — ne
+// garde jamais que les balises et attributs strictement nécessaires au
+// gras, à la couleur et aux liens. Tout le reste (scripts, styles
+// arbitraires, balises inconnues) est retiré, quel que soit son origine.
+function sanitizeRichHtml(html) {
+  const container = document.createElement('div');
+  container.innerHTML = html || '';
+  const allowedTags = ['B', 'STRONG', 'FONT', 'SPAN', 'BR', 'DIV', 'A'];
+  const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/g;
+
+  function linkifyTextNode(node) {
+    const text = node.textContent;
+    if (!urlRegex.test(text)) return;
+    urlRegex.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0, match;
+    while ((match = urlRegex.exec(text)) !== null) {
+      frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      const a = document.createElement('a');
+      const url = match[0].startsWith('www.') ? 'https://' + match[0] : match[0];
+      a.setAttribute('href', url);
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+      a.style.color = '#1A56E8';
+      a.style.textDecoration = 'underline';
+      a.textContent = match[0];
+      frag.appendChild(a);
+      lastIndex = match.index + match[0].length;
+    }
+    frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    node.replaceWith(frag);
+  }
+
+  function clean(node) {
+    [...node.childNodes].forEach(child => {
+      if (child.nodeType === 1) { // élément
+        if (!allowedTags.includes(child.tagName)) {
+          const text = document.createTextNode(child.textContent);
+          child.replaceWith(text);
+          linkifyTextNode(text);
+          return;
+        }
+        const style = child.getAttribute('style') || '';
+        const colorAttr = child.getAttribute('color') || '';
+        const colorMatch = style.match(/color:\s*(#[0-9A-Fa-f]{3,6}|rgb\([^)]+\))/) || (colorAttr ? [null, colorAttr] : null);
+        const href = child.tagName === 'A' ? child.getAttribute('href') : null;
+        [...child.attributes].forEach(attr => child.removeAttribute(attr.name));
+        if (colorMatch) child.style.color = colorMatch[1];
+        if (child.tagName === 'A') {
+          if (href && /^https?:\/\//.test(href)) child.setAttribute('href', href);
+          else child.setAttribute('href', '#');
+          child.setAttribute('target', '_blank');
+          child.setAttribute('rel', 'noopener noreferrer');
+        }
+        clean(child);
+      } else if (child.nodeType === 3) { // texte
+        linkifyTextNode(child);
+      } else {
+        child.remove(); // commentaires ou autres nœuds non voulus
+      }
+    });
+  }
+  clean(container);
+  return container.innerHTML;
+}
+
+// Affichage final : accepte aussi bien l'ancien texte simple (avant ce
+// soir) que le nouveau contenu enrichi — toujours nettoyé avant affichage,
+// peu importe son origine.
+function renderRichText(raw) {
+  if (!raw) return '';
+  // Si le contenu ne ressemble à aucune balise, c'est de l'ancien texte
+  // simple : on échappe d'abord tout, puis on transforme les retours à la
+  // ligne bruts en balises, pour un rendu cohérent avec le nouveau format.
+  const looksLikeHtml = /<[a-z][\s\S]*>/i.test(raw);
+  const input = looksLikeHtml ? raw : esc(raw).replace(/\n/g, '<br>');
+  return sanitizeRichHtml(input);
 }
 
 function previewAnnonceImg(input) {
@@ -4373,7 +4442,7 @@ function previewAnnoncePoster(input) {
 }
 
 async function publishAnnouncement(btn) {
-  const desc = document.getElementById('ann-desc').value.trim();
+  const desc = sanitizeRichHtml(document.getElementById('ann-desc').innerHTML).trim();
   if (!desc) { toast('Ajoutez une description', 'err'); return; }
   const box = document.getElementById('ann-img-preview');
   btn.disabled = true; const origText = btn.textContent; btn.textContent = 'Publication en cours…';
@@ -4409,7 +4478,7 @@ async function publishAnnouncement(btn) {
   }
   const { data, error } = await sb.rpc('admin_create_announcement', { p_image_url: imageUrl, p_description: desc, p_video_url: videoUrl, p_video_poster_url: posterUrl });
   if (error || !data || !data.success) { toast('Erreur', 'err'); return; }
-  document.getElementById('ann-desc').value = '';
+  document.getElementById('ann-desc').innerHTML = '';
   document.getElementById('ann-img').value = '';
   document.getElementById('ann-video-file').value = '';
   document.getElementById('ann-video-preview').innerHTML = '';
@@ -4438,7 +4507,7 @@ async function loadAdminAnnouncementsList() {
     <div class="review-card" style="${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       ${a.is_pinned ? `<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📌 Épinglée</div>` : ''}
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="max-width:160px;border-radius:8px;margin-bottom:8px">` : ''}
-      <div style="font-size:13.5px;white-space:pre-line">${parseFormattedText(a.description)}</div>
+      <div style="font-size:13.5px;white-space:pre-line">${renderRichText(a.description)}</div>
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;max-width:280px;aspect-ratio:16/9;border-radius:10px;margin-bottom:8px;background:#000;object-fit:cover;display:block"></video>` : ''}
       <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -4474,7 +4543,7 @@ async function loadDashboardAnnonces() {
   list.innerHTML = data.map(a => `
     <div class="card" style="padding:14px;${a.is_pinned ? 'border:1.5px solid var(--blue)' : ''}">
       <div style="font-size:13.5px;line-height:1.5;white-space:pre-line">
-        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${parseFormattedText(a.description)}
+        ${a.is_pinned ? `<span style="color:var(--blue);font-weight:700;font-size:11px">📌 Épinglée</span><br>` : ''}${renderRichText(a.description)}
       </div>
       ${a.image_url ? `<img src="${esc(a.image_url)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">` : ''}
       ${a.video_url ? `<video src="${esc(a.video_url)}" ${a.video_poster_url ? `poster="${esc(a.video_poster_url)}"` : ''} controls preload="none" playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-top:10px;display:block;background:#000;object-fit:cover"></video>` : ''}
@@ -5561,7 +5630,7 @@ function showAddForm() {
   document.getElementById('pf-buy').value = '';
   document.getElementById('pf-qty').value = '';
   document.getElementById('pf-var-label').value = '';
-  document.getElementById('pf-desc').value = '';
+  document.getElementById('pf-desc').innerHTML = '';
   document.getElementById('vars-cont').innerHTML = `<div class="var-row"><input placeholder="Ex: Rouge, Taille S…"><input type="file" accept="image/*" style="display:none" id="v_default1" onchange="handleVarImg(this,'v_default1')"><button type="button" class="btn-del-v" style="background:var(--blue-l);color:var(--blue)" onclick="document.getElementById('v_default1').click()" title="Image de la variante">🖼️</button><button class="btn-del-v" onclick="this.parentElement.remove()">×</button></div>`;
   document.getElementById('pf-prev').innerHTML = '';
   S.imgData = []; S.imgFiles = []; S.editImgs = null;
@@ -5583,7 +5652,7 @@ function editProduct(id) {
   document.getElementById('pf-buy').value = p.buyP||'';
   document.getElementById('pf-qty').value = p.qtyAvail;
   document.getElementById('pf-var-label').value = p.varLabel || '';
-  document.getElementById('pf-desc').value = p.desc||'';
+  document.getElementById('pf-desc').innerHTML = renderRichText(p.desc||'');
   // Variantes
   const vc = document.getElementById('vars-cont');
   vc.innerHTML = '';
@@ -5740,7 +5809,7 @@ async function saveProduct() {
   const buyP = parseInt(document.getElementById('pf-buy').value)||0;
   const qty = parseInt(document.getElementById('pf-qty').value)||0;
   const varLabel = document.getElementById('pf-var-label').value.trim();
-  const desc = document.getElementById('pf-desc').value.trim();
+  const desc = sanitizeRichHtml(document.getElementById('pf-desc').innerHTML).trim();
   if (!name) { toast('Donnez un nom au produit *','err'); restoreBtn(); return; }
   if (!newP) { toast('Ajoutez le prix de vente *','err'); restoreBtn(); return; }
   if (!qty && !editId) { toast('Ajoutez la quantité en stock *','err'); restoreBtn(); return; }
@@ -6031,7 +6100,7 @@ function previewShop(prodId, isPublic) {
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
         ${varsHtml}
-        ${p.desc?`<div class="p-desc">${parseFormattedText(p.desc)}</div>`:''}
+        ${p.desc?`<div class="p-desc">${renderRichText(p.desc)}</div>`:''}
         ${renderProductSections(p.sections)}
 
         <div class="quick-order-box">
