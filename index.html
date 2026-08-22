@@ -99,11 +99,11 @@ input,select,textarea{font-size:16px!important;}
 
 /* FORM */
 .fgrp{margin-bottom:14px;}
-.shop-type-card{display:flex;align-items:center;gap:14px;padding:16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:.2s;text-align:left;}
-.shop-type-card:hover{border-color:var(--blue);background:var(--blue-l);}
+.shop-type-card{display:flex;align-items:center;gap:14px;padding:16px;border:2px solid var(--blue);border-radius:16px;cursor:pointer;transition:.2s;text-align:left;background:rgba(26,86,232,0.55);}
+.shop-type-card:hover{background:rgba(26,86,232,0.7);}
 .shop-type-ico{font-size:32px;flex-shrink:0;}
-.shop-type-title{font-size:15px;font-weight:700;color:var(--black);}
-.shop-type-desc{font-size:12px;color:var(--gray);margin-top:2px;}
+.shop-type-title{font-size:15px;font-weight:700;color:#fff;}
+.shop-type-desc{font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px;}
 .fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
 .fmt-toolbar button{height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;padding:0 10px;flex-shrink:0;}
 .fmt-toolbar input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;flex-shrink:0;}
@@ -718,7 +718,7 @@ canvas{display:block;}
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
         <button class="nl-nav-ghost" onclick="go('s-login')">Se connecter</button>
-        <button class="nl-nav-btn" onclick="go('s-register')">Créer ma boutique</button>
+        <button class="nl-nav-btn" onclick="go('s-shop-type-choice')">Créer ma boutique</button>
       </div>
     </div>
   </nav>
@@ -730,7 +730,7 @@ canvas{display:block;}
       <h1>Votre boutique en ligne,<br><span class="nl-grad">prête en quelques minutes</span></h1>
       <p>Zyntelo donne aux commerçants africains tous les outils pour vendre en ligne, gérer leurs commandes et faire grandir leur activité — sans complexité, sans gros budget.</p>
       <div class="nl-cta">
-        <button class="nl-btn-primary" onclick="go('s-register')">Créer ma boutique gratuitement →</button>
+        <button class="nl-btn-primary" onclick="go('s-shop-type-choice')">Créer ma boutique gratuitement →</button>
         <button class="nl-btn-ghost" onclick="demoPreview()">👁 Voir une démo</button>
       </div>
       <div class="nl-hero-note">Aucune carte requise pour commencer · Configuration en 5 minutes</div>
@@ -794,7 +794,7 @@ canvas{display:block;}
           <li><span class="nl-check">✓</span> Paiement automatique Mobile Money &amp; carte</li>
           <li><span class="nl-check">✓</span> Support et centre d'aide intégré</li>
         </ul>
-        <button class="nl-btn-primary" style="width:100%;justify-content:center;" onclick="go('s-register')">Commencer gratuitement</button>
+        <button class="nl-btn-primary" style="width:100%;justify-content:center;" onclick="go('s-shop-type-choice')">Commencer gratuitement</button>
       </div>
     </div>
   </section>
@@ -803,7 +803,7 @@ canvas{display:block;}
     <div class="nl-wrap">
       <h2 class="nl-reveal">Prêt à lancer votre boutique ?</h2>
       <p class="nl-reveal">Rejoignez les entrepreneurs qui font grandir le commerce digital africain.</p>
-      <button class="nl-btn-primary nl-reveal" onclick="go('s-register')" style="font-size:17px;padding:17px 38px;">Créer ma boutique maintenant →</button>
+      <button class="nl-btn-primary nl-reveal" onclick="go('s-shop-type-choice')" style="font-size:17px;padding:17px 38px;">Créer ma boutique maintenant →</button>
     </div>
   </section>
 
@@ -2621,7 +2621,7 @@ async function init() {
   }
   hide('loading');
   if (route.type === 'login') go('s-login');
-  else if (route.type === 'register') go('s-register');
+  else if (route.type === 'register') go('s-shop-type-choice');
   else if (route.type === 'about') go('s-about');
   else if (route.type === 'admin') go('s-admin-login');
   else if (route.type === 'livreur') { await resumeLivreurSession(); }
