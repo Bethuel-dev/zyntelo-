@@ -99,6 +99,11 @@ input,select,textarea{font-size:16px!important;}
 
 /* FORM */
 .fgrp{margin-bottom:14px;}
+.shop-type-card{display:flex;align-items:center;gap:14px;padding:16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:.2s;text-align:left;}
+.shop-type-card:hover{border-color:var(--blue);background:var(--blue-l);}
+.shop-type-ico{font-size:32px;flex-shrink:0;}
+.shop-type-title{font-size:15px;font-weight:700;color:var(--black);}
+.shop-type-desc{font-size:12px;color:var(--gray);margin-top:2px;}
 .fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
 .fmt-toolbar button{height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;padding:0 10px;flex-shrink:0;}
 .fmt-toolbar input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;flex-shrink:0;}
@@ -909,7 +914,37 @@ canvas{display:block;}
       <button class="btn btn-red btn-w" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-gerant-login')">👤 Gérant</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-livreur-login')">🛵 Livreur</button>
-      <div class="auth-switch">Pas de compte ? <a onclick="go('s-register')">Créer une boutique</a></div>
+      <div class="auth-switch">Pas de compte ? <a onclick="go('s-shop-type-choice')">Créer une boutique</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHOIX DU TYPE DE BOUTIQUE (avant inscription)
+═══════════════════════════════════════ -->
+<div id="s-shop-type-choice" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo"><svg width="44" height="44" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg></div>
+      <h2>Quel type de produit souhaitez-vous vendre sur Zyntelo ?</h2>
+      <p class="sub">Ce choix détermine votre espace de vente — vous ne pourrez pas mélanger les deux dans une même boutique</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+        <div class="shop-type-card" onclick="chooseShopType('physique')">
+          <div class="shop-type-ico">🛍️</div>
+          <div>
+            <div class="shop-type-title">Produits physiques</div>
+            <div class="shop-type-desc">Vêtements, accessoires, objets à livrer — avec Zyn Assurance</div>
+          </div>
+        </div>
+        <div class="shop-type-card" onclick="chooseShopType('digital')">
+          <div class="shop-type-ico">💻</div>
+          <div>
+            <div class="shop-type-title">Produits digitaux</div>
+            <div class="shop-type-desc">Ebooks, formations, fichiers — téléchargement immédiat</div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-switch">Déjà un compte ? <a onclick="go('s-login')">Se connecter</a></div>
     </div>
   </div>
 </div>
@@ -1589,6 +1624,85 @@ canvas{display:block;}
 </div>
 
 <!-- ═══════════════════════════════════════
+     TABLEAU DE BORD — PRODUITS DIGITAUX
+     Entièrement séparé du tableau de bord physique ci-dessus.
+═══════════════════════════════════════ -->
+<div id="s-dash-digital" class="flex-screen">
+  <aside class="sb">
+    <div class="sb-logo"><svg width="30" height="30" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span>Zyntelo</span></div>
+    <div class="sb-nav">
+      <div class="nav-item active" onclick="pgDigital('pd-overview',this)"><span class="ni"><i data-lucide="layout-dashboard"></i></span>Vue d'ensemble</div>
+      <div class="nav-item" onclick="pgDigital('pd-products',this)"><span class="ni"><i data-lucide="file-box"></i></span>Produits digitaux</div>
+      <div class="nav-item" onclick="pgDigital('pd-sales',this)"><span class="ni"><i data-lucide="receipt"></i></span>Ventes</div>
+      <div class="nav-item" onclick="pgDigital('pd-clients',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
+      <div class="nav-item" onclick="pgDigital('pd-messages',this)"><span class="ni"><i data-lucide="message-circle"></i></span>Messages</div>
+      <div class="nav-item" onclick="pgDigital('pd-wallet',this)"><span class="ni"><i data-lucide="wallet"></i></span>Portefeuille</div>
+      <div class="nav-item" onclick="pgDigital('pd-settings',this)"><span class="ni"><i data-lucide="settings"></i></span>Paramètres</div>
+      <div class="nav-item" style="margin-top:auto;color:var(--red)" onclick="logout()"><span class="ni"><i data-lucide="log-out"></i></span>Déconnexion</div>
+    </div>
+  </aside>
+  <main class="sb-main">
+    <div class="sb-topbar">
+      <div class="sb-topbar-title" id="pd-topbar-title">Vue d'ensemble</div>
+    </div>
+    <div class="sb-content">
+
+      <div class="dash-page on" id="pd-overview">
+        <div class="page-head"><h1>Tableau de bord</h1><p>Bienvenue sur votre espace produits digitaux</p></div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-lbl">Ventes</div><div class="stat-val" id="pd-st-sales">0</div></div>
+          <div class="stat-box"><div class="stat-lbl">Chiffre d'affaires</div><div class="stat-val sv-green" id="pd-st-ca">0 FCFA</div></div>
+          <div class="stat-box"><div class="stat-lbl">Téléchargements</div><div class="stat-val" id="pd-st-downloads">0</div></div>
+          <div class="stat-box"><div class="stat-lbl">Produits publiés</div><div class="stat-val" id="pd-st-products">0</div></div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-title">🚀 Bienvenue dans votre espace digital</div>
+          <p style="font-size:13px;color:var(--gray);line-height:1.6">Cet espace est spécialement conçu pour la vente de produits digitaux (ebooks, formations, templates) — distinct de l'espace des boutiques physiques. La gestion complète des produits, la livraison automatique et la vérification d'identité arrivent très prochainement.</p>
+        </div>
+      </div>
+
+      <div class="dash-page" id="pd-products">
+        <div class="page-head"><h1>Produits digitaux</h1><p>Vos ebooks, formations et fichiers à vendre</p></div>
+        <div class="empty card"><div class="empty-ico">📁</div><p>La création de produits digitaux arrive très prochainement.</p></div>
+      </div>
+
+      <div class="dash-page" id="pd-sales">
+        <div class="page-head"><h1>Ventes</h1><p>Historique de vos ventes — rien à livrer, tout est automatique</p></div>
+        <div class="empty card"><div class="empty-ico">🧾</div><p>Aucune vente pour le moment.</p></div>
+      </div>
+
+      <div class="dash-page" id="pd-clients">
+        <div class="page-head"><h1>Clients</h1><p>Les personnes qui ont acheté vos produits</p></div>
+        <div class="empty card"><div class="empty-ico">👥</div><p>Aucun client pour le moment.</p></div>
+      </div>
+
+      <div class="dash-page" id="pd-messages">
+        <div class="page-head"><h1>Messages</h1><p>Vos conversations avec vos clients</p></div>
+        <div class="empty card"><div class="empty-ico">💬</div><p>Aucun message pour le moment.</p></div>
+      </div>
+
+      <div class="dash-page" id="pd-wallet">
+        <div class="page-head"><h1>Portefeuille</h1><p>Vos gains, après déduction automatique de la commission</p></div>
+        <div class="card">
+          <div class="card-title">Solde disponible</div>
+          <div style="font-size:26px;font-weight:800;margin:8px 0" id="pd-wallet-balance">0 FCFA</div>
+          <div style="background:var(--yellow-l);color:#92400E;padding:12px;border-radius:10px;font-size:12.5px;font-weight:600">🔒 La vérification d'identité (bientôt disponible) sera nécessaire pour retirer vos gains.</div>
+        </div>
+      </div>
+
+      <div class="dash-page" id="pd-settings">
+        <div class="page-head"><h1>Paramètres</h1><p>Les informations de votre boutique</p></div>
+        <div class="card">
+          <div class="fgrp"><label>Nom de la boutique</label><input id="pd-shop-name" disabled></div>
+          <p style="font-size:11.5px;color:var(--gray)">La modification des paramètres arrive très prochainement.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════
      BOUTIQUE CLIENT
 ═══════════════════════════════════════ -->
 <div id="s-boutique" class="screen">
@@ -2219,7 +2333,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id, pixelDataLevel:data.pixel_data_level||'standard' };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id, pixelDataLevel:data.pixel_data_level||'standard', shopType:data.shop_type||'physique' };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -2540,7 +2654,16 @@ async function init() {
 
 // Change l'URL affichée sans recharger la page
 function navTo(path) {
-  window.history.pushState({}, '', path);
+  // Protection : dans de rares cas (certains navigateurs très restrictifs
+  // en confidentialité, certains contextes webview), changer l'adresse
+  // affichée peut échouer — ça ne doit jamais empêcher la navigation
+  // réelle dans l'application ni alarmer l'utilisateur avec une erreur
+  // technique pour un simple détail d'affichage d'URL.
+  try {
+    window.history.pushState({}, '', path);
+  } catch (e) {
+    console.error('navTo: pushState a échoué (sans conséquence)', e);
+  }
 }
 
 function hide(id) { document.getElementById(id).classList.add('hide'); }
@@ -2655,6 +2778,31 @@ function triggerLandingReveal() {
     }, { threshold: 0.12 });
   }
   els.forEach((el, i) => { el.style.transitionDelay = ((i % 6) * 0.06) + 's'; _nlObserver.observe(el); });
+}
+
+// Navigation au sein de l'espace digital — même principe que pg(), mais
+// entièrement cloisonné à #s-dash-digital, sans aucune interférence avec
+// la navigation du tableau de bord physique.
+const digitalPageTitles = {
+  'pd-overview': "Vue d'ensemble", 'pd-products': 'Produits digitaux', 'pd-sales': 'Ventes',
+  'pd-clients': 'Clients', 'pd-messages': 'Messages', 'pd-wallet': 'Portefeuille', 'pd-settings': 'Paramètres'
+};
+function pgDigital(pageId, el) {
+  document.querySelectorAll('#s-dash-digital .dash-page').forEach(p => p.classList.remove('on'));
+  document.getElementById(pageId).classList.add('on');
+  document.querySelectorAll('#s-dash-digital .nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titleEl = document.getElementById('pd-topbar-title');
+  if (titleEl) titleEl.textContent = digitalPageTitles[pageId] || '';
+  refreshLucideIcons();
+}
+
+// Chargement initial de l'espace digital — pour l'instant les compteurs
+// restent à zéro (aucune donnée existante), la vraie logique de calcul
+// arrivera avec la gestion des produits digitaux.
+function loadDigitalDashboard() {
+  document.getElementById('pd-shop-name').value = S.shop.name || '';
+  refreshLucideIcons();
 }
 
 function pg(pageId, el) {
@@ -3706,6 +3854,17 @@ async function loginAs(user) {
 
   S.shop = shopData || { name: user.shopName||'Ma Boutique', ann:'', wa: user.wa||'', domain:'', blocked:false };
   S.shop.id = ownerId;
+
+  // Aiguillage vers l'espace digital — complètement séparé du tableau de
+  // bord physique existant, qui continue de fonctionner exactement comme
+  // avant pour toutes les boutiques physiques.
+  if (!user.isGerant && S.shop.shopType === 'digital') {
+    hide('loading');
+    go('s-dash-digital');
+    loadDigitalDashboard();
+    return;
+  }
+
   // Compléter les infos utilisateur manquantes (cas de connexion simplifiée) à partir de la boutique
   if (!user.name) user.name = S.shop.name;
   if (!user.shopName) user.shopName = S.shop.name;
@@ -4071,6 +4230,13 @@ async function generateUniqueSlug(shopName) {
   }
 }
 
+// Mémorise le choix fait sur l'écran précédent, puis passe au formulaire
+// d'inscription habituel — inchangé.
+function chooseShopType(type) {
+  S.pendingShopType = type;
+  go('s-register');
+}
+
 async function doRegister() {
   if (S._registering) return; // empêche les clics répétés d'envoyer plusieurs inscriptions
   const name = document.getElementById('rg-name').value.trim();
@@ -4080,6 +4246,10 @@ async function doRegister() {
   const pass = document.getElementById('rg-pass').value;
   if (!name||!wa||!shopName||!email||!pass) { toast('Remplissez tous les champs *','err'); return; }
   if (pass.length < 6) { toast('Mot de passe : 6 caractères minimum','err'); return; }
+  // Sécurité : si quelqu'un arrive directement sur ce formulaire sans être
+  // passé par l'écran de choix (lien direct, ancien favori...), on
+  // considère "physique" par défaut plutôt que de bloquer l'inscription.
+  const shopType = S.pendingShopType === 'digital' ? 'digital' : 'physique';
 
   S._registering = true;
   const regBtns = document.querySelectorAll('[onclick="doRegister()"]');
@@ -4088,7 +4258,7 @@ async function doRegister() {
   try {
   const { data, error } = await sb.auth.signUp({
     email, password: pass,
-    options: { data: { name, shopName, wa } }
+    options: { data: { name, shopName, wa, shopType } }
   });
   if (error) {
     if (error.message.includes('already registered') || error.message.includes('already exists')) {
@@ -5966,7 +6136,7 @@ async function openPublicShopBySlug(route) {
     domain: shop.domain, blocked: shop.blocked, logoUrl: shop.logo_url, slug: shop.slug,
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
     badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA',
-    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id, pixelDataLevel: shop.pixel_data_level||'standard'
+    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id, pixelDataLevel: shop.pixel_data_level||'standard', shopType: shop.shop_type||'physique'
   };
   S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
