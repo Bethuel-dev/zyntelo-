@@ -2541,7 +2541,16 @@ async function init() {
 
 // Change l'URL affichée sans recharger la page
 function navTo(path) {
-  window.history.pushState({}, '', path);
+  // Protection : dans de rares cas (certains navigateurs très restrictifs
+  // en confidentialité, certains contextes webview), changer l'adresse
+  // affichée peut échouer — ça ne doit jamais empêcher la navigation
+  // réelle dans l'application ni alarmer l'utilisateur avec une erreur
+  // technique pour un simple détail d'affichage d'URL.
+  try {
+    window.history.pushState({}, '', path);
+  } catch (e) {
+    console.error('navTo: pushState a échoué (sans conséquence)', e);
+  }
 }
 
 function hide(id) { document.getElementById(id).classList.add('hide'); }
@@ -2637,6 +2646,17 @@ function go(screenId) {
   if (screenId === 's-login') navTo('/login');
   if (screenId === 's-register') navTo('/register');
   if (screenId === 's-admin-login') navTo('/zt-portal-8k3m2x');
+  // Connexion et inscription s'affichent en vrai mode téléphone (adapté à
+  // la taille réelle de l'écran), pour un texte toujours bien lisible —
+  // le reste de l'application garde le mode ordinateur choisi partout
+  // ailleurs, sans aucun changement.
+  const vpMeta = document.querySelector('meta[name="viewport"]');
+  if (vpMeta) {
+    const phoneScreens = ['s-login', 's-register', 's-gerant-login', 's-livreur-login'];
+    vpMeta.setAttribute('content', phoneScreens.includes(screenId)
+      ? 'width=device-width, initial-scale=1.0, viewport-fit=cover'
+      : 'width=1024');
+  }
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
   refreshLucideIcons();
