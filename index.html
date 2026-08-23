@@ -1578,7 +1578,7 @@ canvas{display:block;}
           <div class="hc-chat">
             <div class="hc-msgs" id="hc-msgs"></div>
             <div class="hc-input">
-              <textarea id="hc-text" placeholder="Écrivez votre préoccupation..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHelpMessage();}"></textarea>
+              <textarea id="hc-text" placeholder="Écrivez votre préoccupation..."></textarea>
               <button class="btn btn-blue" onclick="sendHelpMessage()">Envoyer</button>
             </div>
           </div>
@@ -8745,6 +8745,16 @@ async function sendGerantInviteEmail(email, code) {
 const ENOLA = { name: 'Enola', initial: 'E' };
 function hcEscape(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// Échappe le texte d'abord (protection intacte), puis transforme
+// uniquement les adresses web reconnues en liens cliquables.
+function hcLinkify(text) {
+  const safe = hcEscape(text);
+  return safe.replace(/((?:https?:\/\/|www\.)[^\s<]+)/g, (match) => {
+    const href = match.startsWith('www.') ? 'https://' + match : match;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;word-break:break-all">${match}</a>`;
+  });
+}
+
 // ---- Côté marchand / gérant ----
 let hcPollTimer = null;
 let hcMessages = [];
@@ -8768,7 +8778,7 @@ async function loadHelpMessages() {
 }
 
 function hcRow(who, text) {
-  const safe = hcEscape(text);
+  const safe = hcLinkify(text);
   if (who === 'me') return `<div class="hc-row me"><div class="hc-col"><div class="hc-bubble me">${safe}</div></div></div>`;
   return `<div class="hc-row"><div class="hc-ava">${ENOLA.initial}</div><div class="hc-col"><div class="hc-name">${ENOLA.name}</div><div class="hc-bubble enola">${safe}</div></div></div>`;
 }
@@ -8937,7 +8947,7 @@ function renderAdminThreadView(pid) {
   view.style.display = 'block';
   const role = t.type === 'gerant' ? 'Gérant' : 'Marchand';
   const bubbles = t.msgs.map(m => {
-    const safe = hcEscape(m.body);
+    const safe = hcLinkify(m.body);
     if (m.sender === 'admin') return `<div class="hc-row me"><div class="hc-col"><div class="hc-bubble me">${safe}</div></div></div>`;
     return `<div class="hc-row"><div class="hc-ava" style="background:linear-gradient(135deg,#1A56E8,#22D3EE)">${hcEscape((t.name || 'U').charAt(0).toUpperCase())}</div><div class="hc-col"><div class="hc-name">${hcEscape(t.name)}</div><div class="hc-bubble enola">${safe}</div></div></div>`;
   }).join('');
@@ -8947,7 +8957,7 @@ function renderAdminThreadView(pid) {
     <div class="hc-chat">
       <div class="hc-msgs">${bubbles}</div>
       <div class="hc-input">
-        <textarea id="adm-reply-text" placeholder="Votre réponse..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminReply();}"></textarea>
+        <textarea id="adm-reply-text" placeholder="Votre réponse..."></textarea>
         <button class="btn btn-blue" onclick="sendAdminReply()">Répondre</button>
       </div>
     </div>`;
