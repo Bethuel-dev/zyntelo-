@@ -99,11 +99,6 @@ input,select,textarea{font-size:16px!important;}
 
 /* FORM */
 .fgrp{margin-bottom:14px;}
-.shop-type-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 16px;border:2px solid var(--blue);border-radius:16px;cursor:pointer;transition:.2s;text-align:center;background:rgba(26,86,232,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-.shop-type-card:hover{background:rgba(26,86,232,0.62);}
-.shop-type-ico{color:#fff;}
-.shop-type-ico svg{width:34px;height:34px;stroke-width:1.8;}
-.shop-type-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:.2px;}
 .fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
 .fmt-toolbar button{height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;padding:0 10px;flex-shrink:0;}
 .fmt-toolbar input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;flex-shrink:0;}
@@ -718,7 +713,7 @@ canvas{display:block;}
         <button class="nl-nav-ghost" id="land-logout-btn" style="display:none;color:#FF6B6B" onclick="logout()">Déconnexion</button>
         <button class="nl-nav-ghost" onclick="showPerfLog()" style="font-size:9px;opacity:.15" title="Diagnostic performance">📊</button>
         <button class="nl-nav-ghost" onclick="go('s-login')">Se connecter</button>
-        <button class="nl-nav-btn" onclick="go('s-shop-type-choice')">Créer ma boutique</button>
+        <button class="nl-nav-btn" onclick="go('s-register')">Créer ma boutique</button>
       </div>
     </div>
   </nav>
@@ -730,7 +725,7 @@ canvas{display:block;}
       <h1>Votre boutique en ligne,<br><span class="nl-grad">prête en quelques minutes</span></h1>
       <p>Zyntelo donne aux commerçants africains tous les outils pour vendre en ligne, gérer leurs commandes et faire grandir leur activité — sans complexité, sans gros budget.</p>
       <div class="nl-cta">
-        <button class="nl-btn-primary" onclick="go('s-shop-type-choice')">Créer ma boutique gratuitement →</button>
+        <button class="nl-btn-primary" onclick="go('s-register')">Créer ma boutique gratuitement →</button>
         <button class="nl-btn-ghost" onclick="demoPreview()">👁 Voir une démo</button>
       </div>
       <div class="nl-hero-note">Aucune carte requise pour commencer · Configuration en 5 minutes</div>
@@ -794,7 +789,7 @@ canvas{display:block;}
           <li><span class="nl-check">✓</span> Paiement automatique Mobile Money &amp; carte</li>
           <li><span class="nl-check">✓</span> Support et centre d'aide intégré</li>
         </ul>
-        <button class="nl-btn-primary" style="width:100%;justify-content:center;" onclick="go('s-shop-type-choice')">Commencer gratuitement</button>
+        <button class="nl-btn-primary" style="width:100%;justify-content:center;" onclick="go('s-register')">Commencer gratuitement</button>
       </div>
     </div>
   </section>
@@ -803,7 +798,7 @@ canvas{display:block;}
     <div class="nl-wrap">
       <h2 class="nl-reveal">Prêt à lancer votre boutique ?</h2>
       <p class="nl-reveal">Rejoignez les entrepreneurs qui font grandir le commerce digital africain.</p>
-      <button class="nl-btn-primary nl-reveal" onclick="go('s-shop-type-choice')" style="font-size:17px;padding:17px 38px;">Créer ma boutique maintenant →</button>
+      <button class="nl-btn-primary nl-reveal" onclick="go('s-register')" style="font-size:17px;padding:17px 38px;">Créer ma boutique maintenant →</button>
     </div>
   </section>
 
@@ -914,30 +909,7 @@ canvas{display:block;}
       <button class="btn btn-red btn-w" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-gerant-login')">👤 Gérant</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-livreur-login')">🛵 Livreur</button>
-      <div class="auth-switch">Pas de compte ? <a onclick="go('s-shop-type-choice')">Créer une boutique</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     CHOIX DU TYPE DE BOUTIQUE (avant inscription)
-═══════════════════════════════════════ -->
-<div id="s-shop-type-choice" class="screen">
-  <div class="auth-wrap">
-    <div class="auth-box">
-      <div class="auth-logo"><svg width="44" height="44" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg></div>
-      <h2>Que vendez-vous ?</h2>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
-        <div class="shop-type-card" onclick="chooseShopType('physique')">
-          <div class="shop-type-ico"><i data-lucide="shopping-bag"></i></div>
-          <div class="shop-type-title">Produits physiques</div>
-        </div>
-        <div class="shop-type-card" onclick="chooseShopType('digital')">
-          <div class="shop-type-ico"><i data-lucide="laptop"></i></div>
-          <div class="shop-type-title">Produits digitaux</div>
-        </div>
-      </div>
-      <div class="auth-switch">Déjà un compte ? <a onclick="go('s-login')">Se connecter</a></div>
+      <div class="auth-switch">Pas de compte ? <a onclick="go('s-register')">Créer une boutique</a></div>
     </div>
   </div>
 </div>
@@ -1617,119 +1589,6 @@ canvas{display:block;}
 </div>
 
 <!-- ═══════════════════════════════════════
-     TABLEAU DE BORD — PRODUITS DIGITAUX
-     Entièrement séparé du tableau de bord physique ci-dessus.
-═══════════════════════════════════════ -->
-<div id="s-dash-digital" class="flex-screen">
-  <aside class="sb">
-    <div class="sb-logo"><svg width="30" height="30" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg><span>Zyntelo</span></div>
-    <div class="sb-nav">
-      <div class="nav-item active" onclick="pgDigital('pd-overview',this)"><span class="ni"><i data-lucide="layout-dashboard"></i></span>Vue d'ensemble</div>
-      <div class="nav-item" onclick="pgDigital('pd-products',this)"><span class="ni"><i data-lucide="file-box"></i></span>Produits digitaux</div>
-      <div class="nav-item" onclick="pgDigital('pd-sales',this)"><span class="ni"><i data-lucide="receipt"></i></span>Ventes</div>
-      <div class="nav-item" onclick="pgDigital('pd-clients',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
-      <div class="nav-item" onclick="pgDigital('pd-messages',this)"><span class="ni"><i data-lucide="message-circle"></i></span>Messages</div>
-      <div class="nav-item" onclick="pgDigital('pd-wallet',this)"><span class="ni"><i data-lucide="wallet"></i></span>Portefeuille</div>
-      <div class="nav-item" onclick="pgDigital('pd-settings',this)"><span class="ni"><i data-lucide="settings"></i></span>Paramètres</div>
-      <div class="nav-item" style="margin-top:auto;color:var(--red)" onclick="logout()"><span class="ni"><i data-lucide="log-out"></i></span>Déconnexion</div>
-    </div>
-  </aside>
-  <main class="sb-main">
-    <div class="sb-topbar">
-      <div class="sb-topbar-title" id="pd-topbar-title">Vue d'ensemble</div>
-    </div>
-    <div class="sb-content">
-
-      <div class="dash-page on" id="pd-overview">
-        <div class="page-head"><h1>Tableau de bord</h1><p>Bienvenue sur votre espace produits digitaux</p></div>
-        <div class="stats-row">
-          <div class="stat-box"><div class="stat-lbl">Ventes</div><div class="stat-val" id="pd-st-sales">0</div></div>
-          <div class="stat-box"><div class="stat-lbl">Chiffre d'affaires</div><div class="stat-val sv-green" id="pd-st-ca">0 FCFA</div></div>
-          <div class="stat-box"><div class="stat-lbl">Téléchargements</div><div class="stat-val" id="pd-st-downloads">0</div></div>
-          <div class="stat-box"><div class="stat-lbl">Produits publiés</div><div class="stat-val" id="pd-st-products">0</div></div>
-        </div>
-        <div class="card" style="margin-top:18px">
-          <div class="card-title">🚀 Bienvenue dans votre espace digital</div>
-          <p style="font-size:13px;color:var(--gray);line-height:1.6">Cet espace est spécialement conçu pour la vente de produits digitaux (ebooks, formations, templates) — distinct de l'espace des boutiques physiques. La gestion complète des produits, la livraison automatique et la vérification d'identité arrivent très prochainement.</p>
-        </div>
-      </div>
-
-      <div class="dash-page" id="pd-products">
-        <div class="page-head"><h1>Produits digitaux</h1><p>Vos ebooks, formations et fichiers à vendre</p></div>
-
-        <div id="pdf-form-card" class="card" style="margin-bottom:18px;display:none">
-          <div class="fgrp"><label>Image de couverture</label>
-            <div class="upload-zone" style="max-width:160px" onclick="document.getElementById('pdf-cover').click()">
-              <input type="file" id="pdf-cover" accept="image/*" style="display:none" onchange="previewPdfCover(this)">
-              <div id="pdf-cover-preview"><div style="font-size:24px">🖼️</div><div style="font-size:11px;color:var(--gray)">Ajouter</div></div>
-            </div>
-          </div>
-          <div class="fgrp"><label>Nom du produit *</label><input id="pdf-name" placeholder="Ex : Guide complet du commerce en ligne"></div>
-          <div class="fgrp"><label>Prix <span class="curlbl">FCFA</span> *</label><input id="pdf-price" type="number" placeholder="5000"></div>
-          <div class="fgrp"><label>Description</label>
-            <div class="fmt-toolbar">
-              <button type="button" onclick="applyFormat('pdf-desc','bold')"><b>G</b></button>
-              <input type="color" id="pdf-desc-color-pick" value="#1A56E8" title="Choisir une couleur">
-              <button type="button" onclick="applyFormat('pdf-desc','color',document.getElementById('pdf-desc-color-pick').value)">Appliquer la couleur</button>
-            </div>
-            <div id="pdf-desc" class="rich-editable" contenteditable="true" data-placeholder="Décrivez ce que contient votre produit…"></div>
-          </div>
-          <div class="fgrp"><label>Fichier à vendre * <span style="font-weight:400;color:var(--gray)">(PDF, ZIP, audio… max 50 Mo)</span></label>
-            <input type="file" id="pdf-file" onchange="previewPdfFile(this)">
-            <div id="pdf-file-name" style="font-size:12px;color:var(--gray);margin-top:4px"></div>
-          </div>
-          <div class="fgrp"><label>Aperçu gratuit <span style="font-weight:400;color:var(--gray)">(facultatif — quelques pages ou un extrait, montré avant l'achat)</span></label>
-            <input type="file" id="pdf-preview-file" onchange="previewPdfPreviewFile(this)">
-            <div id="pdf-preview-file-name" style="font-size:12px;color:var(--gray);margin-top:4px"></div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:10px">
-            <button class="btn btn-blue" id="pdf-submit-btn" onclick="saveDigitalProduct(this)">Publier le produit</button>
-            <button class="btn btn-ghost" onclick="hidePdfForm()">Annuler</button>
-          </div>
-        </div>
-
-        <button class="btn btn-blue" id="pdf-add-btn" onclick="showPdfForm()" style="margin-bottom:18px">+ Ajouter un produit digital</button>
-
-        <div id="pd-products-list"></div>
-      </div>
-
-      <div class="dash-page" id="pd-sales">
-        <div class="page-head"><h1>Ventes</h1><p>Historique de vos ventes — rien à livrer, tout est automatique</p></div>
-        <div class="empty card"><div class="empty-ico">🧾</div><p>Aucune vente pour le moment.</p></div>
-      </div>
-
-      <div class="dash-page" id="pd-clients">
-        <div class="page-head"><h1>Clients</h1><p>Les personnes qui ont acheté vos produits</p></div>
-        <div class="empty card"><div class="empty-ico">👥</div><p>Aucun client pour le moment.</p></div>
-      </div>
-
-      <div class="dash-page" id="pd-messages">
-        <div class="page-head"><h1>Messages</h1><p>Vos conversations avec vos clients</p></div>
-        <div class="empty card"><div class="empty-ico">💬</div><p>Aucun message pour le moment.</p></div>
-      </div>
-
-      <div class="dash-page" id="pd-wallet">
-        <div class="page-head"><h1>Portefeuille</h1><p>Vos gains, après déduction automatique de la commission</p></div>
-        <div class="card">
-          <div class="card-title">Solde disponible</div>
-          <div style="font-size:26px;font-weight:800;margin:8px 0" id="pd-wallet-balance">0 FCFA</div>
-          <div style="background:var(--yellow-l);color:#92400E;padding:12px;border-radius:10px;font-size:12.5px;font-weight:600">🔒 La vérification d'identité (bientôt disponible) sera nécessaire pour retirer vos gains.</div>
-        </div>
-      </div>
-
-      <div class="dash-page" id="pd-settings">
-        <div class="page-head"><h1>Paramètres</h1><p>Les informations de votre boutique</p></div>
-        <div class="card">
-          <div class="fgrp"><label>Nom de la boutique</label><input id="pd-shop-name" disabled></div>
-          <p style="font-size:11.5px;color:var(--gray)">La modification des paramètres arrive très prochainement.</p>
-        </div>
-      </div>
-
-    </div>
-  </main>
-</div>
-
-<!-- ═══════════════════════════════════════
      BOUTIQUE CLIENT
 ═══════════════════════════════════════ -->
 <div id="s-boutique" class="screen">
@@ -2360,7 +2219,7 @@ const Store = {
         const id = key.replace('shop_','');
         const { data } = await sb.from('shops').select('*').eq('id', id).single();
         if (!data) return null;
-        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id, pixelDataLevel:data.pixel_data_level||'standard', shopType:data.shop_type||'physique' };
+        return { id:data.id, name:data.shop_name, ann:data.ann, anns:data.anns||[], wa:data.wa, domain:data.domain, domainStatus:data.domain_status, domainError:data.domain_error, blocked:data.blocked, suspendedReason:data.suspended_reason, logoUrl:data.logo_url, slug:data.slug, coverImage:data.cover_image, productsTitle:data.products_title||'Nos produits', badge:data.badge, appearance:data.appearance||{}, currency:data.currency||'FCFA', review_given:data.review_given, review_prompt_snoozed_until:data.review_prompt_snoozed_until, fbPixelId:data.fb_pixel_id, tiktokPixelId:data.tiktok_pixel_id, pixelDataLevel:data.pixel_data_level||'standard' };
       }
       if (key.startsWith('prods_') || key.startsWith('orders_') || key.startsWith('gerants_')) {
         const table = key.startsWith('prods_') ? 'products' : key.startsWith('orders_') ? 'orders' : 'gerants';
@@ -2648,7 +2507,7 @@ async function init() {
   }
   hide('loading');
   if (route.type === 'login') go('s-login');
-  else if (route.type === 'register') go('s-shop-type-choice');
+  else if (route.type === 'register') go('s-register');
   else if (route.type === 'about') go('s-about');
   else if (route.type === 'admin') go('s-admin-login');
   else if (route.type === 'livreur') { await resumeLivreurSession(); }
@@ -2681,16 +2540,7 @@ async function init() {
 
 // Change l'URL affichée sans recharger la page
 function navTo(path) {
-  // Protection : dans de rares cas (certains navigateurs très restrictifs
-  // en confidentialité, certains contextes webview), changer l'adresse
-  // affichée peut échouer — ça ne doit jamais empêcher la navigation
-  // réelle dans l'application ni alarmer l'utilisateur avec une erreur
-  // technique pour un simple détail d'affichage d'URL.
-  try {
-    window.history.pushState({}, '', path);
-  } catch (e) {
-    console.error('navTo: pushState a échoué (sans conséquence)', e);
-  }
+  window.history.pushState({}, '', path);
 }
 
 function hide(id) { document.getElementById(id).classList.add('hide'); }
@@ -2805,179 +2655,6 @@ function triggerLandingReveal() {
     }, { threshold: 0.12 });
   }
   els.forEach((el, i) => { el.style.transitionDelay = ((i % 6) * 0.06) + 's'; _nlObserver.observe(el); });
-}
-
-// Navigation au sein de l'espace digital — même principe que pg(), mais
-// entièrement cloisonné à #s-dash-digital, sans aucune interférence avec
-// la navigation du tableau de bord physique.
-const digitalPageTitles = {
-  'pd-overview': "Vue d'ensemble", 'pd-products': 'Produits digitaux', 'pd-sales': 'Ventes',
-  'pd-clients': 'Clients', 'pd-messages': 'Messages', 'pd-wallet': 'Portefeuille', 'pd-settings': 'Paramètres'
-};
-function pgDigital(pageId, el) {
-  document.querySelectorAll('#s-dash-digital .dash-page').forEach(p => p.classList.remove('on'));
-  document.getElementById(pageId).classList.add('on');
-  document.querySelectorAll('#s-dash-digital .nav-item').forEach(n => n.classList.remove('active'));
-  if (el) el.classList.add('active');
-  const titleEl = document.getElementById('pd-topbar-title');
-  if (titleEl) titleEl.textContent = digitalPageTitles[pageId] || '';
-  if (pageId === 'pd-products') loadDigitalProducts();
-  refreshLucideIcons();
-}
-
-// Chargement initial de l'espace digital — pour l'instant les compteurs
-// restent à zéro (aucune donnée existante), la vraie logique de calcul
-// arrivera avec la gestion des produits digitaux.
-function loadDigitalDashboard() {
-  document.getElementById('pd-shop-name').value = S.shop.name || '';
-  loadDigitalProducts();
-  refreshLucideIcons();
-}
-
-// ═══════════════════════════════════════════════
-// PRODUITS DIGITAUX — création, liste
-// ═══════════════════════════════════════════════
-function showPdfForm() {
-  document.getElementById('pdf-form-card').style.display = '';
-  document.getElementById('pdf-add-btn').style.display = 'none';
-}
-function hidePdfForm() {
-  document.getElementById('pdf-form-card').style.display = 'none';
-  document.getElementById('pdf-add-btn').style.display = '';
-  document.getElementById('pdf-name').value = '';
-  document.getElementById('pdf-price').value = '';
-  document.getElementById('pdf-desc').innerHTML = '';
-  document.getElementById('pdf-cover').value = '';
-  document.getElementById('pdf-cover-preview').innerHTML = '<div style="font-size:24px">🖼️</div><div style="font-size:11px;color:var(--gray)">Ajouter</div>';
-  document.getElementById('pdf-file').value = '';
-  document.getElementById('pdf-file-name').textContent = '';
-  document.getElementById('pdf-preview-file').value = '';
-  document.getElementById('pdf-preview-file-name').textContent = '';
-  delete document.getElementById('pdf-cover-preview').dataset.pending;
-  window._pdfFile = null;
-  window._pdfPreviewFile = null;
-}
-
-function previewPdfCover(input) {
-  const file = input.files[0];
-  const box = document.getElementById('pdf-cover-preview');
-  if (!file) return;
-  compressImage(file, 500, 0.75).then(compressed => {
-    box.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
-    box.dataset.pending = compressed;
-  }).catch(() => {});
-}
-
-// Validation de taille (50 Mo) — mêmes précautions que pour les vidéos
-// d'annonces plus tôt ce soir, pour ne jamais risquer le stockage.
-function previewPdfFile(input) {
-  const file = input.files[0];
-  const label = document.getElementById('pdf-file-name');
-  if (!file) { label.textContent = ''; window._pdfFile = null; return; }
-  if (file.size > 50 * 1024 * 1024) {
-    toast('Fichier trop lourd (max 50 Mo)', 'err');
-    input.value = ''; label.textContent = ''; window._pdfFile = null;
-    return;
-  }
-  label.textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} Mo)`;
-  window._pdfFile = file;
-}
-function previewPdfPreviewFile(input) {
-  const file = input.files[0];
-  const label = document.getElementById('pdf-preview-file-name');
-  if (!file) { label.textContent = ''; window._pdfPreviewFile = null; return; }
-  if (file.size > 50 * 1024 * 1024) {
-    toast('Fichier trop lourd (max 50 Mo)', 'err');
-    input.value = ''; label.textContent = ''; window._pdfPreviewFile = null;
-    return;
-  }
-  label.textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} Mo)`;
-  window._pdfPreviewFile = file;
-}
-
-async function saveDigitalProduct(btn) {
-  const name = document.getElementById('pdf-name').value.trim();
-  const price = parseInt(document.getElementById('pdf-price').value) || 0;
-  const desc = sanitizeRichHtml(document.getElementById('pdf-desc').innerHTML).trim();
-  const mainFile = window._pdfFile;
-  if (!name || !price) { toast('Nom et prix obligatoires', 'err'); return; }
-  if (!mainFile) { toast('Ajoutez le fichier à vendre', 'err'); return; }
-
-  const origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Publication en cours…';
-  try {
-    const ownerId = S.shop.id;
-
-    // Couverture (facultative) — dans le compartiment public, comme les
-    // autres images de l'application.
-    let coverUrl = null;
-    const coverBox = document.getElementById('pdf-cover-preview');
-    if (coverBox.dataset.pending) {
-      const blob = dataURLToBlob(coverBox.dataset.pending);
-      const path = `digital-covers/${ownerId}-${Date.now()}.jpg`;
-      const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { contentType: 'image/jpeg' });
-      if (upErr) { toast('Erreur upload couverture : ' + upErr.message, 'err'); return; }
-      coverUrl = sb.storage.from('logos').getPublicUrl(path).data.publicUrl;
-    }
-
-    // Fichier principal — compartiment privé, jamais accessible sans lien
-    // signé généré à la demande.
-    const mainExt = mainFile.name.split('.').pop() || 'pdf';
-    const mainPath = `${ownerId}/${Date.now()}-fichier.${mainExt}`;
-    const { error: fileErr } = await sb.storage.from('digital-files').upload(mainPath, mainFile);
-    if (fileErr) { toast('Erreur upload fichier : ' + fileErr.message, 'err'); return; }
-
-    // Aperçu (facultatif) — même compartiment privé, même principe.
-    let previewPath = null;
-    if (window._pdfPreviewFile) {
-      const pExt = window._pdfPreviewFile.name.split('.').pop() || 'pdf';
-      previewPath = `${ownerId}/${Date.now()}-apercu.${pExt}`;
-      const { error: pErr } = await sb.storage.from('digital-files').upload(previewPath, window._pdfPreviewFile);
-      if (pErr) { toast('Erreur upload aperçu : ' + pErr.message, 'err'); return; }
-    }
-
-    const { error: insertErr } = await sb.from('digital_products').insert({
-      owner_id: ownerId, name, price, description: desc,
-      cover_image: coverUrl, file_path: mainPath, preview_path: previewPath
-    });
-    if (insertErr) { toast('Erreur : ' + insertErr.message, 'err'); return; }
-
-    toast('Produit publié ✓');
-    hidePdfForm();
-    loadDigitalProducts();
-  } finally {
-    btn.disabled = false; btn.textContent = origText;
-  }
-}
-
-async function loadDigitalProducts() {
-  const list = document.getElementById('pd-products-list');
-  if (!list) return;
-  const { data, error } = await sb.from('digital_products').select('*').eq('owner_id', S.shop.id).order('created_at', { ascending: false });
-  const countEl = document.getElementById('pd-st-products');
-  if (countEl) countEl.textContent = (data && data.length) || 0;
-  if (error || !data || !data.length) {
-    list.innerHTML = `<div class="empty card"><div class="empty-ico">📁</div><p>Aucun produit digital publié pour le moment.</p></div>`;
-    return;
-  }
-  list.innerHTML = data.map(p => `
-    <div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
-      ${p.cover_image ? `<img src="${esc(p.cover_image)}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : '<div style="width:56px;height:56px;border-radius:8px;background:var(--gray-l);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">📄</div>'}
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:14px">${esc(p.name)}</div>
-        <div style="font-size:13px;color:var(--blue);font-weight:700">${p.price.toLocaleString()} FCFA</div>
-        <div style="font-size:11px;color:var(--gray)">${p.downloads_count||0} téléchargement(s)</div>
-      </div>
-      <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDigitalProduct('${p.id}')">Retirer</button>
-    </div>`).join('');
-}
-
-async function deleteDigitalProduct(id) {
-  if (!confirm('Retirer ce produit de la vente ?')) return;
-  const { error } = await sb.from('digital_products').delete().eq('id', id);
-  if (error) { toast('Erreur', 'err'); return; }
-  toast('Produit retiré');
-  loadDigitalProducts();
 }
 
 function pg(pageId, el) {
@@ -4029,17 +3706,6 @@ async function loginAs(user) {
 
   S.shop = shopData || { name: user.shopName||'Ma Boutique', ann:'', wa: user.wa||'', domain:'', blocked:false };
   S.shop.id = ownerId;
-
-  // Aiguillage vers l'espace digital — complètement séparé du tableau de
-  // bord physique existant, qui continue de fonctionner exactement comme
-  // avant pour toutes les boutiques physiques.
-  if (!user.isGerant && S.shop.shopType === 'digital') {
-    hide('loading');
-    go('s-dash-digital');
-    loadDigitalDashboard();
-    return;
-  }
-
   // Compléter les infos utilisateur manquantes (cas de connexion simplifiée) à partir de la boutique
   if (!user.name) user.name = S.shop.name;
   if (!user.shopName) user.shopName = S.shop.name;
@@ -4405,13 +4071,6 @@ async function generateUniqueSlug(shopName) {
   }
 }
 
-// Mémorise le choix fait sur l'écran précédent, puis passe au formulaire
-// d'inscription habituel — inchangé.
-function chooseShopType(type) {
-  S.pendingShopType = type;
-  go('s-register');
-}
-
 async function doRegister() {
   if (S._registering) return; // empêche les clics répétés d'envoyer plusieurs inscriptions
   const name = document.getElementById('rg-name').value.trim();
@@ -4421,10 +4080,6 @@ async function doRegister() {
   const pass = document.getElementById('rg-pass').value;
   if (!name||!wa||!shopName||!email||!pass) { toast('Remplissez tous les champs *','err'); return; }
   if (pass.length < 6) { toast('Mot de passe : 6 caractères minimum','err'); return; }
-  // Sécurité : si quelqu'un arrive directement sur ce formulaire sans être
-  // passé par l'écran de choix (lien direct, ancien favori...), on
-  // considère "physique" par défaut plutôt que de bloquer l'inscription.
-  const shopType = S.pendingShopType === 'digital' ? 'digital' : 'physique';
 
   S._registering = true;
   const regBtns = document.querySelectorAll('[onclick="doRegister()"]');
@@ -4433,7 +4088,7 @@ async function doRegister() {
   try {
   const { data, error } = await sb.auth.signUp({
     email, password: pass,
-    options: { data: { name, shopName, wa, shopType } }
+    options: { data: { name, shopName, wa } }
   });
   if (error) {
     if (error.message.includes('already registered') || error.message.includes('already exists')) {
@@ -6311,7 +5966,7 @@ async function openPublicShopBySlug(route) {
     domain: shop.domain, blocked: shop.blocked, logoUrl: shop.logo_url, slug: shop.slug,
     coverImage: shop.cover_image, productsTitle: shop.products_title || 'Nos produits',
     badge: shop.badge, appearance: shop.appearance || {}, currency: shop.currency || 'FCFA',
-    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id, pixelDataLevel: shop.pixel_data_level||'standard', shopType: shop.shop_type||'physique'
+    fbPixelId: shop.fb_pixel_id, tiktokPixelId: shop.tiktok_pixel_id, pixelDataLevel: shop.pixel_data_level||'standard'
   };
   S.publicOwnerId = shop.id;
   recordActivityEvent(shop.id, 'visite');
