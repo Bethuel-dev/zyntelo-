@@ -99,11 +99,11 @@ input,select,textarea{font-size:16px!important;}
 
 /* FORM */
 .fgrp{margin-bottom:14px;}
-.shop-type-card{display:flex;align-items:center;gap:14px;padding:16px;border:2px solid var(--blue);border-radius:16px;cursor:pointer;transition:.2s;text-align:left;background:rgba(26,86,232,0.55);}
-.shop-type-card:hover{background:rgba(26,86,232,0.7);}
-.shop-type-ico{font-size:32px;flex-shrink:0;}
-.shop-type-title{font-size:15px;font-weight:700;color:#fff;}
-.shop-type-desc{font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px;}
+.shop-type-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 16px;border:2px solid var(--blue);border-radius:16px;cursor:pointer;transition:.2s;text-align:center;background:rgba(26,86,232,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.shop-type-card:hover{background:rgba(26,86,232,0.62);}
+.shop-type-ico{color:#fff;}
+.shop-type-ico svg{width:34px;height:34px;stroke-width:1.8;}
+.shop-type-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:.2px;}
 .fmt-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
 .fmt-toolbar button{height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;padding:0 10px;flex-shrink:0;}
 .fmt-toolbar input[type=color]{width:34px;height:30px;border:1.5px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;flex-shrink:0;}
@@ -926,22 +926,15 @@ canvas{display:block;}
   <div class="auth-wrap">
     <div class="auth-box">
       <div class="auth-logo"><svg width="44" height="44" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg></div>
-      <h2>Quel type de produit souhaitez-vous vendre sur Zyntelo ?</h2>
-      <p class="sub">Ce choix détermine votre espace de vente — vous ne pourrez pas mélanger les deux dans une même boutique</p>
+      <h2>Que vendez-vous ?</h2>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
         <div class="shop-type-card" onclick="chooseShopType('physique')">
-          <div class="shop-type-ico">🛍️</div>
-          <div>
-            <div class="shop-type-title">Produits physiques</div>
-            <div class="shop-type-desc">Vêtements, accessoires, objets à livrer — avec Zyn Assurance</div>
-          </div>
+          <div class="shop-type-ico"><i data-lucide="shopping-bag"></i></div>
+          <div class="shop-type-title">Produits physiques</div>
         </div>
         <div class="shop-type-card" onclick="chooseShopType('digital')">
-          <div class="shop-type-ico">💻</div>
-          <div>
-            <div class="shop-type-title">Produits digitaux</div>
-            <div class="shop-type-desc">Ebooks, formations, fichiers — téléchargement immédiat</div>
-          </div>
+          <div class="shop-type-ico"><i data-lucide="laptop"></i></div>
+          <div class="shop-type-title">Produits digitaux</div>
         </div>
       </div>
       <div class="auth-switch">Déjà un compte ? <a onclick="go('s-login')">Se connecter</a></div>
@@ -1663,7 +1656,41 @@ canvas{display:block;}
 
       <div class="dash-page" id="pd-products">
         <div class="page-head"><h1>Produits digitaux</h1><p>Vos ebooks, formations et fichiers à vendre</p></div>
-        <div class="empty card"><div class="empty-ico">📁</div><p>La création de produits digitaux arrive très prochainement.</p></div>
+
+        <div id="pdf-form-card" class="card" style="margin-bottom:18px;display:none">
+          <div class="fgrp"><label>Image de couverture</label>
+            <div class="upload-zone" style="max-width:160px" onclick="document.getElementById('pdf-cover').click()">
+              <input type="file" id="pdf-cover" accept="image/*" style="display:none" onchange="previewPdfCover(this)">
+              <div id="pdf-cover-preview"><div style="font-size:24px">🖼️</div><div style="font-size:11px;color:var(--gray)">Ajouter</div></div>
+            </div>
+          </div>
+          <div class="fgrp"><label>Nom du produit *</label><input id="pdf-name" placeholder="Ex : Guide complet du commerce en ligne"></div>
+          <div class="fgrp"><label>Prix <span class="curlbl">FCFA</span> *</label><input id="pdf-price" type="number" placeholder="5000"></div>
+          <div class="fgrp"><label>Description</label>
+            <div class="fmt-toolbar">
+              <button type="button" onclick="applyFormat('pdf-desc','bold')"><b>G</b></button>
+              <input type="color" id="pdf-desc-color-pick" value="#1A56E8" title="Choisir une couleur">
+              <button type="button" onclick="applyFormat('pdf-desc','color',document.getElementById('pdf-desc-color-pick').value)">Appliquer la couleur</button>
+            </div>
+            <div id="pdf-desc" class="rich-editable" contenteditable="true" data-placeholder="Décrivez ce que contient votre produit…"></div>
+          </div>
+          <div class="fgrp"><label>Fichier à vendre * <span style="font-weight:400;color:var(--gray)">(PDF, ZIP, audio… max 50 Mo)</span></label>
+            <input type="file" id="pdf-file" onchange="previewPdfFile(this)">
+            <div id="pdf-file-name" style="font-size:12px;color:var(--gray);margin-top:4px"></div>
+          </div>
+          <div class="fgrp"><label>Aperçu gratuit <span style="font-weight:400;color:var(--gray)">(facultatif — quelques pages ou un extrait, montré avant l'achat)</span></label>
+            <input type="file" id="pdf-preview-file" onchange="previewPdfPreviewFile(this)">
+            <div id="pdf-preview-file-name" style="font-size:12px;color:var(--gray);margin-top:4px"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:10px">
+            <button class="btn btn-blue" id="pdf-submit-btn" onclick="saveDigitalProduct(this)">Publier le produit</button>
+            <button class="btn btn-ghost" onclick="hidePdfForm()">Annuler</button>
+          </div>
+        </div>
+
+        <button class="btn btn-blue" id="pdf-add-btn" onclick="showPdfForm()" style="margin-bottom:18px">+ Ajouter un produit digital</button>
+
+        <div id="pd-products-list"></div>
       </div>
 
       <div class="dash-page" id="pd-sales">
@@ -2794,6 +2821,7 @@ function pgDigital(pageId, el) {
   if (el) el.classList.add('active');
   const titleEl = document.getElementById('pd-topbar-title');
   if (titleEl) titleEl.textContent = digitalPageTitles[pageId] || '';
+  if (pageId === 'pd-products') loadDigitalProducts();
   refreshLucideIcons();
 }
 
@@ -2802,7 +2830,154 @@ function pgDigital(pageId, el) {
 // arrivera avec la gestion des produits digitaux.
 function loadDigitalDashboard() {
   document.getElementById('pd-shop-name').value = S.shop.name || '';
+  loadDigitalProducts();
   refreshLucideIcons();
+}
+
+// ═══════════════════════════════════════════════
+// PRODUITS DIGITAUX — création, liste
+// ═══════════════════════════════════════════════
+function showPdfForm() {
+  document.getElementById('pdf-form-card').style.display = '';
+  document.getElementById('pdf-add-btn').style.display = 'none';
+}
+function hidePdfForm() {
+  document.getElementById('pdf-form-card').style.display = 'none';
+  document.getElementById('pdf-add-btn').style.display = '';
+  document.getElementById('pdf-name').value = '';
+  document.getElementById('pdf-price').value = '';
+  document.getElementById('pdf-desc').innerHTML = '';
+  document.getElementById('pdf-cover').value = '';
+  document.getElementById('pdf-cover-preview').innerHTML = '<div style="font-size:24px">🖼️</div><div style="font-size:11px;color:var(--gray)">Ajouter</div>';
+  document.getElementById('pdf-file').value = '';
+  document.getElementById('pdf-file-name').textContent = '';
+  document.getElementById('pdf-preview-file').value = '';
+  document.getElementById('pdf-preview-file-name').textContent = '';
+  delete document.getElementById('pdf-cover-preview').dataset.pending;
+  window._pdfFile = null;
+  window._pdfPreviewFile = null;
+}
+
+function previewPdfCover(input) {
+  const file = input.files[0];
+  const box = document.getElementById('pdf-cover-preview');
+  if (!file) return;
+  compressImage(file, 500, 0.75).then(compressed => {
+    box.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+    box.dataset.pending = compressed;
+  }).catch(() => {});
+}
+
+// Validation de taille (50 Mo) — mêmes précautions que pour les vidéos
+// d'annonces plus tôt ce soir, pour ne jamais risquer le stockage.
+function previewPdfFile(input) {
+  const file = input.files[0];
+  const label = document.getElementById('pdf-file-name');
+  if (!file) { label.textContent = ''; window._pdfFile = null; return; }
+  if (file.size > 50 * 1024 * 1024) {
+    toast('Fichier trop lourd (max 50 Mo)', 'err');
+    input.value = ''; label.textContent = ''; window._pdfFile = null;
+    return;
+  }
+  label.textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} Mo)`;
+  window._pdfFile = file;
+}
+function previewPdfPreviewFile(input) {
+  const file = input.files[0];
+  const label = document.getElementById('pdf-preview-file-name');
+  if (!file) { label.textContent = ''; window._pdfPreviewFile = null; return; }
+  if (file.size > 50 * 1024 * 1024) {
+    toast('Fichier trop lourd (max 50 Mo)', 'err');
+    input.value = ''; label.textContent = ''; window._pdfPreviewFile = null;
+    return;
+  }
+  label.textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} Mo)`;
+  window._pdfPreviewFile = file;
+}
+
+async function saveDigitalProduct(btn) {
+  const name = document.getElementById('pdf-name').value.trim();
+  const price = parseInt(document.getElementById('pdf-price').value) || 0;
+  const desc = sanitizeRichHtml(document.getElementById('pdf-desc').innerHTML).trim();
+  const mainFile = window._pdfFile;
+  if (!name || !price) { toast('Nom et prix obligatoires', 'err'); return; }
+  if (!mainFile) { toast('Ajoutez le fichier à vendre', 'err'); return; }
+
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Publication en cours…';
+  try {
+    const ownerId = S.shop.id;
+
+    // Couverture (facultative) — dans le compartiment public, comme les
+    // autres images de l'application.
+    let coverUrl = null;
+    const coverBox = document.getElementById('pdf-cover-preview');
+    if (coverBox.dataset.pending) {
+      const blob = dataURLToBlob(coverBox.dataset.pending);
+      const path = `digital-covers/${ownerId}-${Date.now()}.jpg`;
+      const { error: upErr } = await sb.storage.from('logos').upload(path, blob, { contentType: 'image/jpeg' });
+      if (upErr) { toast('Erreur upload couverture : ' + upErr.message, 'err'); return; }
+      coverUrl = sb.storage.from('logos').getPublicUrl(path).data.publicUrl;
+    }
+
+    // Fichier principal — compartiment privé, jamais accessible sans lien
+    // signé généré à la demande.
+    const mainExt = mainFile.name.split('.').pop() || 'pdf';
+    const mainPath = `${ownerId}/${Date.now()}-fichier.${mainExt}`;
+    const { error: fileErr } = await sb.storage.from('digital-files').upload(mainPath, mainFile);
+    if (fileErr) { toast('Erreur upload fichier : ' + fileErr.message, 'err'); return; }
+
+    // Aperçu (facultatif) — même compartiment privé, même principe.
+    let previewPath = null;
+    if (window._pdfPreviewFile) {
+      const pExt = window._pdfPreviewFile.name.split('.').pop() || 'pdf';
+      previewPath = `${ownerId}/${Date.now()}-apercu.${pExt}`;
+      const { error: pErr } = await sb.storage.from('digital-files').upload(previewPath, window._pdfPreviewFile);
+      if (pErr) { toast('Erreur upload aperçu : ' + pErr.message, 'err'); return; }
+    }
+
+    const { error: insertErr } = await sb.from('digital_products').insert({
+      owner_id: ownerId, name, price, description: desc,
+      cover_image: coverUrl, file_path: mainPath, preview_path: previewPath
+    });
+    if (insertErr) { toast('Erreur : ' + insertErr.message, 'err'); return; }
+
+    toast('Produit publié ✓');
+    hidePdfForm();
+    loadDigitalProducts();
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
+}
+
+async function loadDigitalProducts() {
+  const list = document.getElementById('pd-products-list');
+  if (!list) return;
+  const { data, error } = await sb.from('digital_products').select('*').eq('owner_id', S.shop.id).order('created_at', { ascending: false });
+  const countEl = document.getElementById('pd-st-products');
+  if (countEl) countEl.textContent = (data && data.length) || 0;
+  if (error || !data || !data.length) {
+    list.innerHTML = `<div class="empty card"><div class="empty-ico">📁</div><p>Aucun produit digital publié pour le moment.</p></div>`;
+    return;
+  }
+  list.innerHTML = data.map(p => `
+    <div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+      ${p.cover_image ? `<img src="${esc(p.cover_image)}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : '<div style="width:56px;height:56px;border-radius:8px;background:var(--gray-l);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">📄</div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px">${esc(p.name)}</div>
+        <div style="font-size:13px;color:var(--blue);font-weight:700">${p.price.toLocaleString()} FCFA</div>
+        <div style="font-size:11px;color:var(--gray)">${p.downloads_count||0} téléchargement(s)</div>
+      </div>
+      <button class="btn btn-sm" style="background:var(--red-l);color:var(--red)" onclick="deleteDigitalProduct('${p.id}')">Retirer</button>
+    </div>`).join('');
+}
+
+async function deleteDigitalProduct(id) {
+  if (!confirm('Retirer ce produit de la vente ?')) return;
+  const { error } = await sb.from('digital_products').delete().eq('id', id);
+  if (error) { toast('Erreur', 'err'); return; }
+  toast('Produit retiré');
+  loadDigitalProducts();
 }
 
 function pg(pageId, el) {
