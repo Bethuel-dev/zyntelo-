@@ -2300,6 +2300,14 @@ const Store = {
             ));
           }
           S._prevProductsSnapshot = JSON.parse(JSON.stringify(val||[]));
+          const nbUpserted = (val||[]).length;
+          const nbDeleted = toDelete.length;
+          if (nbUpserted || nbDeleted) {
+            const parts = [];
+            if (nbUpserted) parts.push(`${nbUpserted} produit(s) mis à jour`);
+            if (nbDeleted) parts.push(`${nbDeleted} produit(s) retiré(s)`);
+            await logGerantActivity('produits', parts.join(', '));
+          }
           return;
         }
         // Stratégie ciblée et sûre : jamais de suppression en masse, et on ne
@@ -3886,6 +3894,9 @@ async function loginAs(user) {
     } else if (params.get('goto') === 'produits') {
       const prodNavItem = document.querySelector(`#s-dash .nav-item[onclick*="'p-produits'"]`);
       pg('p-produits', prodNavItem);
+    } else if (params.get('goto') === 'journal') {
+      const gerantNavItem = document.querySelector(`#s-dash .nav-item[onclick*="'p-gerant'"]`);
+      pg('p-gerant', gerantNavItem);
     } else if (params.get('goto') === 'annonces') {
       // Les annonces vivent directement sur la vue d'ensemble (pas un
       // onglet séparé) — on y reste et on fait défiler jusqu'à la section.
@@ -6553,6 +6564,7 @@ async function savePromoOffer() {
     if (S.isGerant) {
       const { data, error } = await sb.rpc('gerant_save_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id, p_name: name, p_start_date: startDate, p_end_date: endDate, p_product_ids: productIds, p_tiers: tiersSorted });
       if (error || !data || !data.success) { toast('Erreur : impossible de modifier l\'offre.', 'err'); console.error('gerant_save_promo error', error, data); return; }
+      await logGerantActivity('promotion', `Offre modifiée : ${name}`);
     } else {
       const { error } = await sb.from('promo_offers').update({ name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted }).eq('id', id);
       if (error) { toast('Erreur : ' + error.message, 'err'); return; }
@@ -6562,6 +6574,7 @@ async function savePromoOffer() {
     if (S.isGerant) {
       const { data, error } = await sb.rpc('gerant_save_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: null, p_name: name, p_start_date: startDate, p_end_date: endDate, p_product_ids: productIds, p_tiers: tiersSorted });
       if (error || !data || !data.success) { toast('Erreur : impossible de créer l\'offre.', 'err'); console.error('gerant_save_promo error', error, data); return; }
+      await logGerantActivity('promotion', `Offre créée : ${name}`);
     } else {
       const { error } = await sb.from('promo_offers').insert({ owner_id: ownerId(), name, start_date: startDate, end_date: endDate, product_ids: productIds, tiers: tiersSorted });
       if (error) { toast('Erreur : ' + error.message, 'err'); return; }
@@ -6743,6 +6756,7 @@ async function togglePromoActive(id, newState) {
   if (S.isGerant) {
     const { data, error } = await sb.rpc('gerant_toggle_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id, p_active: newState });
     if (error || !data || !data.success) { toast('Erreur : action impossible.', 'err'); console.error('gerant_toggle_promo error', error, data); return; }
+    await logGerantActivity('promotion', newState ? 'Offre activée' : 'Offre désactivée');
   } else {
     const { error } = await sb.from('promo_offers').update({ active: newState }).eq('id', id);
     if (error) { toast('Erreur : ' + error.message, 'err'); return; }
@@ -6755,6 +6769,7 @@ async function deletePromoOffer(id) {
   if (S.isGerant) {
     const { data, error } = await sb.rpc('gerant_delete_promo', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_promo_id: id });
     if (error || !data || !data.success) { toast('Erreur : suppression impossible.', 'err'); console.error('gerant_delete_promo error', error, data); return; }
+    await logGerantActivity('promotion', 'Offre supprimée');
   } else {
     const { error } = await sb.from('promo_offers').delete().eq('id', id);
     if (error) { toast('Erreur : ' + error.message, 'err'); return; }
@@ -6836,6 +6851,7 @@ async function saveDeliveryZone() {
   if (S.isGerant) {
     const { data, error } = await sb.rpc('gerant_save_delivery_zone', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_zone_id: id, p_sector: sector, p_price: price, p_is_free: isFree });
     if (error || !data || !data.success) { toast('Erreur : impossible d\'enregistrer.', 'err'); console.error('gerant_save_delivery_zone error', error, data); return; }
+    await logGerantActivity('livraison', `Tarif de livraison enregistré : ${sector}`);
   } else {
     if (id) {
       const { error } = await sb.from('delivery_zones').update({ sector, price, is_free: isFree }).eq('id', id);
@@ -6855,6 +6871,7 @@ async function deleteDeliveryZone(id) {
   if (S.isGerant) {
     const { data, error } = await sb.rpc('gerant_delete_delivery_zone', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_zone_id: id });
     if (error || !data || !data.success) { toast('Erreur : suppression impossible.', 'err'); console.error('gerant_delete_delivery_zone error', error, data); return; }
+    await logGerantActivity('livraison', 'Tarif de livraison supprimé');
   } else {
     const { error } = await sb.from('delivery_zones').delete().eq('id', id);
     if (error) { toast('Erreur : ' + error.message, 'err'); return; }
@@ -9189,7 +9206,8 @@ async function showGerantActivity(gerantId, email) {
   act.querySelector('.card-title').textContent = `📋 Activité de ${email}`;
   const typeLabels = {
     ajout_produit: '➕ Ajout produit', modif_produit: '✏️ Modification produit', suppr_produit: '🗑️ Suppression produit',
-    commande_confirmee: '✅ Commande confirmée', commande_non_confirmee: '❌ Commande annulée'
+    commande_confirmee: '✅ Commande confirmée', commande_non_confirmee: '❌ Commande annulée',
+    produits: '📦 Produits', promotion: '🔥 Promotion', livraison: '🛵 Tarif de livraison'
   };
   if (!activity || !activity.length) {
     body.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><p>Aucune activité enregistrée.</p></div>`;
@@ -9476,6 +9494,15 @@ async function livreurMark(rowId, result) {
 // Envoie réellement l'email au marchand + à ses gérants actifs — ce qui
 // manquait complètement avant, malgré le message affiché au livreur.
 async function notifyMerchantOfLivreurEvent(targetOwnerId, type, orderInfo, livreurName) {
+  // Le push touche déjà marchand + gérants d'un seul coup (même mécanisme
+  // que pour les nouvelles commandes) — jamais bloquant, lancé en parallèle
+  // de l'email.
+  const pushTitle = type === 'delivered' ? '✅ Livraison confirmée' : '⚠️ Client absent';
+  const pushBody = type === 'delivered'
+    ? `${livreurName} a confirmé la livraison de "${orderInfo.prodName}"`
+    : `${livreurName} signale : client absent pour "${orderInfo.prodName}"`;
+  sendPushEvent(targetOwnerId, type === 'delivered' ? 'livraison_confirmee' : 'client_absent', orderInfo.id || orderInfo._rowId || '', pushTitle, pushBody);
+
   try {
     const { data: contact } = await sb.rpc('get_shop_contact_for_notification', { p_owner_id: targetOwnerId });
     const recipients = [];
