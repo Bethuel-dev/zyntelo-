@@ -3168,23 +3168,24 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 // Point d'entrée principal : à appeler depuis un clic utilisateur (obligatoire sur iOS)
-async function enablePushNotifications() {
+async function enablePushNotifications(role) {
+  role = role || 'owner'; // comportement par défaut strictement inchangé pour les marchands
   if (!pushSupported()) {
     if (isIOSDevice() && !isStandaloneMode()) {
-      showIOSInstallInstructions();
+      showIOSInstallInstructions(role);
     } else {
       toast('Les notifications ne sont pas supportées sur ce navigateur', 'err');
     }
     return;
   }
   if (isIOSDevice() && !isStandaloneMode()) {
-    // Sur iPhone, le push n'existe que pour l'app installée sur l'écran d'accueil
-    showIOSInstallInstructions();
+    showIOSInstallInstructions(role);
     return;
   }
 
-  // Cas 1 — déjà accordée précédemment : on confirme simplement et on s'assure
-  // que l'abonnement est bien enregistré (au cas où il aurait été perdu).
+  const saveFns = { owner: saveOwnerPushSubscription, livreur: saveLivreurPushSubscription, client: saveClientPushSubscription };
+  const saveFn = saveFns[role] || saveOwnerPushSubscription;
+
   if (Notification.permission === 'granted') {
     const reg = await registerServiceWorker();
     if (reg) {
@@ -3196,28 +3197,24 @@ async function enablePushNotifications() {
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
           });
         }
-        await saveOwnerPushSubscription(sub);
+        await saveFn(sub);
       } catch (e) { console.error('Erreur réabonnement push', e); }
     }
     toast('🔔 Les notifications sont déjà activées sur cet appareil');
-    markPushPromptSeen();
+    markPushPromptSeen(role);
     return;
   }
 
-  // Cas 2 — déjà refusée précédemment : le navigateur ne réaffichera jamais
-  // la demande automatiquement (règle de sécurité du navigateur, pas un bug
-  // de Zyntelo). On explique clairement comment réactiver manuellement.
   if (Notification.permission === 'denied') {
     toast('Notifications bloquées pour Zyntelo. Pour les activer, allez dans les paramètres de votre navigateur (icône 🔒 ou ⓘ près de l\'adresse du site) et autorisez les notifications.', 'err');
-    markPushPromptSeen();
+    markPushPromptSeen(role);
     return;
   }
 
-  // Cas 3 — jamais demandée encore : on déclenche la vraie demande du navigateur.
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
     toast('Notifications refusées. Vous pourrez les activer plus tard dans les paramètres.', 'err');
-    markPushPromptSeen();
+    markPushPromptSeen(role);
     return;
   }
 
@@ -3232,13 +3229,39 @@ async function enablePushNotifications() {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
-    await saveOwnerPushSubscription(sub);
+    await saveFn(sub);
     toast('🔔 Notifications activées ✓');
-    markPushPromptSeen();
+    markPushPromptSeen(role);
   } catch (e) {
     console.error('Erreur abonnement push', e);
     toast('Erreur lors de l\'activation des notifications', 'err');
   }
+}
+
+async function saveLivreurPushSubscription(sub) {
+  const subJson = sub.toJSON();
+  if (!S.livreurSession || !S.livreurSession.livreurId) return;
+  try {
+    const { data, error } = await sb.rpc('livreur_save_push_subscription', {
+      p_livreur_id: S.livreurSession.livreurId, p_phone: S.livreurSession.phone, p_code: S.livreurSession.code,
+      p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
+      p_device_label: navigator.userAgent.slice(0, 60)
+    });
+    if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (livreur)', error, data);
+  } catch (e) { console.error('Erreur sauvegarde abonnement push (livreur)', e); }
+}
+
+async function saveClientPushSubscription(sub) {
+  const subJson = sub.toJSON();
+  if (!S.client || !S.client.id) return;
+  try {
+    const { data, error } = await sb.rpc('client_save_push_subscription', {
+      p_client_id: S.client.id, p_email: S.client.email,
+      p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
+      p_device_label: navigator.userAgent.slice(0, 60)
+    });
+    if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (client)', error, data);
+  } catch (e) { console.error('Erreur sauvegarde abonnement push (client)', e); }
 }
 
 async function saveOwnerPushSubscription(sub) {
@@ -3267,7 +3290,7 @@ async function saveOwnerPushSubscription(sub) {
   } catch (e) { console.error('Erreur sauvegarde abonnement push', e); }
 }
 
-function showIOSInstallInstructions() {
+function showIOSInstallInstructions(role) {
   const overlay = document.createElement('div');
   overlay.className = 'overlay on';
   overlay.style.zIndex = '9999';
@@ -3285,14 +3308,14 @@ function showIOSInstallInstructions() {
     <button class="btn btn-blue btn-w" onclick="this.closest('.overlay').remove()">J'ai compris</button>
   </div>`;
   document.body.appendChild(overlay);
-  markPushPromptSeen();
+  markPushPromptSeen(role);
 }
 
-function markPushPromptSeen() {
-  try { localStorage.setItem('zyntelo_push_prompt_seen', '1'); } catch {}
+function markPushPromptSeen(role) {
+  try { localStorage.setItem('zyntelo_push_prompt_seen' + (role && role !== 'owner' ? '_' + role : ''), '1'); } catch {}
 }
-function hasPushPromptBeenSeen() {
-  try { return localStorage.getItem('zyntelo_push_prompt_seen') === '1'; } catch { return false; }
+function hasPushPromptBeenSeen(role) {
+  try { return localStorage.getItem('zyntelo_push_prompt_seen' + (role && role !== 'owner' ? '_' + role : '')) === '1'; } catch { return false; }
 }
 
 // ═══════════════════════════════════════════════
@@ -3406,6 +3429,51 @@ function maybePromptPushNotifications() {
       <p style="font-size:14px;color:var(--gray);margin-bottom:18px">Soyez averti instantanément dès qu'une commande arrive sur votre boutique.</p>
       <button class="btn btn-blue btn-w" style="margin-bottom:8px" onclick="this.closest('.overlay').remove();enablePushNotifications()">Activer les notifications</button>
       <button class="btn btn-ghost btn-w" onclick="this.closest('.overlay').remove();markPushPromptSeen()">Plus tard</button>
+    </div>`;
+    document.body.appendChild(overlay);
+  }, 1200);
+}
+
+// Même principe que ci-dessus, adapté au livreur — déclenchée après sa
+// connexion (première fois ou reprise de session).
+function maybePromptLivreurPushNotifications() {
+  if (hasPushPromptBeenSeen('livreur')) return;
+  if (!pushSupported() && !isIOSDevice()) return;
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') { markPushPromptSeen('livreur'); return; }
+  setTimeout(() => {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay on';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = `<div class="popup" style="text-align:center;max-width:380px">
+      <div class="popup-handle"></div>
+      <div style="font-size:44px;margin-bottom:10px">🔔</div>
+      <h3 style="margin-bottom:10px">Activer les notifications ?</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:18px">Recevez une alerte dès qu'une commande vous est assignée.</p>
+      <button class="btn btn-blue btn-w" style="margin-bottom:8px" onclick="this.closest('.overlay').remove();enablePushNotifications('livreur')">Activer les notifications</button>
+      <button class="btn btn-ghost btn-w" onclick="this.closest('.overlay').remove();markPushPromptSeen('livreur')">Plus tard</button>
+    </div>`;
+    document.body.appendChild(overlay);
+  }, 1200);
+}
+
+// Même principe, côté client — déclenchée juste après sa première commande
+// réussie (uniquement s'il a un vrai compte, condition déjà vérifiée par
+// l'appelant).
+function maybePromptClientPushNotifications() {
+  if (hasPushPromptBeenSeen('client')) return;
+  if (!pushSupported() && !isIOSDevice()) return;
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') { markPushPromptSeen('client'); return; }
+  setTimeout(() => {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay on';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = `<div class="popup" style="text-align:center;max-width:380px">
+      <div class="popup-handle"></div>
+      <div style="font-size:44px;margin-bottom:10px">🔔</div>
+      <h3 style="margin-bottom:10px">Restez informée ?</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:18px">Suivez vos commandes et découvrez les nouveautés Zyntelo.</p>
+      <button class="btn btn-blue btn-w" style="margin-bottom:8px" onclick="this.closest('.overlay').remove();enablePushNotifications('client')">Activer les notifications</button>
+      <button class="btn btn-ghost btn-w" onclick="this.closest('.overlay').remove();markPushPromptSeen('client')">Plus tard</button>
     </div>`;
     document.body.appendChild(overlay);
   }, 1200);
@@ -3727,6 +3795,12 @@ async function loginAs(user) {
 
   S.shop = shopData || { name: user.shopName||'Ma Boutique', ann:'', wa: user.wa||'', domain:'', blocked:false };
   S.shop.id = ownerId;
+  // Trace la dernière connexion du PROPRIÉTAIRE uniquement (jamais un
+  // gérant) — sert au rappel automatique "marchand inactif". Ne bloque
+  // jamais la connexion si ça échoue pour une raison quelconque.
+  if (!user.isGerant) {
+    Promise.resolve(sb.from('shops').update({ last_login_at: new Date().toISOString() }).eq('id', ownerId)).catch(() => {});
+  }
   // Compléter les infos utilisateur manquantes (cas de connexion simplifiée) à partir de la boutique
   if (!user.name) user.name = S.shop.name;
   if (!user.shopName) user.shopName = S.shop.name;
@@ -3809,6 +3883,16 @@ async function loginAs(user) {
     if (params.get('goto') === 'commandes') {
       const cmdNavItem = document.querySelector(`#s-dash .nav-item[onclick*="'p-commandes'"]`);
       pg('p-commandes', cmdNavItem);
+    } else if (params.get('goto') === 'produits') {
+      const prodNavItem = document.querySelector(`#s-dash .nav-item[onclick*="'p-produits'"]`);
+      pg('p-produits', prodNavItem);
+    } else if (params.get('goto') === 'annonces') {
+      // Les annonces vivent directement sur la vue d'ensemble (pas un
+      // onglet séparé) — on y reste et on fait défiler jusqu'à la section.
+      setTimeout(() => {
+        const el = document.getElementById('dash-annonces-wrap');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
     }
   } catch (e) { console.error('Redirection post-connexion (goto) ignorée', e); }
 
@@ -8275,6 +8359,7 @@ async function submitOrder() {
     // Client déjà connu (session existante) : on rattache silencieusement,
     // sans jamais lui redemander de créer un compte.
     Promise.resolve(sb.rpc('client_link_order', { p_client_id: S.client.id, p_order_client_id: orderData.id, p_owner_id: ownerId() })).catch(()=>{});
+    setTimeout(() => maybePromptClientPushNotifications(), 1500);
   } else {
     setTimeout(() => showPostOrderSignup(orderData.id, ownerId(), prenom, tel), 1200);
   }
@@ -9279,6 +9364,12 @@ function openAssignLivreur(orderId) {
         body: JSON.stringify({ to: livreur.email, type: 'assigned', orderInfo: cleanData })
       }).catch(() => {});
     }
+    // Notification sur l'écran, en plus de l'email — ne bloque jamais le
+    // reste de l'assignation si elle échoue pour une raison quelconque.
+    fetch('https://rkxnvyebzrxlhwkmbxym.supabase.co/functions/v1/send-livreur-push-notification', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ livreurId: livreur.id, title: '🛵 Nouvelle commande assignée', body: `${cleanData.prodName} — ${cleanData.ville}`, url: '/livreur' })
+    }).catch(() => {});
     renderCmds();
   };
   const open = (livreurs) => {
@@ -9340,6 +9431,7 @@ function showLivreurDash() {
   document.getElementById('lv-shop').textContent = 'Boutique : ' + (s.shopName || '');
   const ava = document.getElementById('lv-ava');
   ava.innerHTML = s.photoUrl ? `<img src="${esc(s.photoUrl)}" style="width:100%;height:100%;object-fit:cover">` : '🛵';
+  maybePromptLivreurPushNotifications();
   go('s-livreur');
   loadLivreurOrders();
 }
