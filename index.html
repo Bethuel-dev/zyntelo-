@@ -8145,8 +8145,18 @@ function chQty(d) {
 // Vérifie les deux identifiants possibles d'un produit (certains anciens
 // produits n'ont que l'identifiant de ligne, pas l'identifiant interne) —
 // pour ne jamais manquer une offre à cause d'une différence d'identifiant.
+// Filtre aussi toujours par date et statut actif ICI, au moment même de
+// l'affichage — certains endroits de l'application (comme le tableau de
+// bord marchand) chargent volontairement TOUTES les offres, y compris
+// expirées ou désactivées, pour la gestion ; ce filtre garantit qu'une
+// offre expirée ne s'affiche jamais chez le client, peu importe d'où
+// viennent les données en mémoire à ce moment précis.
 function getApplicableOffersForProduct(prodId, prodRowId) {
+  const today = new Date().toISOString().split('T')[0];
   return (S.promoOffers||[]).filter(o => {
+    if (o.active === false) return false;
+    if (o.start_date && o.start_date > today) return false;
+    if (o.end_date && o.end_date < today) return false;
     const ids = o.product_ids||[];
     return ids.includes(prodId) || (prodRowId && ids.includes(prodRowId));
   });
