@@ -6516,7 +6516,7 @@ function showPromoForm(offerId) {
   } else {
     picker.innerHTML = S.products.map(p => `
       <label class="cat-prod-item">
-        <input type="checkbox" value="${p.id}" ${selectedProds.includes(p.id)?'checked':''}>
+        <input type="checkbox" value="${p.id||p._rowId}" ${(selectedProds.includes(p.id)||selectedProds.includes(p._rowId))?'checked':''}>
         ${esc(p.name)}
       </label>`).join('');
   }
@@ -8142,8 +8142,14 @@ function chQty(d) {
   if (S.curProd) firePixelAddToCart(S.curProd, S.orderQty); // sans effet si aucun pixel n'est chargé (prévisualisation marchand)
 }
 
-function getApplicableOffersForProduct(prodId) {
-  return (S.promoOffers||[]).filter(o => (o.product_ids||[]).includes(prodId));
+// Vérifie les deux identifiants possibles d'un produit (certains anciens
+// produits n'ont que l'identifiant de ligne, pas l'identifiant interne) —
+// pour ne jamais manquer une offre à cause d'une différence d'identifiant.
+function getApplicableOffersForProduct(prodId, prodRowId) {
+  return (S.promoOffers||[]).filter(o => {
+    const ids = o.product_ids||[];
+    return ids.includes(prodId) || (prodRowId && ids.includes(prodRowId));
+  });
 }
 
 function getBestTierForQty(offer, qty) {
@@ -8155,7 +8161,7 @@ function getBestTierForQty(offer, qty) {
 function renderProductOffers(p) {
   const box = document.getElementById('prod-offers-box');
   if (!box) return;
-  const offers = getApplicableOffersForProduct(p.id);
+  const offers = getApplicableOffersForProduct(p.id, p._rowId);
   if (!offers.length) { box.innerHTML = ''; S.selectedOffer = null; return; }
 
   // Construire la liste à plat de tous les paliers, toutes offres confondues, triée par quantité
