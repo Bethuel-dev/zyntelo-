@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#1A56E8">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
 :root{
   --blue:#1A56E8;--blue-d:#1240C0;--blue-l:#EEF3FF;
   --red:#E8221A;--red-d:#C01A12;--red-l:#FEE2E2;
@@ -365,6 +365,7 @@ tr:hover td{background:#fafafa;}
 .psec-imgtext img{width:100%;border-radius:12px}
 .psec-imgtext div{font-size:32px;font-weight:400;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111}
 .psec-divider{border:none;border-top:1px solid var(--border);margin:4px 0}
+.psec-space{height:28px;}
 
 .quick-order-box{margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
 
@@ -1285,6 +1286,7 @@ canvas{display:block;}
               <button type="button" class="btn btn-ghost btn-sm" onclick="addSection('image_text')">+ Image + Texte</button>
               <button type="button" class="btn btn-ghost btn-sm" onclick="addSection('title')">+ Titre</button>
               <button type="button" class="btn btn-ghost btn-sm" onclick="addSection('divider')">+ Séparateur</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="addSection('space')">+ Espace</button>
             </div>
           </div>
 
@@ -5861,7 +5863,7 @@ function handleSectionImg(id, input) {
 }
 
 function sectionBlockHtml(s) {
-  const labels = { text:'📝 Texte', image:'🖼️ Image', image_text:'🖼️+📝 Image avec texte', title:'🔠 Titre', divider:'➖ Séparateur' };
+  const labels = { text:'📝 Texte', image:'🖼️ Image', image_text:'🖼️+📝 Image avec texte', title:'🔠 Titre', divider:'➖ Séparateur', space:'↕️ Espace' };
   let body = '';
   if (s.type === 'text') {
     body = `<textarea rows="3" placeholder="Votre texte…" oninput="updateSectionText('${s.id}', this.value)">${s.text||''}</textarea>`;
@@ -5876,6 +5878,8 @@ function sectionBlockHtml(s) {
             <textarea rows="3" placeholder="Texte accompagnant l'image…" oninput="updateSectionText('${s.id}', this.value)">${s.text||''}</textarea>`;
   } else if (s.type === 'divider') {
     body = `<div style="font-size:11px;color:var(--gray)">Une ligne de séparation s'affichera ici sur la page produit.</div>`;
+  } else if (s.type === 'space') {
+    body = `<div style="font-size:11px;color:var(--gray)">Un espace vide s'affichera ici, pour séparer deux sections sur la page produit.</div>`;
   }
   return `
     <div class="sec-block" data-sec-id="${s.id}"
@@ -8031,25 +8035,19 @@ function goBackInShop() {
 
 function renderProductSections(sections) {
   if (!sections || !sections.length) return '';
-  // Espace généreux entre chaque bloc par défaut, pour ne jamais coller les
-  // éléments — sauf quand un titre est directement suivi d'une image et/ou
-  // d'un texte : dans ce cas précis (un trio pensé comme un seul groupe),
-  // on garde l'espacement actuel, plus resserré, entre eux uniquement.
-  const isConnectable = t => t === 'image' || t === 'image_text' || t === 'text';
-  return `<div class="prod-sections">` + sections.map((s, i) => {
-    const next = sections[i+1];
-    const tight = (s.type === 'title' && next && isConnectable(next.type))
-      || (i > 0 && sections[i-1].type === 'title' && (s.type === 'image' || s.type === 'text') && next && isConnectable(next.type) && sections[i-1] && isConnectable(s.type));
-    const spacing = tight ? '' : ' style="margin-bottom:28px"';
-    if (s.type === 'title' && s.text) return `<h3 class="psec-title"${spacing}>${s.text}</h3>`;
-    if (s.type === 'text' && s.text) return `<div class="psec-text"${spacing}>${s.text.replace(/\n/g,'<br>')}</div>`;
-    if (s.type === 'image' && s.img) return `<img src="${s.img}" class="psec-img"${spacing}>`;
+  // L'espacement entre sections est décidé par le marchand lui-même, via
+  // le bloc "Espace" qu'il ajoute où il veut — jamais deviné automatiquement.
+  return `<div class="prod-sections">` + sections.map(s => {
+    if (s.type === 'title' && s.text) return `<h3 class="psec-title">${s.text}</h3>`;
+    if (s.type === 'text' && s.text) return `<div class="psec-text">${s.text.replace(/\n/g,'<br>')}</div>`;
+    if (s.type === 'image' && s.img) return `<img src="${s.img}" class="psec-img">`;
     if (s.type === 'image_text' && (s.img||s.text)) return `
-      <div class="psec-imgtext"${spacing}>
+      <div class="psec-imgtext">
         ${s.img?`<img src="${s.img}">`:''}
         ${s.text?`<div>${s.text.replace(/\n/g,'<br>')}</div>`:''}
       </div>`;
     if (s.type === 'divider') return `<hr class="psec-divider">`;
+    if (s.type === 'space') return `<div class="psec-space"></div>`;
     return '';
   }).join('') + `</div>`;
 }
