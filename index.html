@@ -163,7 +163,7 @@ input,select,textarea{font-size:16px!important;}
 .phone-grp select{flex:0 0 108px;padding-left:6px !important;padding-right:2px !important;}
 .phone-grp input{flex:1;min-width:0;}
 .ctry-sel{position:relative;flex:0 0 108px;}
-.ctry-sel-btn{width:100%;padding:10px 8px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:4px;color:var(--black);}
+.ctry-sel-btn{width:100%;padding:12px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:16px;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:4px;color:var(--black);}
 .ctry-sel-btn:hover{border-color:var(--blue);}
 .ctry-sel-arrow{font-size:10px;color:var(--gray);flex-shrink:0;}
 .ctry-sel-dropdown{position:absolute;top:calc(100% + 4px);left:0;width:280px;max-width:80vw;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.15);z-index:200;overflow:hidden;}
@@ -521,8 +521,8 @@ tr:hover td{background:#fafafa;}
 .qty-btn{width:38px;height:38px;background:var(--gray-l);border:none;font-size:18px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;}
 .qty-btn:hover{background:var(--border);}
 .qty-num{min-width:44px;text-align:center;font-weight:700;font-size:15px;}
-.total-row{background:var(--black);color:#fff;border-radius:9px;padding:13px 15px;display:flex;justify-content:center;align-items:center;gap:10px;margin:12px 0;text-align:center;}
-.total-lbl{font-size:14px;color:#fff;}
+.total-row{background:var(--black);color:#fff;border-radius:9px;padding:15px;display:flex;justify-content:center;align-items:center;gap:10px;margin:12px 0;text-align:center;}
+.total-lbl{font-size:17px;font-weight:700;color:#fff;}
 .total-amt{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
 .sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:10px;}
@@ -6235,6 +6235,7 @@ function previewShop(prodId, isPublic) {
         ${renderProductSections(p.sections)}
 
         <div class="quick-order-box">
+          <div class="total-row"><span class="total-lbl">📍 Informations de livraison</span></div>
           <div class="qo-row">
             <div class="sec-lbl" style="margin:0">Quantité</div>
             <div class="qty-wrap">
@@ -6243,12 +6244,10 @@ function previewShop(prodId, isPublic) {
               <button class="qty-btn" onclick="chQty(1)">+</button>
             </div>
           </div>
-          <div class="total-row"><span class="total-lbl">Total à payer à la livraison</span><span class="total-amt" id="pp-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span></div>
           <div id="prod-offers-box"></div>
 
           <div class="delivery-panel" id="delivery-panel">
             <div class="delivery-panel-grip"></div>
-            <div class="sec-lbl">📍 Informations de livraison</div>
             <div class="fgrp"><label>Secteur de livraison (facultatif)</label>
               <select id="or-sector" onchange="updTotal()"><option value="">Sélectionnez votre secteur…</option></select>
             </div>
@@ -6264,8 +6263,8 @@ function previewShop(prodId, isPublic) {
             <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
           </div>
         </div>
-            <button class="btn btn-red btn-w cta-shake" style="max-width:520px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span> à la livraison</button>
-            <button class="btn btn-ghost btn-w" style="max-width:520px;margin:8px auto 0" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
+            <button class="btn btn-red btn-w cta-shake" style="max-width:520px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span> à la livraison</button>
+            <button class="btn btn-ghost btn-w" style="max-width:520px;margin:8px auto 0;font-size:16px" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
           </div>
         </div>
       </div>
@@ -8235,7 +8234,8 @@ function updTotal() {
   const productTotal = Math.round(unitPrice*S.orderQty);
   const deliveryFee = getSelectedDeliveryFee(); // null si aucun secteur choisi, sinon un nombre (0 = gratuite)
   const grandTotal = productTotal + (deliveryFee || 0);
-  document.getElementById('pp-total').textContent = grandTotal.toLocaleString()+' '+CUR();
+  const ppTotalEl = document.getElementById('pp-total');
+  if (ppTotalEl) ppTotalEl.textContent = grandTotal.toLocaleString()+' '+CUR();
   document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString()+' '+CUR();
 
   // Détail Produit / Livraison, affiché seulement une fois un secteur choisi
