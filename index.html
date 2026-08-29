@@ -359,11 +359,11 @@ tr:hover td{background:#fafafa;}
 
 .prod-sections{margin-top:18px;display:flex;flex-direction:column;gap:14px}
 .psec-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;margin:0}
-.psec-text{font-size:32px;font-weight:600;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111}
+.psec-text{font-size:32px;font-weight:400;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111}
 .psec-img{width:100%;border-radius:12px;display:block}
 .psec-imgtext{display:flex;flex-direction:column;gap:10px}
 .psec-imgtext img{width:100%;border-radius:12px}
-.psec-imgtext div{font-size:32px;font-weight:600;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111}
+.psec-imgtext div{font-size:32px;font-weight:400;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111}
 .psec-divider{border:none;border-top:1px solid var(--border);margin:4px 0}
 
 .quick-order-box{margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
@@ -496,17 +496,17 @@ tr:hover td{background:#fafafa;}
 .pthumb{width:54px;height:54px;border-radius:7px;border:2px solid var(--border);cursor:pointer;overflow:hidden;flex-shrink:0;transition:.2s;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:18px;}
 .pthumb img{width:100%;height:100%;object-fit:cover;}
 .pthumb.on{border-color:var(--blue);}
-.p-name-big{font-family:'Sora',sans-serif;font-size:32px;font-weight:800;letter-spacing:-.5px;margin-bottom:9px;}
+.p-name-big{font-family:'Sora',sans-serif;font-size:38px;font-weight:800;letter-spacing:-.5px;margin-bottom:9px;}
 .p-prices{display:flex;align-items:center;gap:11px;margin-bottom:16px;}
 .p-new{font-size:34px;font-weight:800;color:var(--red);}
 .p-old{font-size:22px;color:var(--gray);text-decoration:line-through;}
 .vars-sec{margin-bottom:18px;}
-.vars-lbl{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:7px;}
+.vars-lbl{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:7px;}
 .vars-row{display:flex;gap:7px;flex-wrap:wrap;}
-.vbtn{padding:9px 18px;border:1.5px solid var(--border);border-radius:7px;font-size:16px;font-weight:600;cursor:pointer;background:#fff;transition:.2s;font-family:'Inter',sans-serif;}
+.vbtn{padding:11px 20px;border:1.5px solid var(--border);border-radius:7px;font-size:18px;font-weight:600;cursor:pointer;background:#fff;transition:.2s;font-family:'Inter',sans-serif;}
 .vbtn:hover{border-color:var(--blue);color:var(--blue);}
 .vbtn.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue);}
-.p-desc{font-size:32px;font-weight:600;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111;margin-bottom:22px;white-space:pre-line;}
+.p-desc{font-size:32px;font-weight:400;font-family:'Sora',sans-serif;letter-spacing:-.5px;line-height:1.4;color:#111;margin-bottom:22px;white-space:pre-line;}
 
 /* POPUP */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
@@ -522,7 +522,7 @@ tr:hover td{background:#fafafa;}
 .qty-btn:hover{background:var(--border);}
 .qty-num{min-width:44px;text-align:center;font-weight:700;font-size:15px;}
 .total-row{background:var(--black);color:#fff;border-radius:9px;padding:15px;display:flex;justify-content:center;align-items:center;gap:10px;margin:12px 0;text-align:center;}
-.total-lbl{font-size:17px;font-weight:700;color:#fff;}
+.total-lbl{font-size:17px;font-weight:700;color:#ffffff!important;}
 .total-amt{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
 .sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:10px;}
@@ -8031,12 +8031,21 @@ function goBackInShop() {
 
 function renderProductSections(sections) {
   if (!sections || !sections.length) return '';
-  return `<div class="prod-sections">` + sections.map(s => {
-    if (s.type === 'title' && s.text) return `<h3 class="psec-title">${s.text}</h3>`;
-    if (s.type === 'text' && s.text) return `<div class="psec-text">${s.text.replace(/\n/g,'<br>')}</div>`;
-    if (s.type === 'image' && s.img) return `<img src="${s.img}" class="psec-img">`;
+  // Espace généreux entre chaque bloc par défaut, pour ne jamais coller les
+  // éléments — sauf quand un titre est directement suivi d'une image et/ou
+  // d'un texte : dans ce cas précis (un trio pensé comme un seul groupe),
+  // on garde l'espacement actuel, plus resserré, entre eux uniquement.
+  const isConnectable = t => t === 'image' || t === 'image_text' || t === 'text';
+  return `<div class="prod-sections">` + sections.map((s, i) => {
+    const next = sections[i+1];
+    const tight = (s.type === 'title' && next && isConnectable(next.type))
+      || (i > 0 && sections[i-1].type === 'title' && (s.type === 'image' || s.type === 'text') && next && isConnectable(next.type) && sections[i-1] && isConnectable(s.type));
+    const spacing = tight ? '' : ' style="margin-bottom:28px"';
+    if (s.type === 'title' && s.text) return `<h3 class="psec-title"${spacing}>${s.text}</h3>`;
+    if (s.type === 'text' && s.text) return `<div class="psec-text"${spacing}>${s.text.replace(/\n/g,'<br>')}</div>`;
+    if (s.type === 'image' && s.img) return `<img src="${s.img}" class="psec-img"${spacing}>`;
     if (s.type === 'image_text' && (s.img||s.text)) return `
-      <div class="psec-imgtext">
+      <div class="psec-imgtext"${spacing}>
         ${s.img?`<img src="${s.img}">`:''}
         ${s.text?`<div>${s.text.replace(/\n/g,'<br>')}</div>`:''}
       </div>`;
