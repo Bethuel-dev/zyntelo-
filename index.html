@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1024">
+<meta name="viewport" content="width=1024, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zyntelo">
@@ -2679,8 +2679,8 @@ function go(screenId) {
   if (vpMeta) {
     const phoneScreens = ['s-login', 's-register', 's-gerant-login', 's-livreur-login'];
     vpMeta.setAttribute('content', phoneScreens.includes(screenId)
-      ? 'width=device-width, initial-scale=1.0, viewport-fit=cover'
-      : 'width=1024');
+      ? 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+      : 'width=1024, maximum-scale=1, user-scalable=no');
   }
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
