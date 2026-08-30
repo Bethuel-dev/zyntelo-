@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1024, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=1024">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zyntelo">
@@ -30,7 +30,8 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);f
    champ — cette règle s'applique en dernier et prime sur toute taille de
    police oubliée en dessous de 16px, sans changer l'apparence du reste
    du texte de l'application. */
-input,select,textarea{font-size:16px!important;}
+input,select,textarea{font-size:16px!important;touch-action:manipulation;}
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{min-height:44px;}
 .screen{display:none!important;}
 .screen.on{display:block!important;}
 .flex-screen{display:none!important;}
@@ -2138,7 +2139,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const vpMeta = document.querySelector('meta[name="viewport"]');
     if (!vpMeta || vpMeta.content.includes('device-width')) return; // déjà en mode téléphone (connexion/inscription) : rien à faire
     savedViewportContent = vpMeta.content;
-    vpMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    vpMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover');
   });
   document.addEventListener('focusout', (e) => {
     if (!isFieldEl(e.target) || savedViewportContent === null) return;
@@ -2702,8 +2703,8 @@ function go(screenId) {
   if (vpMeta) {
     const phoneScreens = ['s-login', 's-register', 's-gerant-login', 's-livreur-login'];
     vpMeta.setAttribute('content', phoneScreens.includes(screenId)
-      ? 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover'
-      : 'width=1024, maximum-scale=1, user-scalable=no');
+      ? 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover'
+      : 'width=1024');
   }
   closeMobileSidebar();
   refreshMobileMenuButtonVisibility();
