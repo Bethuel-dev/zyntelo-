@@ -6328,7 +6328,7 @@ async function loadProductReviews(productId) {
     return;
   }
   const avg = reviews.reduce((s,r)=>s+r.rating,0) / reviews.length;
-  summaryEl.innerHTML = `<span class="stars">${starsHtml(Math.round(avg))}</span> <span>${avg.toFixed(1)}/5 (${reviews.length} avis)</span>`;
+  summaryEl.innerHTML = `<span style="color:#FFC107;font-size:19px;letter-spacing:1px">${starsHtml(Math.round(avg))}</span> <span>${avg.toFixed(1)}/5 (${reviews.length} avis)</span>`;
   listEl.innerHTML = reviews.map(r => `
     <div class="review-card">
       <div class="review-card-hdr">
