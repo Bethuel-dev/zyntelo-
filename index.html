@@ -2124,6 +2124,29 @@ Merci pour votre confiance 🙏
 const SUPABASE_URL = 'https://rkxnvyebzrxlhwkmbxym.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_As2pSbd0Jt7iB22CC-l7mg_-pGWnC7U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Empêche le zoom automatique du clavier (Android ET iPhone) : dès qu'un
+// champ de saisie reçoit le focus, on bascule temporairement en vraie
+// largeur d'écran (comme un vrai téléphone) — le champ apparaît alors à sa
+// vraie taille, donc le navigateur n'a plus aucune raison de zoomer tout
+// seul. On revient au mode ordinateur normal dès qu'on quitte le champ.
+(function() {
+  let savedViewportContent = null;
+  const isFieldEl = el => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
+  document.addEventListener('focusin', (e) => {
+    if (!isFieldEl(e.target)) return;
+    const vpMeta = document.querySelector('meta[name="viewport"]');
+    if (!vpMeta || vpMeta.content.includes('device-width')) return; // déjà en mode téléphone (connexion/inscription) : rien à faire
+    savedViewportContent = vpMeta.content;
+    vpMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  });
+  document.addEventListener('focusout', (e) => {
+    if (!isFieldEl(e.target) || savedViewportContent === null) return;
+    const vpMeta = document.querySelector('meta[name="viewport"]');
+    if (vpMeta) vpMeta.setAttribute('content', savedViewportContent);
+    savedViewportContent = null;
+  });
+})();
 // UID du compte administrateur (à remplacer une fois le compte admin créé — voir instructions)
 const ADMIN_UID = '51f865a0-0231-4bf9-8828-3d793e0ad06a';
 
