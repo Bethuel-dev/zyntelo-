@@ -9,11 +9,12 @@
 <title>Zyntelo — Marketplace et boutiques en ligne protégées en Côte d'Ivoire</title>
 <meta name="description" content="Zyntelo est une marketplace multi-boutiques en Côte d'Ivoire. Créez votre boutique en ligne gratuitement, vendez avec Zyn Assurance (paiement protégé jusqu'à la livraison), gérez vos commandes, livreurs et équipe depuis votre téléphone.">
 <link rel="manifest" href="/manifest.json">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <meta name="theme-color" content="#1A56E8">
 <link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap" media="print" onload="this.media='all'">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
 :root{
   --blue:#1A56E8;--blue-d:#1240C0;--blue-l:#EEF3FF;
   --red:#E8221A;--red-d:#C01A12;--red-l:#FEE2E2;
@@ -25,7 +26,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{overflow-x:hidden;}
-body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);font-size:14px;overflow-x:hidden;max-width:100vw;}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--white);color:var(--black);font-size:14px;overflow-x:hidden;max-width:100vw;}
 /* Empêche Safari sur iPhone de zoomer automatiquement quand on touche un
    champ — cette règle s'applique en dernier et prime sur toute taille de
    police oubliée en dessous de 16px, sans changer l'apparence du reste
@@ -674,12 +675,22 @@ canvas{display:block;}
 .nl-reveal.nl-on{opacity:1;transform:none;}
 @media(max-width:600px){.nl-hero{padding:80px 0 50px;}.nl-trust{gap:24px;}.nl-section{padding:56px 0;}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-<div id="loading"><div class="spin"></div>Chargement de Zyntelo…</div>
+<div id="loading"><div class="spin"></div>Chargement de Zyntelo…<div id="loading-slow" style="display:none;flex-direction:column;align-items:center;gap:14px;margin-top:6px;text-align:center;padding:0 24px"><span style="font-size:18px;color:var(--black);font-weight:600">La connexion est plus lente que prévu.</span><span style="font-size:15px;color:var(--gray);font-weight:500">Vérifiez votre connexion internet, puis réessayez.</span><button type="button" onclick="location.reload()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:17px;font-weight:700;cursor:pointer">Réessayer</button></div></div>
+<script>
+// Surveillance indépendante du reste de l'application : si l'écran de
+// chargement est toujours affiché après 15 s (réseau lent, ressource
+// filtrée, erreur imprévue), on affiche un message clair et un bouton
+// « Réessayer » — jamais de chargement infini sans explication. Si le
+// chargement aboutit ensuite, l'écran disparaît normalement.
+setTimeout(function () {
+  var l = document.getElementById('loading');
+  var m = document.getElementById('loading-slow');
+  if (l && m && !l.classList.contains('hide')) m.style.display = 'flex';
+}, 15000);
+</script>
 <div id="pwa-install-banner" class="pwa-install-banner">
   <div class="pib-ico">📲</div>
   <div class="pib-text"><strong>Installez Zyntelo</strong>Accès rapide depuis votre écran d'accueil, comme une vraie application.</div>
@@ -2117,6 +2128,136 @@ Merci pour votre confiance 🙏
 
 <script>
 // ═══════════════════════════════════════════════
+// CHARGEUR RÉSILIENT DES BIBLIOTHÈQUES
+// Versions figées. Pour chaque bibliothèque : d'abord la copie servie par
+// Zyntelo lui-même (/vendor/), puis plusieurs CDN de secours, chacun avec un
+// délai maximum. Aucune ne bloque l'affichage de la page.
+// ═══════════════════════════════════════════════
+(function () {
+  var V = { supabase: '2.45.4', lucide: '0.383.0', chart: '4.4.0' };
+  var SOURCES = {
+    supabase: [
+      '/vendor/supabase.min.js',
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@' + V.supabase + '/dist/umd/supabase.min.js',
+      'https://unpkg.com/@supabase/supabase-js@' + V.supabase + '/dist/umd/supabase.js'
+    ],
+    lucide: [
+      '/vendor/lucide.min.js',
+      'https://cdn.jsdelivr.net/npm/lucide@' + V.lucide + '/dist/umd/lucide.min.js',
+      'https://unpkg.com/lucide@' + V.lucide + '/dist/umd/lucide.js'
+    ],
+    chart: [
+      '/vendor/chart.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/chart.js@' + V.chart + '/dist/chart.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/' + V.chart + '/chart.umd.min.js'
+    ]
+  };
+  // Une source n'est validée que si la bibliothèque est réellement utilisable
+  // (protège aussi du cas où /vendor/ renverrait une page HTML au lieu du fichier).
+  var READY = {
+    supabase: function () { return !!(window.supabase && typeof window.supabase.createClient === 'function'); },
+    lucide: function () { return !!(window.lucide && typeof window.lucide.createIcons === 'function'); },
+    chart: function () { return typeof window.Chart === 'function'; }
+  };
+
+  function loadOne(url, ms, ready) {
+    return new Promise(function (resolve, reject) {
+      var done = false, el = document.createElement('script');
+      var timer = setTimeout(function () { if (!done) { done = true; reject(new Error('délai dépassé')); } }, ms);
+      el.src = url; el.async = true;
+      el.onload = function () { if (done) return; done = true; clearTimeout(timer); ready() ? resolve() : reject(new Error('fichier invalide')); };
+      el.onerror = function () { if (done) return; done = true; clearTimeout(timer); reject(new Error('erreur réseau')); };
+      document.head.appendChild(el);
+    });
+  }
+
+  function loadLib(name) {
+    if (READY[name]()) return Promise.resolve();
+    var list = SOURCES[name], i = 0;
+    return new Promise(function (resolve, reject) {
+      (function next() {
+        if (i >= list.length) { reject(new Error(name + ' indisponible')); return; }
+        var url = list[i], ms = i === 0 ? 5000 : 7000; i++;
+        loadOne(url, ms, READY[name]).then(resolve, function (err) {
+          console.warn('[Zyntelo] ' + name + ' : échec de ' + url + ' (' + err.message + ')');
+          next();
+        });
+      })();
+    });
+  }
+
+  var pending = {};
+  window.zyLoadLib = function (name) {
+    if (!pending[name]) pending[name] = loadLib(name).catch(function (e) { delete pending[name]; throw e; });
+    return pending[name];
+  };
+
+  // Client Supabase de remplacement, utilisé seulement si le SDK n'a pu être
+  // chargé depuis aucune source : l'interface s'affiche quand même, et chaque
+  // appel renvoie une erreur propre (gérée par l'application) au lieu de planter.
+  function installOfflineSupabase() {
+    var OFF = { data: null, error: { message: 'Service momentanément inaccessible', code: 'ZY_OFFLINE' }, count: null, status: 0 };
+    function chain() {
+      var target = function () {};
+      return new Proxy(target, {
+        get: function (t, prop) {
+          if (prop === 'then') return function (res, rej) { return Promise.resolve(OFF).then(res, rej); };
+          if (prop === 'catch' || prop === 'finally') return function (f) { return Promise.resolve(OFF)[prop](f); };
+          return function () { return chain(); };
+        },
+        apply: function () { return chain(); }
+      });
+    }
+    var channel = { on: function () { return channel; }, subscribe: function () { return channel; }, unsubscribe: function () {} };
+    window.__ZY_OFFLINE = true;
+    window.supabase = {
+      createClient: function () {
+        return {
+          from: function () { return chain(); },
+          rpc: function () { return chain(); },
+          channel: function () { return channel; },
+          removeChannel: function () { return Promise.resolve(); },
+          functions: { invoke: function () { return Promise.resolve(OFF); } },
+          storage: { from: function () {
+            return { upload: function () { return Promise.resolve(OFF); }, remove: function () { return Promise.resolve(OFF); },
+                     createSignedUrl: function () { return Promise.resolve(OFF); },
+                     getPublicUrl: function () { return { data: { publicUrl: '' } }; } };
+          } },
+          auth: {
+            getSession: function () { return Promise.resolve({ data: { session: null }, error: OFF.error }); },
+            getUser: function () { return Promise.resolve({ data: { user: null }, error: OFF.error }); },
+            onAuthStateChange: function () { return { data: { subscription: { unsubscribe: function () {} } } }; },
+            signOut: function () { return Promise.resolve({ error: null }); },
+            signInWithPassword: function () { return Promise.resolve({ data: { user: null, session: null }, error: OFF.error }); },
+            signUp: function () { return Promise.resolve({ data: { user: null, session: null }, error: OFF.error }); },
+            resetPasswordForEmail: function () { return Promise.resolve({ data: null, error: OFF.error }); },
+            updateUser: function () { return Promise.resolve({ data: { user: null }, error: OFF.error }); }
+          }
+        };
+      }
+    };
+    console.warn('[Zyntelo] SDK Supabase indisponible : mode dégradé, interface affichée quand même.');
+  }
+
+  var started = false;
+  function startMain() {
+    if (started) return; started = true;
+    var run = function () {
+      var src = document.getElementById('zyntelo-main');
+      var el = document.createElement('script');
+      el.text = src.textContent; // exécuté en portée globale, exactement comme avant
+      document.body.appendChild(el);
+      // Bibliothèques non essentielles : chargées après l'affichage, jamais bloquantes.
+      window.zyLoadLib('lucide').then(function () { if (typeof refreshLucideIcons === 'function') refreshLucideIcons(); }, function () {});
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+  }
+
+  window.zyLoadLib('supabase').then(startMain, function () { installOfflineSupabase(); startMain(); });
+})();
+</script>
+<script type="text/plain" id="zyntelo-main">
+// ═══════════════════════════════════════════════
 // STORAGE PERSISTANT
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
@@ -2124,7 +2265,24 @@ Merci pour votre confiance 🙏
 // ═══════════════════════════════════════════════
 const SUPABASE_URL = 'https://rkxnvyebzrxlhwkmbxym.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_As2pSbd0Jt7iB22CC-l7mg_-pGWnC7U';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Chaque requête vers Supabase a un délai maximum : si le réseau ne répond
+// pas (lenteur, filtrage), l'appel échoue proprement au lieu d'attendre sans
+// fin. Envois de fichiers et fonctions serveur : délai plus long.
+function zyFetchWithTimeout(input, init) {
+  init = init || {};
+  if (typeof AbortController === 'undefined') return fetch(input, init);
+  var url = typeof input === 'string' ? input : ((input && input.url) || '');
+  var ms = (url.indexOf('/storage/v1/') !== -1 || url.indexOf('/functions/v1/') !== -1) ? 120000 : 20000;
+  var ctrl = new AbortController();
+  if (init.signal) {
+    if (init.signal.aborted) ctrl.abort();
+    else init.signal.addEventListener('abort', function () { ctrl.abort(); });
+  }
+  var timer = setTimeout(function () { ctrl.abort(); }, ms);
+  return fetch(input, Object.assign({}, init, { signal: ctrl.signal }))
+    .finally(function () { clearTimeout(timer); });
+}
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: zyFetchWithTimeout } });
 
 // Empêche le zoom automatique du clavier (Android ET iPhone) : dès qu'un
 // champ de saisie reçoit le focus, on bascule temporairement en vraie
@@ -3106,7 +3264,14 @@ function computeGrowthRate(series) {
 
 function drawLineChart(canvasId, labels, data, color) {
   const canvas = document.getElementById(canvasId);
-  if (!canvas || typeof Chart === 'undefined') return;
+  if (!canvas) return;
+  if (typeof Chart === 'undefined') {
+    // Chargé à la demande, sans jamais bloquer l'application
+    if (window.zyLoadLib) window.zyLoadLib('chart').then(function () {
+      if (typeof Chart !== 'undefined') drawLineChart(canvasId, labels, data, color);
+    }, function () {});
+    return;
+  }
   if (statsCharts[canvasId]) statsCharts[canvasId].destroy();
   statsCharts[canvasId] = new Chart(canvas, {
     type: 'line',
@@ -6108,7 +6273,15 @@ async function openPublicShopBySlug(route) {
   const { data: shop, error } = route.customDomain
     ? await query.eq('domain', route.customDomain).maybeSingle()
     : await query.eq('slug', route.shopSlug).maybeSingle();
-  if (error || !shop) {
+  if (error) {
+    // Problème de connexion (lenteur, filtrage réseau) : ce n'est PAS une
+    // boutique introuvable — on le dit clairement et on propose de réessayer.
+    hide('loading');
+    go('s-boutique');
+    document.getElementById('bshop-area').innerHTML = `<div class="empty"><div class="empty-ico">📡</div><p style="font-size:17px;font-weight:600;color:var(--black)">Impossible de charger cette boutique pour le moment.</p><p>Vérifiez votre connexion internet, puis réessayez.</p><button class="btn btn-blue" style="margin-top:14px;font-size:16px;padding:12px 28px" onclick="location.reload()">Réessayer</button></div>`;
+    return;
+  }
+  if (!shop) {
     hide('loading');
     go('s-boutique');
     document.getElementById('bshop-area').innerHTML = `<div class="empty"><div class="empty-ico">🔍</div><p>Boutique introuvable.</p></div>`;
