@@ -2272,6 +2272,11 @@ function zyFetchWithTimeout(input, init) {
   init = init || {};
   if (typeof AbortController === 'undefined') return fetch(input, init);
   var url = typeof input === 'string' ? input : ((input && input.url) || '');
+  // Inscription et connexion : AUCUN délai maximum, comme avant v184.
+  // L'inscription attend l'envoi de l'e-mail de confirmation par Supabase
+  // avant de répondre : sur un réseau lent, cela peut dépasser 20 s, et
+  // l'interrompre laisserait l'utilisateur bloqué alors que son compte existe.
+  if (url.indexOf('/auth/v1/') !== -1) return fetch(input, init);
   var ms = (url.indexOf('/storage/v1/') !== -1 || url.indexOf('/functions/v1/') !== -1) ? 120000 : 20000;
   var ctrl = new AbortController();
   if (init.signal) {
