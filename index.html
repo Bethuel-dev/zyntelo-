@@ -2769,21 +2769,13 @@ async function enablePushNotifications(role) {
   const saveFn = saveFns[role] || saveOwnerPushSubscription;
 
   if (Notification.permission === 'granted') {
-    const reg = await registerServiceWorker();
-    if (reg) {
-      try {
-        let sub = await reg.pushManager.getSubscription();
-        if (!sub) {
-          sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-          });
-        }
-        await saveFn(sub);
-      } catch (e) { console.error('Erreur réabonnement push', e); }
+    const ok = await subscribeAndSave(saveFn);
+    if (ok) {
+      toast('🔔 Les notifications sont activées sur cet appareil');
+      markPushPromptSeen(role);
+    } else {
+      toast('Impossible d\'activer les notifications pour le moment. Réessayez dans un instant.', 'err');
     }
-    toast('🔔 Les notifications sont déjà activées sur cet appareil');
-    markPushPromptSeen(role);
     return;
   }
 
@@ -2800,9 +2792,35 @@ async function enablePushNotifications(role) {
     return;
   }
 
-  const reg = await registerServiceWorker();
-  if (!reg) { toast('Erreur technique, réessayez plus tard', 'err'); return; }
+  const ok = await subscribeAndSave(saveFn);
+  if (ok) {
+    toast('🔔 Notifications activées ✓');
+    markPushPromptSeen(role);
+  } else {
+    toast('Impossible d\'activer les notifications pour le moment. Réessayez dans un instant.', 'err');
+  }
+}
 
+// Au tout premier enregistrement, le Service Worker est encore « en
+// installation » : Chrome refuse alors de créer l'abonnement push. On attend
+// donc qu'il soit réellement actif (15 s maximum).
+async function getActiveServiceWorker() {
+  const reg = await registerServiceWorker();
+  if (!reg) return null;
+  if (reg.active) return reg;
+  try {
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker non actif après 15 s')), 15000))
+    ]);
+  } catch (e) { console.error('Service Worker pas encore actif', e); return null; }
+}
+
+// Crée (ou retrouve) l'abonnement push puis l'enregistre. Ne renvoie true
+// que si l'abonnement est RÉELLEMENT enregistré côté serveur.
+async function subscribeAndSave(saveFn) {
+  const reg = await getActiveServiceWorker();
+  if (!reg) return false;
   try {
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -2811,45 +2829,42 @@ async function enablePushNotifications(role) {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
-    await saveFn(sub);
-    toast('🔔 Notifications activées ✓');
-    markPushPromptSeen(role);
-  } catch (e) {
-    console.error('Erreur abonnement push', e);
-    toast('Erreur lors de l\'activation des notifications', 'err');
-  }
+    return (await saveFn(sub)) === true;
+  } catch (e) { console.error('Erreur abonnement push', e); return false; }
 }
 
 async function saveLivreurPushSubscription(sub) {
   const subJson = sub.toJSON();
-  if (!S.livreurSession || !S.livreurSession.livreurId) return;
+  if (!S.livreurSession || !S.livreurSession.livreurId) return false;
   try {
     const { data, error } = await sb.rpc('livreur_save_push_subscription', {
       p_livreur_id: S.livreurSession.livreurId, p_phone: S.livreurSession.phone, p_code: S.livreurSession.code,
       p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
       p_device_label: navigator.userAgent.slice(0, 60)
     });
-    if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (livreur)', error, data);
-  } catch (e) { console.error('Erreur sauvegarde abonnement push (livreur)', e); }
+    if (error || !data || !data.success) { console.error('Erreur sauvegarde abonnement push (livreur)', error, data); return false; }
+    return true;
+  } catch (e) { console.error('Erreur sauvegarde abonnement push (livreur)', e); return false; }
 }
 
 async function saveClientPushSubscription(sub) {
   const subJson = sub.toJSON();
-  if (!S.client || !S.client.id) return;
+  if (!S.client || !S.client.id) return false;
   try {
     const { data, error } = await sb.rpc('client_save_push_subscription', {
       p_client_id: S.client.id, p_email: S.client.email,
       p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
       p_device_label: navigator.userAgent.slice(0, 60)
     });
-    if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (client)', error, data);
-  } catch (e) { console.error('Erreur sauvegarde abonnement push (client)', e); }
+    if (error || !data || !data.success) { console.error('Erreur sauvegarde abonnement push (client)', error, data); return false; }
+    return true;
+  } catch (e) { console.error('Erreur sauvegarde abonnement push (client)', e); return false; }
 }
 
 async function saveOwnerPushSubscription(sub) {
   const subJson = sub.toJSON();
   const targetOwnerId = ownerId();
-  if (!targetOwnerId) return;
+  if (!targetOwnerId) return false;
   try {
     if (S.isGerant) {
       // Le gérant n'a pas de session Supabase Auth classique — on passe par
@@ -2859,17 +2874,19 @@ async function saveOwnerPushSubscription(sub) {
         p_endpoint: subJson.endpoint, p_p256dh: subJson.keys.p256dh, p_auth_key: subJson.keys.auth,
         p_device_label: navigator.userAgent.slice(0, 60)
       });
-      if (error || !data || !data.success) console.error('Erreur sauvegarde abonnement push (gérant)', error, data);
-      return;
+      if (error || !data || !data.success) { console.error('Erreur sauvegarde abonnement push (gérant)', error, data); return false; }
+      return true;
     }
-    await sb.from('push_subscriptions').upsert({
+    const { error } = await sb.from('push_subscriptions').upsert({
       owner_id: targetOwnerId,
       endpoint: subJson.endpoint,
       p256dh: subJson.keys.p256dh,
       auth_key: subJson.keys.auth,
       device_label: navigator.userAgent.slice(0, 60)
     }, { onConflict: 'owner_id,endpoint' });
-  } catch (e) { console.error('Erreur sauvegarde abonnement push', e); }
+    if (error) { console.error('Erreur sauvegarde abonnement push', error); return false; }
+    return true;
+  } catch (e) { console.error('Erreur sauvegarde abonnement push', e); return false; }
 }
 
 function showIOSInstallInstructions(role) {
