@@ -971,6 +971,22 @@ setTimeout(function () {
 <!-- ═══════════════════════════════════════
      ADMIN LOGIN
 ═══════════════════════════════════════ -->
+<div id="s-verify-otp" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo"><svg width="44" height="44" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg></div>
+      <h2>Vérifiez votre e-mail</h2>
+      <p class="sub">Nous avons envoyé un code de confirmation à <strong id="otp-email"></strong>.<br>Pensez à regarder aussi dans vos spams.</p>
+      <div class="fgrp"><label>Code de confirmation</label>
+        <input id="otp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" style="text-align:center;letter-spacing:8px;font-size:24px;font-weight:700" onkeydown="if(event.key==='Enter')verifySignupOtp()">
+      </div>
+      <button class="btn btn-red btn-w" id="otp-submit" onclick="verifySignupOtp()">Confirmer</button>
+      <button class="btn btn-ghost btn-w" id="otp-resend" style="margin-top:10px" onclick="resendSignupOtp()">Renvoyer le code</button>
+      <div class="auth-switch">Déjà confirmé ? <a onclick="go('s-login')">Se connecter</a></div>
+    </div>
+  </div>
+</div>
+
 <div id="s-admin-login" class="screen">
   <div class="auth-wrap">
     <div class="auth-box">
@@ -2231,7 +2247,9 @@ Merci pour votre confiance 🙏
             signInWithPassword: function () { return Promise.resolve({ data: { user: null, session: null }, error: OFF.error }); },
             signUp: function () { return Promise.resolve({ data: { user: null, session: null }, error: OFF.error }); },
             resetPasswordForEmail: function () { return Promise.resolve({ data: null, error: OFF.error }); },
-            updateUser: function () { return Promise.resolve({ data: { user: null }, error: OFF.error }); }
+            updateUser: function () { return Promise.resolve({ data: { user: null }, error: OFF.error }); },
+            verifyOtp: function () { return Promise.resolve({ data: { user: null, session: null }, error: OFF.error }); },
+            resend: function () { return Promise.resolve({ data: null, error: OFF.error }); }
           }
         };
       }
@@ -2864,7 +2882,7 @@ function go(screenId) {
   // ailleurs, sans aucun changement.
   const vpMeta = document.querySelector('meta[name="viewport"]');
   if (vpMeta) {
-    const phoneScreens = ['s-login', 's-register', 's-gerant-login', 's-livreur-login'];
+    const phoneScreens = ['s-login', 's-register', 's-verify-otp', 's-gerant-login', 's-livreur-login'];
     vpMeta.setAttribute('content', phoneScreens.includes(screenId)
       ? 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover'
       : 'width=1024');
@@ -3737,7 +3755,8 @@ async function doLogin() {
   window._zyntelloPerfLog.push({ event: 'auth_signin', ms: Math.round(performance.now() - _authStart), ts: Date.now() });
   if (error) {
     if (error.message.includes('Email not confirmed')) {
-      toast('Confirmez votre email avant de vous connecter (vérifiez votre boîte mail)', 'err');
+      toast('Confirmez d\'abord votre e-mail avec le code reçu (ou demandez-en un nouveau)', 'err');
+      openOtpScreen(email);
     } else {
       toast('Email ou mot de passe incorrect', 'err');
     }
@@ -3749,6 +3768,67 @@ async function doLogin() {
   const user = { id: data.user.id, email: data.user.email, isAdmin:false, isGerant:false };
   await loginAs(user);
   if (!S.isGerant) maybePromptPushNotifications();
+}
+
+// ═══════════════════════════════════════════════
+// CONFIRMATION DE L'E-MAIL PAR CODE
+// ═══════════════════════════════════════════════
+function openOtpScreen(email) {
+  S.pendingVerifyEmail = email;
+  document.getElementById('otp-email').textContent = email;
+  document.getElementById('otp-code').value = '';
+  go('s-verify-otp');
+}
+
+async function verifySignupOtp() {
+  const email = S.pendingVerifyEmail;
+  const token = (document.getElementById('otp-code').value || '').replace(/\D/g, '');
+  if (!email) { go('s-login'); return; }
+  if (token.length < 6) { toast('Entrez le code à 6 chiffres reçu par e-mail', 'err'); return; }
+  const btn = document.getElementById('otp-submit');
+  if (btn.disabled) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Vérification…';
+  try {
+    let { data, error } = await sb.auth.verifyOtp({ email, token, type: 'signup' });
+    if (error) {
+      // Selon la configuration Supabase, le code peut être de type « email »
+      const retry = await sb.auth.verifyOtp({ email, token, type: 'email' });
+      if (!retry.error) { data = retry.data; error = null; }
+    }
+    if (error || !data || !data.user) {
+      toast('Code incorrect ou expiré. Vérifiez-le, ou demandez un nouveau code.', 'err');
+      return;
+    }
+    S.pendingVerifyEmail = null;
+    toast('E-mail confirmé ✓ Bienvenue sur Zyntelo !');
+    await loginAs({ id: data.user.id, email: data.user.email, isAdmin:false, isGerant:false });
+    if (!S.isGerant) maybePromptPushNotifications();
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+let _otpResendUntil = 0;
+async function resendSignupOtp() {
+  const email = S.pendingVerifyEmail;
+  if (!email) { go('s-login'); return; }
+  const wait = Math.ceil((_otpResendUntil - Date.now()) / 1000);
+  if (wait > 0) { toast(`Patientez ${wait} s avant de redemander un code`, 'err'); return; }
+  const btn = document.getElementById('otp-resend');
+  btn.disabled = true;
+  try {
+    const { error } = await sb.auth.resend({ type: 'signup', email });
+    if (error) {
+      if (/rate|second|many|limit/i.test(error.message || '')) toast('Trop de demandes. Patientez une minute, puis réessayez.', 'err');
+      else toast('Impossible d\'envoyer le code pour le moment. Réessayez dans un instant.', 'err');
+      return;
+    }
+    _otpResendUntil = Date.now() + 60000;
+    toast('Nouveau code envoyé 📧 Pensez à vérifier vos spams.');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function doGerantLogin() {
@@ -4427,6 +4507,15 @@ async function doRegister() {
     }
     return;
   }
+  // Adresse déjà inscrite : par sécurité, Supabase ne renvoie aucune erreur
+  // et n'envoie aucun e-mail (liste « identities » vide). On le dit clairement
+  // au lieu d'afficher à tort « Compte créé ».
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    toast('Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».', 'err');
+    const liEmail = document.getElementById('li-email'); if (liEmail) liEmail.value = email;
+    go('s-login');
+    return;
+  }
   const userId = data.user.id;
   // La boutique est désormais créée automatiquement par la base de
   // données elle-même, au même instant que le compte — impossible qu'elle
@@ -4434,9 +4523,10 @@ async function doRegister() {
   // connexion. Plus aucun appel séparé nécessaire ici.
 
   if (!data.session) {
-    // Email de confirmation requis avant de pouvoir se connecter
-    toast('Compte créé ! Vérifiez votre email pour confirmer 📧');
-    go('s-login');
+    // Confirmation par code à 6 chiffres : le code peut être lu sur un autre
+    // appareil (ex. téléphone) et saisi ici, sans changer d'appareil.
+    toast('Compte créé ! Entrez le code reçu par e-mail 📧');
+    openOtpScreen(email);
     return;
   }
   // Récupère la vraie fiche boutique (créée automatiquement), pour avoir
