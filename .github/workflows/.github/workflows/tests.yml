@@ -1,0 +1,32 @@
+# Lance automatiquement les 288 tests de Zyntelo (72 tests x 4 profils d'appareils)
+# à chaque push et à chaque Pull Request vers main.
+name: Tests Zyntelo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    name: 288 tests (4 appareils)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer Playwright
+        run: pip install -r tests/requirements.txt
+
+      - name: Installer Chromium
+        run: python -m playwright install --with-deps chromium
+
+      - name: Lancer les 288 tests
+        run: python tests/full_audit.py
