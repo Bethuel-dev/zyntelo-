@@ -934,6 +934,7 @@ setTimeout(function () {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <input type="checkbox" id="li-remember" checked style="width:auto">
         <label for="li-remember" style="font-size:12px;color:var(--gray);text-transform:none;letter-spacing:0">Rester connecté</label>
+        <a onclick="openForgotPassword()" style="margin-left:auto;font-size:13px;color:var(--blue);font-weight:600;cursor:pointer">Mot de passe oublié ?</a>
       </div>
       <button class="btn btn-red btn-w" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-ghost btn-w" style="margin-top:8px" onclick="go('s-gerant-login')">👤 Gérant</button>
@@ -983,6 +984,30 @@ setTimeout(function () {
       <button class="btn btn-red btn-w" id="otp-submit" onclick="verifySignupOtp()">Confirmer</button>
       <button class="btn btn-ghost btn-w" id="otp-resend" style="margin-top:10px" onclick="resendSignupOtp()">Renvoyer le code</button>
       <div class="auth-switch">Déjà confirmé ? <a onclick="go('s-login')">Se connecter</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="s-reset-password" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo"><svg width="44" height="44" viewBox="0 0 36 36"><rect width="36" height="36" rx="8" fill="#1A56E8"/><text x="4" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="24" fill="white">Z</text><circle cx="18" cy="5" r="3" fill="white"/></svg></div>
+      <h2>Mot de passe oublié</h2>
+      <div id="rp-step-email">
+        <p class="sub">Entrez l'e-mail de votre compte : nous vous enverrons un code de 6 chiffres.</p>
+        <div class="fgrp"><label>Email</label><input id="rp-email" type="email" placeholder="votre@email.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
+        <button class="btn btn-red btn-w" id="rp-send" onclick="sendResetCode()">Recevoir un code</button>
+      </div>
+      <div id="rp-step-code" style="display:none">
+        <p class="sub">Si un compte existe avec <strong id="rp-email-label"></strong>, un code vient d'y être envoyé.<br>Pensez à regarder aussi dans vos spams.</p>
+        <div class="fgrp"><label>Code reçu par e-mail</label>
+          <input id="rp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" style="text-align:center;letter-spacing:8px;font-size:24px;font-weight:700">
+        </div>
+        <div class="fgrp"><label>Nouveau mot de passe</label><input id="rp-pass" type="password" placeholder="Minimum 6 caractères" onkeydown="if(event.key==='Enter')confirmResetPassword()"></div>
+        <button class="btn btn-red btn-w" id="rp-confirm" onclick="confirmResetPassword()">Changer mon mot de passe</button>
+        <button class="btn btn-ghost btn-w" id="rp-resend" style="margin-top:10px" onclick="sendResetCode(true)">Renvoyer le code</button>
+      </div>
+      <div class="auth-switch"><a onclick="go('s-login')">← Retour à la connexion</a></div>
     </div>
   </div>
 </div>
@@ -2882,7 +2907,7 @@ function go(screenId) {
   // ailleurs, sans aucun changement.
   const vpMeta = document.querySelector('meta[name="viewport"]');
   if (vpMeta) {
-    const phoneScreens = ['s-login', 's-register', 's-verify-otp', 's-gerant-login', 's-livreur-login'];
+    const phoneScreens = ['s-login', 's-register', 's-verify-otp', 's-reset-password', 's-gerant-login', 's-livreur-login'];
     vpMeta.setAttribute('content', phoneScreens.includes(screenId)
       ? 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover'
       : 'width=1024');
@@ -3828,6 +3853,76 @@ async function resendSignupOtp() {
     toast('Nouveau code envoyé 📧 Pensez à vérifier vos spams.');
   } finally {
     btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MOT DE PASSE OUBLIÉ (code à 6 chiffres)
+// ═══════════════════════════════════════════════
+function openForgotPassword() {
+  const typed = (document.getElementById('li-email').value || '').trim();
+  document.getElementById('rp-email').value = typed;
+  document.getElementById('rp-code').value = '';
+  document.getElementById('rp-pass').value = '';
+  document.getElementById('rp-step-email').style.display = '';
+  document.getElementById('rp-step-code').style.display = 'none';
+  go('s-reset-password');
+}
+
+let _resetResendUntil = 0;
+async function sendResetCode(isResend) {
+  const email = isResend ? S.resetEmail : (document.getElementById('rp-email').value || '').trim();
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { toast('Entrez une adresse e-mail valide', 'err'); return; }
+  const wait = Math.ceil((_resetResendUntil - Date.now()) / 1000);
+  if (isResend && wait > 0) { toast(`Patientez ${wait} s avant de redemander un code`, 'err'); return; }
+  const btn = document.getElementById(isResend ? 'rp-resend' : 'rp-send');
+  if (btn.disabled) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    if (error) {
+      if (/rate|second|many|limit/i.test(error.message || '')) toast('Trop de demandes. Patientez une minute, puis réessayez.', 'err');
+      else toast('Impossible d\'envoyer le code pour le moment. Réessayez dans un instant.', 'err');
+      return;
+    }
+    S.resetEmail = email;
+    _resetResendUntil = Date.now() + 60000;
+    document.getElementById('rp-email-label').textContent = email;
+    document.getElementById('rp-step-email').style.display = 'none';
+    document.getElementById('rp-step-code').style.display = '';
+    toast(isResend ? 'Nouveau code envoyé 📧' : 'Code envoyé 📧 Vérifiez votre boîte mail');
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+async function confirmResetPassword() {
+  const email = S.resetEmail;
+  const token = (document.getElementById('rp-code').value || '').replace(/\D/g, '');
+  const pass = document.getElementById('rp-pass').value;
+  if (!email) { openForgotPassword(); return; }
+  if (token.length < 6) { toast('Entrez le code à 6 chiffres reçu par e-mail', 'err'); return; }
+  if (!pass || pass.length < 6) { toast('Mot de passe : 6 caractères minimum', 'err'); return; }
+  const btn = document.getElementById('rp-confirm');
+  if (btn.disabled) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Vérification…';
+  try {
+    const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'recovery' });
+    if (error || !data || !data.user) { toast('Code incorrect ou expiré. Vérifiez-le, ou demandez un nouveau code.', 'err'); return; }
+    const { error: upErr } = await sb.auth.updateUser({ password: pass });
+    if (upErr) {
+      if (/different|same/i.test(upErr.message || '')) toast('Choisissez un mot de passe différent de l\'ancien', 'err');
+      else toast('Impossible de changer le mot de passe pour le moment. Réessayez.', 'err');
+      return;
+    }
+    S.resetEmail = null;
+    toast('Mot de passe changé ✓ Bienvenue !');
+    await loginAs({ id: data.user.id, email: data.user.email, isAdmin:false, isGerant:false });
+    if (!S.isGerant) maybePromptPushNotifications();
+  } finally {
+    btn.disabled = false; btn.textContent = label;
   }
 }
 
