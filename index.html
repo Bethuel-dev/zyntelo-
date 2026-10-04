@@ -90,7 +90,7 @@ setTimeout(function () {
   <header class="nl-hero">
     <div class="nl-hero-glow"></div>
     <div class="nl-wrap">
-      <div class="nl-badge-free"><span class="nl-dot"></span>1 mois d'essai gratuit — sans engagement</div>
+      <div class="nl-badge-free"><span class="nl-dot"></span>Abonnement gratuit jusqu'au 1er janvier 2027</div>
       <h1>Votre boutique en ligne,<br><span class="nl-grad">prête en quelques minutes</span></h1>
       <p>Zyntelo donne aux commerçants africains tous les outils pour vendre en ligne, gérer leurs commandes et faire grandir leur activité — sans complexité, sans gros budget.</p>
       <div class="nl-cta">
@@ -104,7 +104,7 @@ setTimeout(function () {
   <div class="nl-wrap">
     <div class="nl-trust nl-reveal">
       <div class="nl-trust-item"><div class="nl-trust-num">5 min</div><div class="nl-trust-lbl">pour ouvrir sa boutique</div></div>
-      <div class="nl-trust-item"><div class="nl-trust-num">0 F</div><div class="nl-trust-lbl">le premier mois</div></div>
+      <div class="nl-trust-item"><div class="nl-trust-num">0 F</div><div class="nl-trust-lbl">jusqu'au 1er janvier 2027</div></div>
       <div class="nl-trust-item"><div class="nl-trust-num">100%</div><div class="nl-trust-lbl">depuis le téléphone</div></div>
     </div>
   </div>
@@ -148,10 +148,10 @@ setTimeout(function () {
       </div>
       <div class="nl-pricing nl-reveal">
         <div class="nl-pricing-glow"></div>
-        <div class="nl-free-tag">★ 1er mois offert</div>
+        <div class="nl-free-tag">★ Gratuit jusqu'au 1er janvier 2027</div>
         <h3>Accès complet</h3>
         <div class="nl-price-line"><span class="nl-price-amt">5 000</span> <span class="nl-price-per">F CFA / mois</span></div>
-        <div class="nl-sub">après votre mois gratuit · sans engagement · résiliable à tout moment</div>
+        <div class="nl-sub">à partir du 1er janvier 2027 · sans engagement · résiliable à tout moment</div>
         <ul>
           <li><span class="nl-check">✓</span> Toutes les fonctionnalités, sans restriction</li>
           <li><span class="nl-check">✓</span> Mises à jour incluses en continu</li>
@@ -4451,7 +4451,7 @@ async function loadReviews() {
 // novembre, l'inscription redevient normale (30 jours après inscription).
 // N'affecte jamais le renouvellement d'un abonnement déjà payant.
 function getRegistrationExpiryDate() {
-  const cutoff = new Date('2026-11-01T00:00:00');
+  const cutoff = new Date('2027-01-01T00:00:00');
   const now = new Date();
   if (now < cutoff) return cutoff;
   const d = new Date(); d.setMonth(d.getMonth()+1);
