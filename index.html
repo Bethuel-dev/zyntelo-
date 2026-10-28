@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/styles.css?v=2">
+<link rel="stylesheet" href="/styles.css?v=3">
 </head>
 <body>
 
@@ -620,7 +620,7 @@ setTimeout(function () {
           </div>
           <div class="form-row">
             <div class="fgrp"><label>Police du titre produit</label><select id="ap-prod-title-font"></select></div>
-            <div class="fgrp"><label>Taille du titre (px)</label><input type="number" id="ap-prod-title-size" min="14" max="48"></div>
+            <div class="fgrp"><label>Taille du titre (px)</label><input type="number" id="ap-prod-title-size" min="40" max="72"></div>
           </div>
         </div>
 
@@ -2507,7 +2507,7 @@ async function loadAdminStats() {
   document.getElementById('sc-inactive-users').textContent = inactiveUsers;
   document.getElementById('sc-active-rate').textContent = activeRate + '%';
   document.getElementById('sc-inactive-rate').textContent = inactiveRate + '%';
-  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' ' + CUR();
+  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString('fr-FR') + ' ' + CUR();
   document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
 
   renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
@@ -3435,7 +3435,7 @@ function recomputeStatsFromLiveData() {
   document.getElementById('sc-inactive-users').textContent = inactiveUsers;
   document.getElementById('sc-active-rate').textContent = activeRate + '%';
   document.getElementById('sc-inactive-rate').textContent = inactiveRate + '%';
-  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString() + ' ' + CUR();
+  document.getElementById('sc-total-sales').textContent = totalSales.toLocaleString('fr-FR') + ' ' + CUR();
   document.getElementById('sc-confirmed-orders').textContent = confirmedOrders.length;
 
   renderBadgesProgress(allShops, confirmedOrdersCountByOwner);
@@ -4687,7 +4687,7 @@ async function loadAdminPaymentsHistory() {
     data.map(p => {
       const d = new Date(p.created_at);
       const shopName = shopNameById[p.owner_id] || '—';
-      return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(shopName)}</td><td>${p.provider}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
+      return `<tr><td>${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(shopName)}</td><td>${p.provider}</td><td>${p.amount.toLocaleString('fr-FR')} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
 }
@@ -4702,7 +4702,7 @@ async function loadPaymentsHistory() {
   box.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${
     data.map(p => {
       const d = new Date(p.created_at);
-      return `<tr><td>${d.toLocaleDateString('fr-FR')}</td><td>${p.amount.toLocaleString()} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
+      return `<tr><td>${d.toLocaleDateString('fr-FR')}</td><td>${p.amount.toLocaleString('fr-FR')} FCFA</td><td>${statusLabels[p.status] || p.status}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
 }
@@ -5256,8 +5256,8 @@ async function deleteEmpreinte(idx) {
 async function loadAdminEscrow() {
   const { data: overview } = await sb.rpc('admin_get_escrow_overview');
   if (overview && overview.success) {
-    document.getElementById('esc-total-protege').textContent = (overview.total_protege_tous_marchands || 0).toLocaleString() + ' FCFA';
-    document.getElementById('esc-total-libere').textContent = (overview.total_libere_non_retire || 0).toLocaleString() + ' FCFA';
+    document.getElementById('esc-total-protege').textContent = (overview.total_protege_tous_marchands || 0).toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('esc-total-libere').textContent = (overview.total_libere_non_retire || 0).toLocaleString('fr-FR') + ' FCFA';
   }
   const { data: disputes } = await sb.rpc('admin_get_escrow_disputes');
   renderAdminEscrowDisputes(disputes || []);
@@ -5280,7 +5280,7 @@ function renderAdminEscrowDisputes(rows) {
     <div class="review-card">
       <div class="review-card-hdr">
         <span class="review-card-name">${esc(r.shop_name)}</span>
-        <span class="badge b-red">${(+r.total_amount).toLocaleString()} FCFA</span>
+        <span class="badge b-red">${(+r.total_amount).toLocaleString('fr-FR')} FCFA</span>
       </div>
       <div style="font-size:13px;margin-top:6px"><strong>Produit :</strong> ${esc(r.product_name)}</div>
       <div style="font-size:13px;margin-top:4px"><strong>Motif :</strong> ${reasonLabels[r.dispute_reason] || esc(r.dispute_reason)}</div>
@@ -5358,7 +5358,7 @@ async function resolveEscrowDispute(idx, action) {
   if (!r) return;
   let partialAmount = null;
   if (action === 'remboursement_partiel') {
-    partialAmount = parseFloat(prompt(`Montant à rembourser (sur ${(+r.total_amount).toLocaleString()} FCFA) :`));
+    partialAmount = parseFloat(prompt(`Montant à rembourser (sur ${(+r.total_amount).toLocaleString('fr-FR')} FCFA) :`));
     if (!partialAmount || partialAmount <= 0) { toast('Montant invalide, annulé', 'err'); return; }
   }
   const note = prompt('Note interne (facultatif) :') || null;
@@ -5388,7 +5388,7 @@ function renderAdminWithdrawals(rows) {
   list.innerHTML = rows.map((r, idx) => `
     <div class="cmd-card">
       <div class="cmd-info">
-        <div class="cmd-name">${r.shop_name} — ${(+r.amount).toLocaleString()} FCFA</div>
+        <div class="cmd-name">${r.shop_name} — ${(+r.amount).toLocaleString('fr-FR')} FCFA</div>
         <div class="cmd-detail">${methodLabels[r.method] || r.method} · ${r.destination_details} · ${new Date(r.requested_at).toLocaleDateString('fr-FR')}</div>
       </div>
       ${r.status === 'demande' ? `
@@ -5750,7 +5750,7 @@ function renderProds() {
       <div class="prod-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}" loading="lazy" decoding="async">`:'📦'}</div>
       <div class="prod-info">
         <div class="prod-name">${esc(p.name)}</div>
-        <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString()} ${CUR()}</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString()} ${CUR()}</strong></div>
+        <div class="prod-price">${p.oldP?`<span style="text-decoration:line-through;color:var(--gray)">${p.oldP.toLocaleString('fr-FR')} ${CUR()}</span> → `:''}<strong style="color:var(--red)">${p.newP.toLocaleString('fr-FR')} ${CUR()}</strong></div>
         ${p.vars&&p.vars.length?`<div class="prod-vars">${esc(p.varLabel||'Variantes')} : ${p.vars.map(v=>(typeof v==='string')?v:v.name).join(', ')}</div>`:''}
         <div class="prod-stock">Stock : <strong>${p.qtyAvail}</strong> dispo · ${p.qtySold||0} vendus</div>
       </div>
@@ -5954,10 +5954,14 @@ function previewShop(prodId, isPublic) {
       <div>
         <div class="p-name-big">${esc(p.name)}</div>
         <div class="p-prices">
-          <span class="p-new">${(+p.newP||0).toLocaleString()} ${CUR()}</span>
-          ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString()} ${CUR()}</span>`:''}
+          <span class="p-new">${(+p.newP||0).toLocaleString('fr-FR')} ${CUR()}</span>
+          ${p.oldP?`<span class="p-old">${(+p.oldP||0).toLocaleString('fr-FR')} ${CUR()}</span>`:''}
         </div>
         <div id="prod-rating-summary" class="prod-rating-summary"></div>
+        <div class="p-trust">
+          <span class="p-trust-item">🛡️ Paiement à la livraison</span>
+          <span class="p-trust-item">🏪 ${esc(S.shop.name || 'Boutique')} <span id="p-trust-badge"></span></span>
+        </div>
         ${varsHtml}
         ${p.desc?`<div class="p-desc">${renderRichText(p.desc)}</div>`:''}
         ${renderProductSections(p.sections)}
@@ -5991,8 +5995,8 @@ function previewShop(prodId, isPublic) {
             <input id="or-tel-num" type="tel" inputmode="numeric" placeholder="07 XX XX XX XX">
           </div>
         </div>
-            <button class="btn btn-red btn-w cta-shake" style="max-width:520px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString()} ${CUR()}</span> à la livraison</button>
-            <button class="btn btn-ghost btn-w" style="max-width:520px;margin:8px auto 0;font-size:16px" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
+            <button class="btn btn-red btn-w cta-shake p-order-btn" onclick="submitOrder()">🛒 COMMANDER — <span id="pp-btn-total">${(+p.newP||0).toLocaleString('fr-FR')} ${CUR()}</span> à la livraison</button>
+            <button class="btn btn-ghost btn-w p-chat-btn" onclick="openChatWithMerchant()">💬 Discuter avec ce marchand</button>
           </div>
         </div>
       </div>
@@ -6022,15 +6026,40 @@ function previewShop(prodId, isPublic) {
       <div id="similar-products-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px"></div>
     </div>
     <div style="text-align:center;padding:18px 0 6px">
-      <a onclick="showReportMerchantPopup()" style="font-size:15px;color:var(--gray);text-decoration:underline;cursor:pointer">🚩 Signaler ce marchand</a>
+      <a class="p-report-link" onclick="showReportMerchantPopup()" style="font-size:15px;color:var(--gray);text-decoration:underline;cursor:pointer">🚩 Signaler ce marchand</a>
+    </div>
+    <div class="buy-bar" id="buy-bar">
+      <div class="buy-bar-info"><div class="buy-bar-lbl">Total</div><div class="buy-bar-total" id="buy-bar-total">${(+p.newP||0).toLocaleString('fr-FR')} ${CUR()}</div></div>
+      <button class="buy-bar-btn" onclick="scrollToOrderForm()">🛒 Commander</button>
     </div>`;
   S.orderQty = 1;
   go('s-boutique');
+  renderShopBadge('p-trust-badge', S.shop.badge);
+  setupBuyBar();
   loadProductReviews(p.id);
   renderProductOffers(p);
   loadAndPopulateDeliverySectors();
   loadSimilarProducts(p.id);
   if (isPublic) { injectTrackingPixels(S.shop); firePixelViewContent(p); }
+}
+
+// Barre d'achat fixe : visible tant que le formulaire de commande n'est pas
+// à l'écran ; un appui fait descendre directement au formulaire.
+let _buyBarObserver = null;
+function setupBuyBar() {
+  const bar = document.getElementById('buy-bar');
+  const panel = document.getElementById('delivery-panel');
+  if (_buyBarObserver) { _buyBarObserver.disconnect(); _buyBarObserver = null; }
+  if (!bar || !panel) return;
+  if (!('IntersectionObserver' in window)) { bar.classList.add('show'); return; }
+  _buyBarObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => bar.classList.toggle('show', !e.isIntersecting));
+  }, { threshold: 0.05 });
+  _buyBarObserver.observe(panel);
+}
+function scrollToOrderForm() {
+  const panel = document.getElementById('delivery-panel');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 let prodReviewStars = 0;
@@ -6085,7 +6114,7 @@ async function loadSimilarProducts(productId) {
         ${img ? `<img src="${esc(img)}" style="width:100%;height:100%;object-fit:cover">` : ''}
       </div>
       <div style="font-size:12px;font-weight:600;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(p.name)||''}</div>
-      <div style="font-size:12.5px;font-weight:700;color:var(--blue);margin-top:2px">${(+p.newP||0).toLocaleString()} FCFA</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--blue);margin-top:2px">${(+p.newP||0).toLocaleString('fr-FR')} FCFA</div>
     </div>`;
   }).join('');
 }
@@ -6338,7 +6367,7 @@ const APPEARANCE_FONTS = ['Inter', 'Syne', 'Poppins', 'Roboto', 'Lato', 'Montser
 const APPEARANCE_DEFAULTS = {
   ann:  { bg:'#1A56E8', font:'Inter', size:13, color:'#FFFFFF' },
   body: { bg:'#FFFFFF', font:'Inter', size:14, color:'#0F0F0F' },
-  product: { bg:'#FFFFFF', font:'Inter', size:14, color:'#0F0F0F', titleFont:'Syne', titleSize:22 }
+  product: { bg:'#FFFFFF', font:'Inter', size:14, color:'#0F0F0F', titleFont:'Syne', titleSize:44 }
 };
 
 function populateFontSelects() {
@@ -6462,7 +6491,7 @@ function applyShopAppearance(appearance) {
     #bann-bar, #sh-ann-bar { background:${ann.bg} !important; color:${ann.color} !important; font-family:'${ann.font}',sans-serif !important; font-size:${ann.size}px !important; }
     #s-boutique .bshop-body, #s-shop-home .bshop-body, #s-catalogue .bshop-body, #s-category .bshop-body { background:${body.bg} !important; color:${body.color} !important; font-family:'${body.font}',sans-serif !important; font-size:${body.size}px !important; }
     #s-boutique .bshop-body * , #s-shop-home .bshop-body *, #s-catalogue .bshop-body *, #s-category .bshop-body * { color:inherit; }
-    #s-boutique .p-name-big { font-family:'${product.titleFont}',sans-serif !important; font-size:${product.titleSize}px !important; color:${product.color} !important; }
+    #s-boutique .p-name-big { font-family:'${product.titleFont}',sans-serif !important; font-size:${Math.max(+product.titleSize || 44, 40)}px !important; color:${product.color} !important; }
     #s-boutique .bshop-body { background:${product.bg} !important; color:${product.color} !important; font-family:'${product.font}',sans-serif !important; font-size:${product.size}px !important; }
   `;
 }
@@ -6544,7 +6573,7 @@ function renderDeliveryZones() {
     <div class="promo-card">
       <div class="promo-card-hdr">
         <div class="promo-card-name">${z.sector}</div>
-        <div style="font-weight:700;color:${z.is_free ? 'var(--green)' : 'var(--ink)'}">${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString() + ' ' + CUR()}</div>
+        <div style="font-weight:700;color:${z.is_free ? 'var(--green)' : 'var(--ink)'}">${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString('fr-FR') + ' ' + CUR()}</div>
       </div>
       <div class="promo-card-actions">
         <button class="btn btn-sm" style="background:var(--orange-l);color:var(--orange)" onclick="editDeliveryZone('${z.id}')">✏️ Modifier</button>
@@ -6665,8 +6694,8 @@ function productCardHtml(p) {
       <div class="shh-prod-img" style="${img?'':'display:flex;align-items:center;justify-content:center;font-size:32px;'}">${img?`<img src="${img}" class="shh-prod-img" style="margin:0" loading="lazy" decoding="async">`:'🛍️'}</div>
       <div class="shh-prod-name">${esc(p.name)}</div>
       <div class="shh-prod-prices">
-        <span class="shh-prod-new">${(+p.newP).toLocaleString()} ${CUR()}</span>
-        ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString()}</span>` : ''}
+        <span class="shh-prod-new">${(+p.newP).toLocaleString('fr-FR')} ${CUR()}</span>
+        ${p.oldP && +p.oldP > +p.newP ? `<span class="shh-prod-old">${(+p.oldP).toLocaleString('fr-FR')}</span>` : ''}
       </div>
     </div>`;
 }
@@ -6699,8 +6728,8 @@ function marketplaceCardHtml(row) {
         <div class="mkt-card-shop">${esc(row.shop_name) || ''}</div>
         <div style="font-size:9.5px;color:var(--gray);margin-top:1px">${esc(getCountryNameFromPhone(row.shop_wa))}</div>
         <div class="mkt-card-prices">
-          <span class="mkt-card-new">${(+p.newP||0).toLocaleString()} ${esc(row.currency)||'FCFA'}</span>
-          ${p.oldP && +p.oldP > +p.newP ? `<span class="mkt-card-old">${(+p.oldP).toLocaleString()}</span>` : ''}
+          <span class="mkt-card-new">${(+p.newP||0).toLocaleString('fr-FR')} ${esc(row.currency)||'FCFA'}</span>
+          ${p.oldP && +p.oldP > +p.newP ? `<span class="mkt-card-old">${(+p.oldP).toLocaleString('fr-FR')}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -6925,7 +6954,7 @@ function renderClientOrders(rows) {
     return `<div class="mkt-order-card">
       <div>
         <div class="mkt-order-name">${esc(o.prodName) || 'Produit'} · <span class="mkt-order-shop">${esc(r.shop_name) || ''}</span></div>
-        <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString()} ${esc(o.currency)||'FCFA'}</strong></div>
+        <div class="mkt-order-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · <strong style="color:#EDF1F8">${(o.total||0).toLocaleString('fr-FR')} ${esc(o.currency)||'FCFA'}</strong></div>
         ${waLink ? `<a href="${esc(waLink)}" target="_blank" rel="noopener" class="mkt-order-contact">📲 Contacter ${esc(r.shop_name) || 'le marchand'}</a>` : ''}
         <div><a onclick="openReportFromOrder(${idx})" style="font-size:11.5px;color:#8B95AD;text-decoration:underline;cursor:pointer;display:inline-block;margin-top:6px">🚩 Signaler ce marchand</a></div>
       </div>
@@ -7140,7 +7169,7 @@ function escrowCardHtml(m, myRole) {
       ${data.product_image ? `<img src="${data.product_image}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0">` : `<div style="width:52px;height:52px;border-radius:8px;background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🛡️</div>`}
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:13.5px">${hcEscape(data.product_name||'')}</div>
-        <div style="font-size:12px;color:var(--gray)">Qté : ${data.quantity} · <strong style="color:var(--black)">${(+data.total_amount).toLocaleString()} FCFA</strong></div>
+        <div style="font-size:12px;color:var(--gray)">Qté : ${data.quantity} · <strong style="color:var(--black)">${(+data.total_amount).toLocaleString('fr-FR')} FCFA</strong></div>
       </div>
     </div>
     <div class="escrow-status-badge" style="font-size:12px;font-weight:700;margin-top:10px">Vérification…</div>
@@ -7208,7 +7237,7 @@ function updateEscrowFormTotal() {
   if (priceEl && !priceEl.dataset.touched && opt) priceEl.value = opt.dataset.price || 0;
   const qty = parseInt(document.getElementById('esc-qty').value) || 1;
   const price = parseFloat(priceEl.value) || 0;
-  document.getElementById('esc-total').textContent = (qty * price).toLocaleString();
+  document.getElementById('esc-total').textContent = (qty * price).toLocaleString('fr-FR');
 }
 
 async function submitCreateEscrow() {
@@ -7574,8 +7603,8 @@ function updateShopMessagesBadge(rows) {
 async function loadWallet() {
   const { data } = await sb.rpc('shop_get_wallet_summary', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email });
   if (data && data.success) {
-    document.getElementById('wallet-pending').textContent = (data.solde_en_attente || 0).toLocaleString() + ' FCFA';
-    document.getElementById('wallet-available').textContent = (data.solde_disponible || 0).toLocaleString() + ' FCFA';
+    document.getElementById('wallet-pending').textContent = (data.solde_en_attente || 0).toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('wallet-available').textContent = (data.solde_disponible || 0).toLocaleString('fr-FR') + ' FCFA';
   }
   const { data: history } = await sb.rpc('shop_get_escrow_history', { p_owner_id: ownerId(), p_gerant_id: S.isGerant ? S.gerantRecordId : null, p_email: S.user.email });
   renderWalletHistory(history || []);
@@ -7593,7 +7622,7 @@ function renderWalletHistory(rows) {
     <div class="cmd-card">
       <div class="cmd-info">
         <div class="cmd-name">${esc(r.product_name)} — ${esc(r.client_name || '')}</div>
-        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · ${(+displayAmount).toLocaleString()} FCFA${note}</div>
+        <div class="cmd-detail">${new Date(r.created_at).toLocaleDateString('fr-FR')} · ${(+displayAmount).toLocaleString('fr-FR')} FCFA${note}</div>
       </div>
       <span class="badge b-blue">${labels[r.status] || r.status}</span>
     </div>`;
@@ -7816,7 +7845,7 @@ function openOrder() {
   const p = S.curProd; if (!p) return;
   S.orderQty = 1;
   document.getElementById('pp-qty').textContent = 1;
-  document.getElementById('pp-sum').innerHTML = `<strong>${esc(p.name)}</strong><br>${p.newP.toLocaleString()} ${CUR()} / unité`;
+  document.getElementById('pp-sum').innerHTML = `<strong>${esc(p.name)}</strong><br>${p.newP.toLocaleString('fr-FR')} ${CUR()} / unité`;
   const ppv = document.getElementById('pp-vars');
   if (p.vars&&p.vars.length) {
     ppv.innerHTML = p.vars.map((v,i)=>{ const vName=(typeof v==='string')?v:v.name; return `<button class="vbtn ${i===0?'on':''}" onclick="selPopVar(this,'${escJs(vName)}')">${esc(vName)}</button>`; }).join('');
@@ -7966,8 +7995,10 @@ function updTotal() {
   const deliveryFee = getSelectedDeliveryFee(); // null si aucun secteur choisi, sinon un nombre (0 = gratuite)
   const grandTotal = productTotal + (deliveryFee || 0);
   const ppTotalEl = document.getElementById('pp-total');
-  if (ppTotalEl) ppTotalEl.textContent = grandTotal.toLocaleString()+' '+CUR();
-  document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString()+' '+CUR();
+  if (ppTotalEl) ppTotalEl.textContent = grandTotal.toLocaleString('fr-FR')+' '+CUR();
+  document.getElementById('pp-btn-total').textContent = grandTotal.toLocaleString('fr-FR')+' '+CUR();
+  const buyBarTotal = document.getElementById('buy-bar-total');
+  if (buyBarTotal) buyBarTotal.textContent = grandTotal.toLocaleString('fr-FR')+' '+CUR();
 
   // Détail Produit / Livraison, affiché seulement une fois un secteur choisi
   document.querySelectorAll('[id="or-delivery-summary"]').forEach(box => {
@@ -7975,8 +8006,8 @@ function updTotal() {
     box.style.display = '';
     const priceEl = box.querySelector('#or-product-price');
     const feeEl = box.querySelector('#or-delivery-fee');
-    if (priceEl) priceEl.textContent = productTotal.toLocaleString()+' '+CUR();
-    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'Gratuite' : deliveryFee.toLocaleString()+' '+CUR();
+    if (priceEl) priceEl.textContent = productTotal.toLocaleString('fr-FR')+' '+CUR();
+    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'Gratuite' : deliveryFee.toLocaleString('fr-FR')+' '+CUR();
   });
 }
 
@@ -7985,7 +8016,7 @@ function updTotal() {
 function populateDeliverySectorSelects() {
   const zones = S.deliveryZonesPublic || [];
   const optsHtml = '<option value="">Sélectionnez votre secteur…</option>' + zones.map(z =>
-    `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString()+' '+CUR()}</option>`
+    `<option value="${z.id}" data-free="${z.is_free?'1':'0'}" data-price="${z.price||0}">${z.sector} — ${z.is_free ? 'Gratuite' : (z.price||0).toLocaleString('fr-FR')+' '+CUR()}</option>`
   ).join('');
   document.querySelectorAll('[id="or-sector"]').forEach(sel => { sel.innerHTML = optsHtml; });
 }
@@ -8018,7 +8049,7 @@ async function notifyOwnerNewOrder(orderData) {
   // Le push touche déjà tous les appareils abonnés sur cet owner_id, gérants
   // inclus (chacun a son propre abonnement, même owner_id, endpoint différent).
   sendPushEvent(ownerId(), 'nouvelle_commande', orderData.id,
-    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString()} ${orderData.currency||'FCFA'}`);
+    '🛒 Nouvelle commande', `${orderData.prodName} — ${orderData.total.toLocaleString('fr-FR')} ${orderData.currency||'FCFA'}`);
 
   const basePayload = {
     shopName: null, // rempli plus bas une fois connu
@@ -8252,7 +8283,7 @@ function renderCmds() {
     const actions=o.status==='attente'
       ?`${!S.isGerant?`<button class="bw" onclick="openAssignLivreur('${o.id}')">🛵 ${o.livreurName?'Réassigner':'Assigner'}</button>`:''}<button class="bv" onclick="valCmd('${o.id}')">✓ Valider livraison</button><button class="ba" onclick="annCmd('${o.id}')">✗ Annuler</button>`
       :o.status==='livree'?`<button class="bw" onclick="sendReceipt('${o.id}')">📲 Reçu WhatsApp</button>`:'';
-    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString()} ${esc(o.currency)||'FCFA'} livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}${o.livreurName?`<br>🛵 <span style="color:var(--blue);font-weight:600">Livreur : ${esc(o.livreurName)}</span>`:''}${o.livreurNote&&o.status==='attente'?`<br>⚠️ <span style="color:#B45309">${esc(o.livreurNote)}</span>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
+    return `<div class="cmd-card"><div class="cmd-info"><div class="cmd-name">${esc(o.prenom)} · ${esc(o.prodName)}</div><div class="cmd-detail">${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''} · ${esc(o.tel)}<br>${o.qty} unité(s) · <strong>${o.total.toLocaleString('fr-FR')} ${esc(o.currency)||'FCFA'}</strong>${o.deliveryFee?` <span style="color:var(--gray);font-weight:400">(dont ${o.deliveryFee.toLocaleString('fr-FR')} ${esc(o.currency)||'FCFA'} livraison)</span>`:''} · ${formatOrderDateTime(o)}${o.validatedBy?`<br><em style="color:var(--gray)">${o.status==='livree'?'Validée':'Traitée'} par : ${esc(o.validatedBy)}</em>`:''}${o.livreurName?`<br>🛵 <span style="color:var(--blue);font-weight:600">Livreur : ${esc(o.livreurName)}</span>`:''}${o.livreurNote&&o.status==='attente'?`<br>⚠️ <span style="color:#B45309">${esc(o.livreurNote)}</span>`:''}</div></div>${badge}<div class="cmd-actions">${actions}</div></div>`;
   }).join('');
   list.innerHTML=html;
   if(ov) ov.innerHTML=html;
@@ -8341,7 +8372,7 @@ function sendReceipt(id) {
     `Votre commande a été livrée avec succès !\n\n`+
     `📦 Produit : ${o.prodName}\n`+
     `🔢 Quantité : ${o.qty}\n`+
-    `💰 Montant payé : ${o.total.toLocaleString()} ${o.currency||'FCFA'}\n`+
+    `💰 Montant payé : ${o.total.toLocaleString('fr-FR')} ${o.currency||'FCFA'}\n`+
     `📅 Date : ${o.date}\n\n`+
     `Merci pour votre confiance ! 🙏\n— ${shopName}`
   );
@@ -8384,7 +8415,7 @@ function renderStock() {
     const m=p.newP-(p.buyP||0); const ben=m*(p.qtySold||0);
     const sc=p.qtyAvail===0?'b-red':p.qtyAvail<5?'b-yellow':'b-green';
     const st=p.qtyAvail===0?'Épuisé':p.qtyAvail<5?'Stock bas':'En stock';
-    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString()+' '+CUR():'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString()} ${CUR()}</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString()+' '+CUR():'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString()+' '+CUR():'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
+    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString('fr-FR')} ${CUR()}</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
   }).join('');
 }
 
@@ -8396,8 +8427,8 @@ function updateStats() {
   const ca=done.reduce((s,o)=>s+o.total,0);
   const ben=done.reduce((s,o)=>{ const p=S.products.find(x=>x.id===o.prodId); return s+(p&&p.buyP?(p.newP-p.buyP)*o.qty:0); },0);
   document.getElementById('st-cmds').textContent=S.orders.length;
-  document.getElementById('st-ca').textContent=ca.toLocaleString()+' '+CUR();
-  document.getElementById('st-ben').textContent=ben.toLocaleString()+' '+CUR();
+  document.getElementById('st-ca').textContent=ca.toLocaleString('fr-FR')+' '+CUR();
+  document.getElementById('st-ben').textContent=ben.toLocaleString('fr-FR')+' '+CUR();
   document.getElementById('st-prods').textContent=(S.productsTotalCount != null ? S.productsTotalCount : S.products.length + '+');
 }
 
@@ -8483,7 +8514,7 @@ async function renderStats() {
   document.getElementById('st-wait').textContent = attente;
   document.getElementById('st-ann').textContent = annule;
   document.getElementById('st-visits').textContent = visits === null ? '—' : visits;
-  document.getElementById('st-ca-periode').textContent = caPeriode.toLocaleString() + ' ' + CUR();
+  document.getElementById('st-ca-periode').textContent = caPeriode.toLocaleString('fr-FR') + ' ' + CUR();
   drawBarChart('chart-status',[valide,attente,annule],['Validées','En attente','Annulées'],['#16A34A','#D97706','#E8221A']);
 
   // Évolution du CA : granularité adaptée à la période (heures / jours / mois)
@@ -8923,12 +8954,12 @@ function renderShopClients() {
       <div class="cat-card-hdr">
         <div>
           <div class="cat-card-name">${c.prenom} · ${c.tel}</div>
-          <div class="cat-card-count">${c.ville}, ${c.qrt} · ${c.orders.length} commande(s) · ${total.toLocaleString()} ${CUR()} · Dernière commande : ${formatOrderDateTime(lastOrder)}</div>
+          <div class="cat-card-count">${c.ville}, ${c.qrt} · ${c.orders.length} commande(s) · ${total.toLocaleString('fr-FR')} ${CUR()} · Dernière commande : ${formatOrderDateTime(lastOrder)}</div>
         </div>
       </div>
       <div class="tbl-wrap" style="margin-top:10px">
         <table><thead><tr><th>Produit</th><th>Qté</th><th>Total</th><th>Date et heure</th><th>Statut</th></tr></thead><tbody>
-        ${c.orders.map(o => `<tr><td>${esc(o.prodName)}</td><td>${o.qty}</td><td>${o.total.toLocaleString()} ${esc(o.currency)||'FCFA'}</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
+        ${c.orders.map(o => `<tr><td>${esc(o.prodName)}</td><td>${o.qty}</td><td>${o.total.toLocaleString('fr-FR')} ${esc(o.currency)||'FCFA'}</td><td>${formatOrderDateTime(o)}</td><td>${o.status==='livree'?'✅ Livrée':o.status==='annulee'?'❌ Annulée':'⏳ En attente'}</td></tr>`).join('')}
         </tbody></table>
       </div>
     </div>`;
@@ -9232,7 +9263,7 @@ async function loadLivreurOrders() {
   const card = (o) => `<div class="card" style="margin-bottom:10px">
       <div style="font-weight:800">${esc(o.prodName)} · ${o.qty} unité(s)</div>
       <div style="font-size:13px;color:var(--gray);margin:6px 0">👤 ${esc(o.prenom)} — ${esc(o.ville)}, ${esc(o.qrt)}${o.secteur?` · 📍 ${esc(o.secteur)}`:''}</div>
-      <div style="font-size:15px;margin-bottom:8px">💰 À encaisser : <strong>${(o.total||0).toLocaleString()} ${cur(o)}</strong></div>
+      <div style="font-size:15px;margin-bottom:8px">💰 À encaisser : <strong>${(o.total||0).toLocaleString('fr-FR')} ${cur(o)}</strong></div>
       ${o.livreurNote && o.status==='attente' ? `<div style="font-size:12px;color:#B45309;margin-bottom:8px">⚠️ ${esc(o.livreurNote)}</div>` : ''}
       ${o.status === 'attente' ? `
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -9301,7 +9332,7 @@ async function renderAdminClients() {
   document.getElementById('adm-total').textContent=clients.length;
   document.getElementById('adm-actifs').textContent=actifs;
   document.getElementById('adm-bloques').textContent=bloques;
-  document.getElementById('adm-rev').textContent=(actifs*5000).toLocaleString()+' FCFA';
+  document.getElementById('adm-rev').textContent=(actifs*5000).toLocaleString('fr-FR')+' FCFA';
   // (v101) Inactifs = boutiques n'ayant jamais reçu de commande confirmée (même définition que la page Statistiques)
   try {
     const { data: ords } = await sb.from('orders').select('owner_id, data');
