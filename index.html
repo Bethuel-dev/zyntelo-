@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/styles.css?v=4">
+<link rel="stylesheet" href="/styles.css?v=5">
 </head>
 <body>
 
@@ -437,6 +437,7 @@ setTimeout(function () {
       <div class="nav-item" onclick="pg('p-commandes',this)"><span class="ni"><i data-lucide="clipboard-list"></i></span>Commandes</div>
       <div class="nav-item" onclick="pg('p-clients-shop',this)"><span class="ni"><i data-lucide="users"></i></span>Clients</div>
       <div class="nav-item" onclick="pg('p-stock',this)"><span class="ni"><i data-lucide="archive"></i></span>Stock</div>
+      <div class="nav-item" onclick="pg('p-depenses',this)"><span class="ni"><i data-lucide="receipt"></i></span>Dépenses</div>
       <div class="nav-item" onclick="pg('p-stats',this)"><span class="ni"><i data-lucide="trending-up"></i></span>Statistiques</div>
       <div class="nav-item" onclick="pg('p-gerant',this)"><span class="ni"><i data-lucide="user-cog"></i></span>Gérant</div>
       <div class="nav-item" onclick="pg('p-livreurs',this)"><span class="ni"><i data-lucide="bike"></i></span>Livreurs</div>
@@ -460,6 +461,7 @@ setTimeout(function () {
           <div class="stat-box"><div class="stat-lbl">Commandes</div><div class="stat-val sv-blue" id="st-cmds">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Chiffre d'affaires</div><div class="stat-val sv-green" id="st-ca">0 FCFA</div></div>
           <div class="stat-box"><div class="stat-lbl">Bénéfice brut</div><div class="stat-val" id="st-ben">0 FCFA</div></div>
+          <div class="stat-box owner-net"><div class="stat-lbl">Bénéfice net</div><div class="stat-val sv-green" id="st-net">0 FCFA</div></div>
           <div class="stat-box"><div class="stat-lbl">Produits</div><div class="stat-val" id="st-prods">0</div></div>
         </div>
         <div id="dash-youtube-banner" style="display:none"></div>
@@ -836,6 +838,29 @@ setTimeout(function () {
       </div>
 
       <!-- STATISTIQUES -->
+      <div class="dash-page" id="p-depenses">
+        <div class="page-head"><h1>Dépenses &amp; bénéfice net</h1><p>Notez ce que vous dépensez pour votre boutique : Zyntelo calcule votre vrai bénéfice.</p></div>
+        <div class="exp-periods" id="exp-periods">
+          <button class="exp-period on" onclick="setExpPeriod('month',this)">Ce mois</button>
+          <button class="exp-period" onclick="setExpPeriod('lastmonth',this)">Mois dernier</button>
+          <button class="exp-period" onclick="setExpPeriod('year',this)">Cette année</button>
+          <button class="exp-period" onclick="setExpPeriod('all',this)">Tout</button>
+        </div>
+        <div id="exp-result" class="exp-result"></div>
+        <div class="exp-form">
+          <div class="exp-form-title">➕ Ajouter une dépense</div>
+          <div class="exp-form-grid">
+            <div class="fgrp"><label>Montant (<span class="exp-cur">FCFA</span>) *</label><input id="exp-amount" type="number" inputmode="numeric" min="1" placeholder="Ex : 10000"></div>
+            <div class="fgrp"><label>Catégorie *</label><select id="exp-cat"></select></div>
+            <div class="fgrp"><label>Date *</label><input id="exp-date" type="date"></div>
+            <div class="fgrp"><label>Note (facultatif)</label><input id="exp-note" maxlength="120" placeholder="Ex : Pub Facebook robe wax"></div>
+          </div>
+          <button class="btn btn-red btn-w" id="exp-save" onclick="saveExpense()">Enregistrer la dépense</button>
+        </div>
+        <div class="exp-list-title">Historique des dépenses</div>
+        <div id="exp-list" class="exp-list"></div>
+      </div>
+
       <div class="dash-page" id="p-stats">
         <div class="page-head"><h1>Statistiques</h1><p>Analyse de vos performances</p></div>
 
@@ -2258,6 +2283,7 @@ function pg(pageId, el) {
   if (pageId === 'p-commandes') renderCmds();
   if (pageId === 'p-clients-shop') renderShopClients();
   if (pageId === 'p-stock') renderStock();
+  if (pageId === 'p-depenses') renderExpenses();
   if (pageId === 'p-stats') renderStats();
   if (pageId === 'p-gerant') renderGerants();
   if (pageId === 'p-livreurs') renderLivreurs();
@@ -3600,6 +3626,7 @@ async function loginAs(user) {
   checkBlocked();
   updateLink();
   updateStats();
+  if (!user.isGerant) { S.expenses = []; S.expensesStatus = 'idle'; loadExpenses(); }
   renderProds();
   renderCmds();
   renderCategories();
@@ -8422,10 +8449,10 @@ function orderUnitCost(o, p) {
   if (o && o.unitCost != null && +o.unitCost > 0) return +o.unitCost;
   return p && +p.buyP > 0 ? +p.buyP : null;
 }
-function computeStockAccounting() {
+function computeStockAccounting(inPeriod) {
   const per = {};
-  let ca = 0, profit = 0, ordersWithoutCost = 0;
-  (S.orders || []).filter(o => o.status === 'livree').forEach(o => {
+  let ca = 0, profit = 0, ordersWithoutCost = 0, revWithoutCost = 0;
+  (S.orders || []).filter(o => o.status === 'livree' && (!inPeriod || inPeriod(ordDate(o)))).forEach(o => {
     const p = S.products.find(x => x.id === o.prodId);
     const rev = orderProductRevenue(o);
     const unitCost = orderUnitCost(o, p);
@@ -8433,7 +8460,7 @@ function computeStockAccounting() {
     const r = per[o.prodId] || (per[o.prodId] = { rev: 0, sold: 0, profit: 0, costKnown: true });
     r.rev += rev; r.sold += (+o.qty || 0);
     if (unitCost != null) { const pr = rev - unitCost * (+o.qty || 0); r.profit += pr; profit += pr; }
-    else { r.costKnown = false; ordersWithoutCost++; }
+    else { r.costKnown = false; ordersWithoutCost++; revWithoutCost += rev; }
   });
   let stockValue = 0, lowCount = 0, outCount = 0, missingCost = 0;
   S.products.forEach(p => {
@@ -8441,7 +8468,7 @@ function computeStockAccounting() {
     if (+p.buyP > 0) stockValue += avail * (+p.buyP); else missingCost++;
     if (avail === 0) outCount++; else if (avail < 5) lowCount++;
   });
-  return { per, ca, profit, ordersWithoutCost, stockValue, lowCount, outCount, missingCost };
+  return { per, ca, profit, ordersWithoutCost, revWithoutCost, stockValue, lowCount, outCount, missingCost };
 }
 const fmtMoney = n => Math.round(+n || 0).toLocaleString('fr-FR') + ' ' + CUR();
 
@@ -8457,6 +8484,7 @@ function renderStock() {
     <div class="stock-kpi"><div class="stock-kpi-lbl">💰 Chiffre d'affaires réalisé</div><div class="stock-kpi-val">${fmtMoney(A.ca)}</div><div class="stock-kpi-sub">Commandes livrées, réductions déduites</div></div>
     <div class="stock-kpi green"><div class="stock-kpi-lbl">📈 Bénéfice brut</div><div class="stock-kpi-val">${fmtMoney(A.profit)}</div><div class="stock-kpi-sub">Ventes − prix d'achat des produits vendus</div></div>
     <div class="stock-kpi"><div class="stock-kpi-lbl">📦 Valeur du stock restant</div><div class="stock-kpi-val">${fmtMoney(A.stockValue)}</div><div class="stock-kpi-sub">Argent placé dans la marchandise</div></div>
+    ${S.isGerant ? '' : `<div class="stock-kpi green"><div class="stock-kpi-lbl">✅ Bénéfice net</div><div class="stock-kpi-val">${fmtMoney(A.profit - expensesTotal())}</div><div class="stock-kpi-sub">Bénéfice brut − dépenses (${fmtMoney(expensesTotal())})</div></div>`}
     <div class="stock-kpi ${A.outCount||A.lowCount?'warn':''}"><div class="stock-kpi-lbl">⚠️ À réapprovisionner</div><div class="stock-kpi-val">${A.outCount} épuisé(s) · ${A.lowCount} bas</div><div class="stock-kpi-sub">Stock bas = moins de 5 unités</div></div>`;
   if (note) {
     if (A.missingCost > 0) {
@@ -8496,6 +8524,95 @@ function renderStock() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// DÉPENSES & BÉNÉFICE NET (propriétaire uniquement)
+// ═══════════════════════════════════════════════
+const EXPENSE_CATS = [['pub','📣 Publicité'],['livraison','🛵 Livraison'],['emballage','📦 Emballage'],['loyer','🏠 Loyer'],['salaire','👤 Salaire'],['telecom','📱 Internet / téléphone'],['transport','🚕 Transport'],['abonnement','💳 Abonnement Zyntelo'],['autre','🧾 Autre']];
+const expCatLabel = k => (EXPENSE_CATS.find(c => c[0] === k) || ['', '🧾 Autre'])[1];
+let expPeriod = 'month';
+function expensesTotal(inPeriod) {
+  return (S.expenses || []).filter(e => !inPeriod || inPeriod(new Date(e.spent_on + 'T12:00:00'))).reduce((t, e) => t + (+e.amount || 0), 0);
+}
+function expPeriodRange(p) {
+  const now = new Date();
+  if (p === 'month') return [new Date(now.getFullYear(), now.getMonth(), 1), new Date(now.getFullYear(), now.getMonth() + 1, 1)];
+  if (p === 'lastmonth') return [new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 1)];
+  if (p === 'year') return [new Date(now.getFullYear(), 0, 1), new Date(now.getFullYear() + 1, 0, 1)];
+  return null;
+}
+function setExpPeriod(p, btn) {
+  expPeriod = p;
+  document.querySelectorAll('#exp-periods .exp-period').forEach(b => b.classList.toggle('on', b === btn));
+  renderExpenses();
+}
+async function loadExpenses() {
+  if (S.isGerant) return;
+  S.expensesStatus = 'loading';
+  const { data, error } = await sb.from('shop_expenses').select('*').eq('owner_id', ownerId()).order('spent_on', { ascending: false });
+  if (error) { console.error('loadExpenses', error); S.expensesStatus = 'error'; S.expenses = []; }
+  else { S.expenses = data || []; S.expensesStatus = 'ok'; }
+  updateStats();
+  if (document.getElementById('p-depenses')?.classList.contains('on')) renderExpenses();
+  if (document.getElementById('p-stock')?.classList.contains('on')) renderStock();
+}
+function renderExpenses() {
+  const res = document.getElementById('exp-result'), list = document.getElementById('exp-list');
+  if (!res || !list) return;
+  const cat = document.getElementById('exp-cat');
+  if (cat && !cat.options.length) cat.innerHTML = EXPENSE_CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('');
+  const d = document.getElementById('exp-date'); if (d && !d.value) d.value = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll('#p-depenses .exp-cur').forEach(e => e.textContent = CUR());
+  if (!S.expensesStatus || S.expensesStatus === 'idle') { loadExpenses(); }
+  const rng = expPeriodRange(expPeriod);
+  const inP = rng ? (dt => dt && dt >= rng[0] && dt < rng[1]) : null;
+  const A = computeStockAccounting(inP);
+  const exps = (S.expenses || []).filter(e => !inP || inP(new Date(e.spent_on + 'T12:00:00')));
+  const totalExp = exps.reduce((t, e) => t + (+e.amount || 0), 0);
+  const cost = A.ca - A.profit - A.revWithoutCost; // prix d'achat des produits vendus (au coût connu)
+  const net = A.profit - totalExp;
+  const byCat = {}; exps.forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + (+e.amount || 0); });
+  res.innerHTML = (S.expensesStatus === 'error' ? `<div class="stock-note">⚠️ Impossible de charger vos dépenses pour le moment. Vérifiez votre connexion, puis rouvrez cette page.</div>` : '') + `
+    <div class="exp-line"><span>💰 Ventes encaissées</span><strong>${fmtMoney(A.ca)}</strong></div>
+    <div class="exp-line minus"><span>− Prix d'achat des produits vendus</span><strong>${fmtMoney(cost)}</strong></div>
+    <div class="exp-line sub"><span>= Bénéfice brut</span><strong>${fmtMoney(A.profit)}</strong></div>
+    <div class="exp-line minus"><span>− Dépenses</span><strong>${fmtMoney(totalExp)}</strong></div>
+    ${Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(k => `<div class="exp-line cat"><span>${expCatLabel(k)}</span><strong>${fmtMoney(byCat[k])}</strong></div>`).join('')}
+    <div class="exp-line total ${net < 0 ? 'neg' : ''}"><span>= Bénéfice net</span><strong>${fmtMoney(net)}</strong></div>
+    ${A.ordersWithoutCost ? `<div class="exp-hint">ℹ️ ${A.ordersWithoutCost} vente(s) de produits sans prix d'achat ne sont pas comptées dans le bénéfice : ajoutez le prix d'achat de ces produits.</div>` : ''}`;
+  list.innerHTML = exps.length ? exps.map(e => `<div class="exp-item">
+      <div class="exp-item-main"><div class="exp-item-cat">${expCatLabel(e.category)}</div>${e.note ? `<div class="exp-item-note">${esc(e.note)}</div>` : ''}<div class="exp-item-date">${new Date(e.spent_on + 'T12:00:00').toLocaleDateString('fr-FR')}</div></div>
+      <div class="exp-item-amt">${fmtMoney(e.amount)}</div>
+      <button class="exp-del" aria-label="Supprimer" onclick="deleteExpense('${escJs(String(e.id))}')">🗑️</button>
+    </div>`).join('') : `<div class="empty"><div class="empty-ico">🧾</div><p>Aucune dépense sur cette période.</p></div>`;
+}
+async function saveExpense() {
+  const amount = parseInt(document.getElementById('exp-amount').value) || 0;
+  const category = document.getElementById('exp-cat').value || 'autre';
+  const spent_on = document.getElementById('exp-date').value || new Date().toISOString().slice(0, 10);
+  const note = (document.getElementById('exp-note').value || '').trim().slice(0, 120);
+  if (amount <= 0) { toast('Indiquez le montant de la dépense', 'err'); return; }
+  const btn = document.getElementById('exp-save'); if (btn.disabled) return; btn.disabled = true;
+  try {
+    const { data, error } = await sb.from('shop_expenses').insert({ owner_id: ownerId(), amount, category, spent_on, note: note || null }).select().single();
+    if (error) throw error;
+    S.expenses = [data, ...(S.expenses || [])].sort((a, b) => String(b.spent_on).localeCompare(String(a.spent_on)));
+    S.expensesStatus = 'ok';
+    document.getElementById('exp-amount').value = ''; document.getElementById('exp-note').value = '';
+    toast('Dépense enregistrée ✓');
+    renderExpenses(); updateStats();
+  } catch (e) {
+    console.error('saveExpense', e);
+    toast("Impossible d'enregistrer la dépense. Vérifiez votre connexion.", 'err');
+  } finally { btn.disabled = false; }
+}
+async function deleteExpense(id) {
+  if (!confirm('Supprimer cette dépense ?')) return;
+  const { error } = await sb.from('shop_expenses').delete().eq('id', id).eq('owner_id', ownerId());
+  if (error) { console.error('deleteExpense', error); toast('Suppression impossible. Réessayez.', 'err'); return; }
+  S.expenses = (S.expenses || []).filter(e => String(e.id) !== String(id));
+  toast('Dépense supprimée'); renderExpenses(); updateStats();
 }
 
 // ── Réapprovisionnement : ajoute des unités et recalcule le prix d'achat moyen
@@ -8566,6 +8683,8 @@ function updateStats() {
   const done=S.orders.filter(o=>o.status==='livree');
   const ca=done.reduce((s,o)=>s+o.total,0);
   const ben=computeStockAccounting().profit;
+  const netEl=document.getElementById('st-net');
+  if (netEl) { netEl.textContent = (ben - expensesTotal()).toLocaleString('fr-FR')+' '+CUR(); netEl.closest('.stat-box').style.display = S.isGerant ? 'none' : ''; }
   document.getElementById('st-cmds').textContent=S.orders.length;
   document.getElementById('st-ca').textContent=ca.toLocaleString('fr-FR')+' '+CUR();
   document.getElementById('st-ben').textContent=ben.toLocaleString('fr-FR')+' '+CUR();

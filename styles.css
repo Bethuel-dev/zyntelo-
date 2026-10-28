@@ -821,3 +821,37 @@ canvas{display:block;}
 #restock-overlay .fgrp label{font-size:20px;margin-bottom:10px;}
 #restock-overlay .fgrp input{font-size:28px !important;padding:22px 20px;border-radius:14px;}
 #restock-overlay .btn{font-size:28px;padding:26px;border-radius:16px;}
+
+/* ═══ DÉPENSES & BÉNÉFICE NET (v195) ═══ */
+#p-depenses .page-head h1{font-size:34px;}
+#p-depenses .page-head p{font-size:19px;}
+.exp-periods{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.exp-period{border:1px solid var(--border);background:#fff;color:var(--gray);border-radius:100px;padding:12px 20px;font-size:19px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.exp-period.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.exp-result{background:#fff;border:1px solid var(--border);border-radius:20px;padding:10px 22px;margin-bottom:18px;}
+.exp-line{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);font-size:21px;}
+.exp-line strong{font-size:24px;font-weight:800;white-space:nowrap;}
+.exp-line.minus strong{color:var(--red);}
+.exp-line.sub{font-weight:700;}
+.exp-line.cat{font-size:18px;color:var(--gray);padding:8px 0 8px 22px;border-bottom:none;}
+.exp-line.cat strong{font-size:19px;font-weight:700;color:var(--gray);}
+.exp-line.total{border-bottom:none;font-size:24px;font-weight:800;padding:18px 0;}
+.exp-line.total strong{font-size:32px;color:var(--green);}
+.exp-line.total.neg strong{color:var(--red);}
+.exp-hint{font-size:17px;color:var(--gray);padding:0 0 14px;line-height:1.5;}
+.exp-form{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:22px;}
+.exp-form-title{font-size:24px;font-weight:800;margin-bottom:16px;}
+.exp-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;}
+#p-depenses .fgrp label{font-size:18px;margin-bottom:8px;}
+#p-depenses .fgrp input,#p-depenses .fgrp select{font-size:22px !important;padding:18px 16px;border-radius:14px;}
+#p-depenses .exp-form .btn{font-size:24px;padding:22px;border-radius:16px;}
+.exp-list-title{font-size:24px;font-weight:800;margin-bottom:12px;}
+.exp-list{display:flex;flex-direction:column;gap:12px;}
+.exp-item{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;}
+.exp-item-main{flex:1;min-width:0;}
+.exp-item-cat{font-size:21px;font-weight:700;}
+.exp-item-note{font-size:18px;color:var(--black);margin-top:2px;}
+.exp-item-date{font-size:16px;color:var(--gray);margin-top:4px;}
+.exp-item-amt{font-size:24px;font-weight:800;color:var(--red);white-space:nowrap;}
+.exp-del{border:none;background:var(--gray-l);border-radius:12px;width:52px;height:52px;font-size:22px;cursor:pointer;flex-shrink:0;}
+.stock-summary .stock-kpi:last-child:nth-child(odd){grid-column:1 / -1;}
