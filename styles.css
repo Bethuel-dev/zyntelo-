@@ -778,3 +778,46 @@ canvas{display:block;}
 .buy-bar-lbl{font-size:20px;color:var(--gray);font-weight:600;}
 .buy-bar-total{font-size:34px;font-weight:800;color:var(--red);white-space:nowrap;}
 .buy-bar-btn{flex:1;border:none;border-radius:16px;background:var(--red);color:#fff;font-size:32px;font-weight:800;padding:26px 18px;cursor:pointer;font-family:'Inter',sans-serif;}
+
+/* ═══ CONNEXION / INSCRIPTION (v194) ═══ */
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:56px !important;}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:none;background:transparent;font-size:20px;cursor:pointer;border-radius:10px;}
+.pw-eye:active{background:var(--gray-l);}
+@media(max-width:600px){
+  .auth-wrap{padding:12px;}
+  .auth-box{padding:32px 20px;border-radius:20px;}
+}
+
+/* ═══ STOCK & COMPTABILITÉ (v194) ═══
+   Tailles pensées pour le mode ordinateur affiché sur un téléphone. */
+#p-stock .page-head h1{font-size:34px;}
+#p-stock .page-head p{font-size:19px;}
+.stock-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;}
+.stock-kpi{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px;}
+.stock-kpi-lbl{font-size:20px;font-weight:700;color:var(--gray);}
+.stock-kpi-val{font-size:36px;font-weight:800;margin-top:8px;color:var(--black);line-height:1.15;}
+.stock-kpi-sub{font-size:17px;color:var(--gray);margin-top:6px;}
+.stock-kpi.green .stock-kpi-val{color:var(--green);}
+.stock-kpi.warn{border-color:#F5C26B;background:#FFF8EB;}
+.stock-note{background:var(--blue-l);color:#0B2D8C;border-radius:16px;padding:18px 20px;font-size:19px;line-height:1.5;margin-bottom:18px;}
+.stock-list{display:flex;flex-direction:column;gap:18px;}
+.stock-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px;}
+.stock-card-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;}
+.stock-card-name{font-size:30px;font-weight:800;line-height:1.2;}
+.stock-card-hdr .badge{font-size:18px;padding:8px 16px;flex-shrink:0;}
+.stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.stock-grid > div{background:var(--gray-l);border-radius:14px;padding:14px 16px;}
+.stock-grid span{display:block;font-size:18px;color:var(--gray);font-weight:600;line-height:1.25;}
+.stock-grid strong{display:block;font-size:27px;font-weight:800;margin-top:6px;color:var(--black);}
+.stock-grid strong.red{color:var(--red);}
+.stock-grid strong.green{color:var(--green);}
+.stock-card-ftr{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap;}
+.stock-date{font-size:18px;color:var(--gray);}
+.stock-card-ftr .btn{font-size:22px;padding:16px 26px;border-radius:14px;}
+#restock-overlay .popup{max-width:760px;padding:30px 30px 40px;border-radius:26px 26px 0 0;}
+#restock-overlay .popup h3{font-size:32px;margin-bottom:16px;}
+#restock-overlay .popup p{font-size:20px !important;}
+#restock-overlay .fgrp label{font-size:20px;margin-bottom:10px;}
+#restock-overlay .fgrp input{font-size:28px !important;padding:22px 20px;border-radius:14px;}
+#restock-overlay .btn{font-size:28px;padding:26px;border-radius:16px;}

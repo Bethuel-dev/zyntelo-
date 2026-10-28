@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700;800&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/styles.css?v=3">
+<link rel="stylesheet" href="/styles.css?v=4">
 </head>
 <body>
 
@@ -270,7 +270,7 @@ setTimeout(function () {
       <h2>Bon retour 👋</h2>
       <p class="sub">Connectez-vous à votre espace commerçant</p>
       <div class="fgrp"><label>Email</label><input id="li-email" type="email" placeholder="votre@email.com"></div>
-      <div class="fgrp"><label>Mot de passe</label><input id="li-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fgrp"><label>Mot de passe</label><div class="pw-wrap"><input id="li-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-eye" aria-label="Afficher le mot de passe" onclick="togglePw('li-pass',this)">👁️</button></div></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <input type="checkbox" id="li-remember" checked style="width:auto">
         <label for="li-remember" style="font-size:12px;color:var(--gray);text-transform:none;letter-spacing:0">Rester connecté</label>
@@ -302,7 +302,7 @@ setTimeout(function () {
       </div>
       <div class="fgrp"><label>Nom de la boutique *</label><input id="rg-shop" placeholder="Mode Abidjan"></div>
       <div class="fgrp"><label>Email *</label><input id="rg-email" type="email" placeholder="votre@email.com"></div>
-      <div class="fgrp"><label>Mot de passe *</label><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"></div>
+      <div class="fgrp"><label>Mot de passe *</label><div class="pw-wrap"><input id="rg-pass" type="password" placeholder="Minimum 6 caractères"><button type="button" class="pw-eye" aria-label="Afficher le mot de passe" onclick="togglePw('rg-pass',this)">👁️</button></div></div>
       <button class="btn btn-red btn-w" onclick="doRegister()">Créer ma boutique</button>
       <div class="auth-switch">Déjà un compte ? <a onclick="go('s-login')">Se connecter</a></div>
     </div>
@@ -343,7 +343,7 @@ setTimeout(function () {
         <div class="fgrp"><label>Code reçu par e-mail</label>
           <input id="rp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" style="text-align:center;letter-spacing:8px;font-size:24px;font-weight:700">
         </div>
-        <div class="fgrp"><label>Nouveau mot de passe</label><input id="rp-pass" type="password" placeholder="Minimum 6 caractères" onkeydown="if(event.key==='Enter')confirmResetPassword()"></div>
+        <div class="fgrp"><label>Nouveau mot de passe</label><div class="pw-wrap"><input id="rp-pass" type="password" placeholder="Minimum 6 caractères" onkeydown="if(event.key==='Enter')confirmResetPassword()"><button type="button" class="pw-eye" aria-label="Afficher le mot de passe" onclick="togglePw('rp-pass',this)">👁️</button></div></div>
         <button class="btn btn-red btn-w" id="rp-confirm" onclick="confirmResetPassword()">Changer mon mot de passe</button>
         <button class="btn btn-ghost btn-w" id="rp-resend" style="margin-top:10px" onclick="sendResetCode(true)">Renvoyer le code</button>
       </div>
@@ -459,7 +459,7 @@ setTimeout(function () {
         <div class="stats-row">
           <div class="stat-box"><div class="stat-lbl">Commandes</div><div class="stat-val sv-blue" id="st-cmds">0</div></div>
           <div class="stat-box"><div class="stat-lbl">Chiffre d'affaires</div><div class="stat-val sv-green" id="st-ca">0 FCFA</div></div>
-          <div class="stat-box"><div class="stat-lbl">Bénéfice net</div><div class="stat-val" id="st-ben">0 FCFA</div></div>
+          <div class="stat-box"><div class="stat-lbl">Bénéfice brut</div><div class="stat-val" id="st-ben">0 FCFA</div></div>
           <div class="stat-box"><div class="stat-lbl">Produits</div><div class="stat-val" id="st-prods">0</div></div>
         </div>
         <div id="dash-youtube-banner" style="display:none"></div>
@@ -825,14 +825,11 @@ setTimeout(function () {
           <span>⚠️ Seuls vos produits les plus récents sont affichés ici.</span>
           <button class="btn btn-sm btn-ghost" onclick="loadAllProductsForStock()">Afficher tout le stock</button>
         </div>
-        <div class="tbl-wrap">
+        <div id="stock-summary" class="stock-summary"></div>
+        <div id="stock-missing-cost" class="stock-note" style="display:none"></div>
+        <div id="stock-list" class="stock-list"></div>
+        <div class="tbl-wrap" style="display:none">
           <table>
-            <thead><tr>
-              <th>Produit</th><th>Date ajout</th><th>Qté initiale</th>
-              <th>Qté disponible</th><th>Qté vendue</th>
-              <th>Prix achat</th><th>Prix vente</th>
-              <th>Marge/unité</th><th>Bénéfice</th><th>Statut</th>
-            </tr></thead>
             <tbody id="stock-body"></tbody>
           </table>
         </div>
@@ -3261,6 +3258,14 @@ async function confirmResetPassword() {
   } finally {
     btn.disabled = false; btn.textContent = label;
   }
+}
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id); if (!el) return;
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁️';
+  btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
 }
 
 async function doGerantLogin() {
@@ -8295,6 +8300,7 @@ async function valCmd(id) {
   if (!o._rowId) { toast('Erreur : identifiant de commande manquant. Rechargez la page.', 'err'); console.error('valCmd: _rowId manquant', o); return; }
 
   o.status='livree';
+  { const pp = S.products.find(x => x.id === o.prodId); if (pp && +pp.buyP > 0 && o.unitCost == null) o.unitCost = +pp.buyP; }
   o.validatedBy = S.isGerant ? `Gérant : ${S.user.name || S.user.email}` : 'Propriétaire';
 
   // Étape 1 — Mettre à jour la commande elle-même
@@ -8405,18 +8411,152 @@ async function loadAllProductsForStock() {
   toast('Stock complet chargé ✓');
 }
 
+// ═══════════════════════════════════════════════
+// COMPTABILITÉ DU STOCK
+// Le bénéfice est calculé à partir des commandes RÉELLEMENT livrées :
+// montant encaissé pour le produit (réductions déduites, livraison exclue)
+// moins le coût d'achat des unités vendues.
+// ═══════════════════════════════════════════════
+function orderProductRevenue(o) { return Math.max(0, (+o.total || 0) - (+o.deliveryFee || 0)); }
+function orderUnitCost(o, p) {
+  if (o && o.unitCost != null && +o.unitCost > 0) return +o.unitCost;
+  return p && +p.buyP > 0 ? +p.buyP : null;
+}
+function computeStockAccounting() {
+  const per = {};
+  let ca = 0, profit = 0, ordersWithoutCost = 0;
+  (S.orders || []).filter(o => o.status === 'livree').forEach(o => {
+    const p = S.products.find(x => x.id === o.prodId);
+    const rev = orderProductRevenue(o);
+    const unitCost = orderUnitCost(o, p);
+    ca += rev;
+    const r = per[o.prodId] || (per[o.prodId] = { rev: 0, sold: 0, profit: 0, costKnown: true });
+    r.rev += rev; r.sold += (+o.qty || 0);
+    if (unitCost != null) { const pr = rev - unitCost * (+o.qty || 0); r.profit += pr; profit += pr; }
+    else { r.costKnown = false; ordersWithoutCost++; }
+  });
+  let stockValue = 0, lowCount = 0, outCount = 0, missingCost = 0;
+  S.products.forEach(p => {
+    const avail = +p.qtyAvail || 0;
+    if (+p.buyP > 0) stockValue += avail * (+p.buyP); else missingCost++;
+    if (avail === 0) outCount++; else if (avail < 5) lowCount++;
+  });
+  return { per, ca, profit, ordersWithoutCost, stockValue, lowCount, outCount, missingCost };
+}
+const fmtMoney = n => Math.round(+n || 0).toLocaleString('fr-FR') + ' ' + CUR();
+
 function renderStock() {
-  const tbody=document.getElementById('stock-body');
+  const list = document.getElementById('stock-list');
+  const summary = document.getElementById('stock-summary');
+  const note = document.getElementById('stock-missing-cost');
   const warningBox = document.getElementById('stock-incomplete-warning');
-  const hasMore = S.productsHasMore === true;
-  if (warningBox) warningBox.style.display = hasMore ? '' : 'none';
-  if(!S.products.length){ tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--gray)">Aucun produit en stock</td></tr>`; return; }
-  tbody.innerHTML=S.products.map(p=>{
-    const m=p.newP-(p.buyP||0); const ben=m*(p.qtySold||0);
-    const sc=p.qtyAvail===0?'b-red':p.qtyAvail<5?'b-yellow':'b-green';
-    const st=p.qtyAvail===0?'Épuisé':p.qtyAvail<5?'Stock bas':'En stock';
-    return `<tr><td><strong>${esc(p.name)}</strong></td><td>${p.date||'—'}</td><td>${p.qty||p.qtyAvail}</td><td><strong>${p.qtyAvail}</strong></td><td>${p.qtySold||0}</td><td>${p.buyP?p.buyP.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td><strong style="color:var(--red)">${p.newP.toLocaleString('fr-FR')} ${CUR()}</strong></td><td style="color:var(--green);font-weight:700">${p.buyP?m.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td style="font-weight:700">${p.buyP?ben.toLocaleString('fr-FR')+' '+CUR():'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
+  if (warningBox) warningBox.style.display = S.productsHasMore === true ? '' : 'none';
+  if (!list) return;
+  const A = computeStockAccounting();
+  if (summary) summary.innerHTML = `
+    <div class="stock-kpi"><div class="stock-kpi-lbl">💰 Chiffre d'affaires réalisé</div><div class="stock-kpi-val">${fmtMoney(A.ca)}</div><div class="stock-kpi-sub">Commandes livrées, réductions déduites</div></div>
+    <div class="stock-kpi green"><div class="stock-kpi-lbl">📈 Bénéfice brut</div><div class="stock-kpi-val">${fmtMoney(A.profit)}</div><div class="stock-kpi-sub">Ventes − prix d'achat des produits vendus</div></div>
+    <div class="stock-kpi"><div class="stock-kpi-lbl">📦 Valeur du stock restant</div><div class="stock-kpi-val">${fmtMoney(A.stockValue)}</div><div class="stock-kpi-sub">Argent placé dans la marchandise</div></div>
+    <div class="stock-kpi ${A.outCount||A.lowCount?'warn':''}"><div class="stock-kpi-lbl">⚠️ À réapprovisionner</div><div class="stock-kpi-val">${A.outCount} épuisé(s) · ${A.lowCount} bas</div><div class="stock-kpi-sub">Stock bas = moins de 5 unités</div></div>`;
+  if (note) {
+    if (A.missingCost > 0) {
+      note.style.display = '';
+      note.innerHTML = `ℹ️ <strong>${A.missingCost} produit(s) sans prix d'achat.</strong> Leur bénéfice et la valeur de leur stock ne peuvent pas être calculés : ajoutez leur prix d'achat (bouton « Modifier » dans Produits).`;
+    } else note.style.display = 'none';
+  }
+  if (!S.products.length) { list.innerHTML = `<div class="empty"><div class="empty-ico">📦</div><p>Aucun produit en stock</p></div>`; return; }
+  list.innerHTML = S.products.map(p => {
+    const r = A.per[p.id] || { rev: 0, sold: 0, profit: 0, costKnown: true };
+    const avail = +p.qtyAvail || 0;
+    const hasCost = +p.buyP > 0;
+    const sc = avail === 0 ? 'b-red' : avail < 5 ? 'b-yellow' : 'b-green';
+    const st = avail === 0 ? 'Épuisé' : avail < 5 ? 'Stock bas' : 'En stock';
+    const unitMargin = hasCost ? (+p.newP || 0) - (+p.buyP) : null;
+    const profitTxt = r.sold === 0 ? fmtMoney(0) : (hasCost || r.costKnown ? fmtMoney(r.profit) : '—');
+    const nRestock = (p.restocks || []).length;
+    return `<div class="stock-card">
+      <div class="stock-card-hdr">
+        <div class="stock-card-name">${esc(p.name)}</div>
+        <span class="badge ${sc}">${st}</span>
+      </div>
+      <div class="stock-grid">
+        <div><span>Disponible</span><strong>${avail}</strong></div>
+        <div><span>Vendus (livrés)</span><strong>${r.sold}</strong></div>
+        <div><span>Reçus au total</span><strong>${p.qty || avail}</strong></div>
+        <div><span>Prix d'achat${nRestock?' (moyen)':''}</span><strong>${hasCost ? fmtMoney(p.buyP) : '—'}</strong></div>
+        <div><span>Prix de vente</span><strong class="red">${fmtMoney(p.newP)}</strong></div>
+        <div><span>Marge / unité</span><strong class="green">${unitMargin != null ? fmtMoney(unitMargin) : '—'}</strong></div>
+        <div><span>Ventes encaissées</span><strong>${fmtMoney(r.rev)}</strong></div>
+        <div><span>Bénéfice réel</span><strong class="green">${profitTxt}</strong></div>
+        <div><span>Valeur du stock</span><strong>${hasCost ? fmtMoney(avail * p.buyP) : '—'}</strong></div>
+      </div>
+      <div class="stock-card-ftr">
+        <span class="stock-date">Ajouté le ${p.date || '—'}${nRestock ? ` · ${nRestock} réapprovisionnement(s)` : ''}</span>
+        <button class="btn btn-blue btn-sm" onclick="openRestock('${escJs(p.id)}')">➕ Réapprovisionner</button>
+      </div>
+    </div>`;
   }).join('');
+}
+
+// ── Réapprovisionnement : ajoute des unités et recalcule le prix d'achat moyen
+function openRestock(prodId) {
+  const p = S.products.find(x => x.id === prodId);
+  if (!p) return;
+  let ov = document.getElementById('restock-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.className = 'overlay'; ov.id = 'restock-overlay';
+    ov.onclick = (e) => { if (e.target === ov) ov.classList.remove('on'); };
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="popup">
+    <div class="popup-handle"></div>
+    <h3>➕ Réapprovisionner</h3>
+    <p style="font-size:14px;color:var(--gray);margin:-6px 0 14px"><strong style="color:var(--black)">${esc(p.name)}</strong> · ${+p.qtyAvail||0} en stock actuellement</p>
+    <div class="fgrp"><label>Quantité reçue *</label><input id="rs-qty" type="number" inputmode="numeric" min="1" placeholder="Ex : 20"></div>
+    <div class="fgrp"><label>Prix d'achat unitaire (${CUR()}) *</label><input id="rs-cost" type="number" inputmode="numeric" min="0" value="${+p.buyP||''}" placeholder="Ex : 9000"></div>
+    <p style="font-size:12.5px;color:var(--gray);margin:-4px 0 14px">Le prix d'achat moyen est recalculé automatiquement si ce prix a changé.</p>
+    <button class="btn btn-red btn-w" id="rs-save" onclick="saveRestock('${escJs(p.id)}')">Enregistrer l'arrivage</button>
+  </div>`;
+  requestAnimationFrame(() => ov.classList.add('on'));
+}
+
+async function saveRestock(prodId) {
+  const p = S.products.find(x => x.id === prodId);
+  if (!p) return;
+  const n = parseInt(document.getElementById('rs-qty').value) || 0;
+  const cost = parseInt(document.getElementById('rs-cost').value) || 0;
+  if (n < 1) { toast('Indiquez la quantité reçue', 'err'); return; }
+  if (cost <= 0) { toast("Indiquez le prix d'achat unitaire", 'err'); return; }
+  const btn = document.getElementById('rs-save'); btn.disabled = true;
+  const before = { ...p };
+  const avail = +p.qtyAvail || 0, oldCost = +p.buyP || 0;
+  // Coût moyen pondéré : (stock actuel × ancien coût + arrivage × nouveau coût) / total
+  p.buyP = (avail > 0 && oldCost > 0) ? Math.round((avail * oldCost + n * cost) / (avail + n)) : cost;
+  p.qtyAvail = avail + n;
+  p.qty = (+p.qty || avail) + n;
+  p.restocks = [...(p.restocks || []), { date: new Date().toISOString(), qty: n, unitCost: cost }];
+  try {
+    const { _rowId, ...prodClean } = p;
+    let error = null;
+    if (S.isGerant) {
+      const res = await sb.rpc('gerant_upsert_product', { p_owner_id: ownerId(), p_gerant_id: S.gerantRecordId, p_email: S.user.email, p_row_id: _rowId, p_data: prodClean });
+      error = res.error || (res.data && res.data.success === false ? { message: 'refusé' } : null);
+      if (!error) await logGerantActivity('reappro_produit', `Réapprovisionnement : ${p.name} (+${n})`);
+    } else if (_rowId) {
+      ({ error } = await sb.from('products').update({ data: prodClean }).eq('id', _rowId));
+    } else {
+      await Store.set('prods_' + ownerId(), S.products);
+    }
+    if (error) throw error;
+    toast(`Stock mis à jour ✓ (+${n})`);
+    document.getElementById('restock-overlay').classList.remove('on');
+    renderStock(); renderProds(); updateStats();
+  } catch (e) {
+    Object.assign(p, before); // annule la modification locale
+    console.error('saveRestock', e);
+    toast("Impossible d'enregistrer l'arrivage. Vérifiez votre connexion.", 'err');
+  } finally { btn.disabled = false; }
 }
 
 // ═══════════════════════════════════════════════
@@ -8425,7 +8565,7 @@ function renderStock() {
 function updateStats() {
   const done=S.orders.filter(o=>o.status==='livree');
   const ca=done.reduce((s,o)=>s+o.total,0);
-  const ben=done.reduce((s,o)=>{ const p=S.products.find(x=>x.id===o.prodId); return s+(p&&p.buyP?(p.newP-p.buyP)*o.qty:0); },0);
+  const ben=computeStockAccounting().profit;
   document.getElementById('st-cmds').textContent=S.orders.length;
   document.getElementById('st-ca').textContent=ca.toLocaleString('fr-FR')+' '+CUR();
   document.getElementById('st-ben').textContent=ben.toLocaleString('fr-FR')+' '+CUR();
