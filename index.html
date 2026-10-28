@@ -2227,7 +2227,7 @@ function go(screenId) {
   // ailleurs, sans aucun changement.
   const vpMeta = document.querySelector('meta[name="viewport"]');
   if (vpMeta) {
-    const phoneScreens = ['s-login', 's-register', 's-verify-otp', 's-reset-password', 's-gerant-login', 's-livreur-login', 's-marketplace'];
+    const phoneScreens = ['s-login', 's-register', 's-verify-otp', 's-reset-password', 's-gerant-login', 's-livreur-login'];
     vpMeta.setAttribute('content', phoneScreens.includes(screenId)
       ? 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover'
       : 'width=1024');
